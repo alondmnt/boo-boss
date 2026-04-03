@@ -1,4 +1,90 @@
-/** ScareFactory — composites creature + monster type + action into a deployed scare. */
+/**
+ * ScareFactory — composites creature + monster type + action into a deployed scare.
+ * Single entry point for creature deployment. Manages room occupancy (1 per room).
+ * Does NOT know about Picker — callers provide onExpire callbacks.
+ */
 const ScareFactory = (() => {
-  return {};
+  const _deployed = {}; // roomId -> creature object
+
+  /**
+   * Deploy a creature to a room with default monster type and action.
+   * Returns the creature object, or null if the room is occupied.
+   *
+   * @param {string} creatureType - creature type key
+   * @param {string} roomId - room to deploy into
+   * @param {function} [onExpire] - called when creature's lifetime ends
+   * @returns {object|null} creature object or null if room occupied
+   */
+  function deploy(creatureType, roomId, onExpire) {
+    if (_deployed[roomId]) return null;
+
+    const creature = Creatures.create(creatureType, roomId);
+    if (!creature) return null;
+
+    // Apply default monster type overlay
+    const monsterType = CONFIG.defaultMonsterType[creatureType];
+    MonsterTypes.apply(creature.el, monsterType);
+    creature.monsterType = monsterType;
+    creature.action = CONFIG.defaultAction[creatureType];
+
+    _deployed[roomId] = creature;
+
+    // Start lifetime timer
+    creature.timer = setTimeout(() => {
+      _expire(creature, onExpire);
+    }, CONFIG.creatureLifetimeMs);
+
+    Audio.play('deploy');
+    return creature;
+  }
+
+  /** Internal: expire a creature (lifetime ended). */
+  function _expire(creature, onExpire) {
+    clearRoom(creature.roomId);
+    Creatures.remove(creature);
+    Audio.play('expire');
+    if (onExpire) onExpire(creature);
+  }
+
+  /**
+   * Evaluate what happens when a visitor encounters a deployed creature.
+   * Pure function — no side effects.
+   *
+   * @param {object} visitor - visitor object with fear/love/scareCount
+   * @param {object} creature - creature object with type
+   * @returns {{ result: string, points: number }}
+   */
+  function evaluate(visitor, creature) {
+    if (visitor.fear === creature.type) {
+      visitor.scareCount++;
+      const mult = visitor.scareCount === 1 ? 1
+        : visitor.scareCount === 2 ? CONFIG.scoring.combo2x
+        : CONFIG.scoring.combo3x;
+      return { result: 'scared', points: Math.round(CONFIG.scoring.scareBase * mult) };
+    }
+    if (visitor.love === creature.type) {
+      return { result: 'loved', points: 0 };
+    }
+    return { result: 'neutral', points: 0 };
+  }
+
+  /** Check if a room has a deployed creature. */
+  function isOccupied(roomId) { return !!_deployed[roomId]; }
+
+  /** Return the deployed creature in a room, or null. */
+  function getDeployed(roomId) { return _deployed[roomId] || null; }
+
+  /** Clear the room occupancy record (after removal or hug). */
+  function clearRoom(roomId) { delete _deployed[roomId]; }
+
+  /** Clear all deployed creatures (on wave/game reset). */
+  function clearAll() {
+    for (const roomId of Object.keys(_deployed)) {
+      const creature = _deployed[roomId];
+      Creatures.remove(creature);
+      delete _deployed[roomId];
+    }
+  }
+
+  return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll };
 })();
