@@ -1,4 +1,196 @@
-/** Visitor — lightweight visitor sketches, movement, thought bubbles. */
+/**
+ * Visitor — lightweight stick-figure SVGs with thought bubbles.
+ * Intentionally minimal so scare creatures remain the visual focus.
+ */
 const Visitor = (() => {
-  return {};
+  const NS = 'http://www.w3.org/2000/svg';
+  let _nextId = 0;
+
+  /** Creature type -> emoji for thought bubbles. */
+  const CREATURE_ICONS = {
+    spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
+    owl: '🦉', snake: '🐍', rat: '🐀',
+  };
+
+  /** Small palette for visitor skin tones. */
+  const SKIN_TONES = ['#f5d0a9', '#d4a574', '#a0785a', '#6b4c3b', '#f0c8a0', '#e8b88a'];
+
+  /**
+   * Create a visitor object with fear/love thought bubbles.
+   * Fear and love are always different creature types.
+   */
+  function create(fear, love) {
+    const id = _nextId++;
+    const skin = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+    const hasHat = Math.random() < 0.15;
+    const hasGlasses = Math.random() < 0.12;
+
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('visitor');
+    g.setAttribute('data-visitor', id);
+
+    // Build the stick figure (~40px tall, centred at 0,0 feet level)
+    let svg = '';
+
+    // Head
+    svg += `<circle cx="0" cy="-32" r="6" fill="${skin}" stroke="#333" stroke-width="0.8"/>`;
+
+    // Optional hat
+    if (hasHat) {
+      svg += `<rect x="-7" y="-40" width="14" height="4" rx="1" fill="#4a3a6a"/>`;
+      svg += `<rect x="-4" y="-44" width="8" height="5" rx="1" fill="#4a3a6a"/>`;
+    }
+
+    // Optional glasses
+    if (hasGlasses) {
+      svg += `<circle cx="-3" cy="-33" r="2.5" fill="none" stroke="#555" stroke-width="0.6"/>`;
+      svg += `<circle cx="3" cy="-33" r="2.5" fill="none" stroke="#555" stroke-width="0.6"/>`;
+      svg += `<line x1="-0.5" y1="-33" x2="0.5" y2="-33" stroke="#555" stroke-width="0.5"/>`;
+    }
+
+    // Eyes
+    svg += `<circle cx="-2" cy="-33" r="0.8" fill="#333"/>`;
+    svg += `<circle cx="2" cy="-33" r="0.8" fill="#333"/>`;
+
+    // Body
+    svg += `<rect x="-5" y="-25" width="10" height="16" rx="2" fill="${skin}" opacity="0.8"
+                  stroke="#333" stroke-width="0.6"/>`;
+
+    // Arms
+    svg += `<line x1="-5" y1="-22" x2="-10" y2="-14" stroke="${skin}" stroke-width="2" stroke-linecap="round" class="visitor__arm-l"/>`;
+    svg += `<line x1="5" y1="-22" x2="10" y2="-14" stroke="${skin}" stroke-width="2" stroke-linecap="round" class="visitor__arm-r"/>`;
+
+    // Legs
+    svg += `<line x1="-3" y1="-9" x2="-5" y2="0" stroke="${skin}" stroke-width="2.5" stroke-linecap="round" class="visitor__leg-l"/>`;
+    svg += `<line x1="3" y1="-9" x2="5" y2="0" stroke="${skin}" stroke-width="2.5" stroke-linecap="round" class="visitor__leg-r"/>`;
+
+    // Smile (for exiting state, hidden by default)
+    svg += `<path d="M-2.5 -30 Q0 -28 2.5 -30" stroke="#333" stroke-width="0.6" fill="none"
+                  class="visitor__smile" style="display:none"/>`;
+
+    // Fear thought bubble (red jagged starburst)
+    svg += `<g class="visitor__bubble visitor__bubble--fear" transform="translate(-14, -52)">`;
+    svg += `  <polygon points="0,-9 3,-6 6,-9 7,-5 10,-4 7,-1 10,2 6,2 4,5 2,2 -2,3 -1,-1 -4,-3 -1,-5"
+                       fill="#ff4444" opacity="0.85" stroke="#cc0000" stroke-width="0.5"/>`;
+    svg += `  <text x="3" y="0" font-size="7" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[fear] || '?'}</text>`;
+    svg += `</g>`;
+
+    // Love thought bubble (pink heart shape)
+    svg += `<g class="visitor__bubble visitor__bubble--love" transform="translate(8, -52)">`;
+    svg += `  <path d="M4,-2 C4,-6 0,-7 0,-4 C0,-7 -4,-6 -4,-2 C-4,1 0,5 0,5 C0,5 4,1 4,-2 Z"
+                    fill="#ff88aa" opacity="0.85" stroke="#cc4477" stroke-width="0.5"
+                    transform="translate(3, -2) scale(1.3)"/>`;
+    svg += `  <text x="3" y="0" font-size="7" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[love] || '?'}</text>`;
+    svg += `</g>`;
+
+    g.innerHTML = svg;
+
+    const visitor = {
+      id,
+      el: g,
+      fear,
+      love,
+      currentRoom: null,
+      scareCount: 0,
+      roomsVisited: 0,
+      state: 'riding',
+      _scared: false, // true when currently in a scare encounter
+    };
+
+    return visitor;
+  }
+
+  /** Place a visitor in a room (instant, no animation). */
+  function placeInRoom(visitor, roomId) {
+    const centre = House.getRoomCentre(roomId);
+    if (!centre) return;
+
+    // Offset slightly so visitors don't all stack on the exact centre
+    const offsetX = (Math.random() - 0.5) * 40;
+    const offsetY = (Math.random() - 0.5) * 20;
+
+    visitor.el.setAttribute('transform',
+      `translate(${centre.x + offsetX}, ${centre.y + offsetY + 15})`);
+    visitor.currentRoom = roomId;
+
+    // Ensure visitor is in the visitor layer
+    const layer = House.getSvg().querySelector('.house__visitor-layer');
+    if (layer && !layer.contains(visitor.el)) {
+      layer.appendChild(visitor.el);
+    }
+  }
+
+  /** Animate visitor moving to a new room. Calls onArrive when done. */
+  function moveToRoom(visitor, roomId, onArrive) {
+    const centre = House.getRoomCentre(roomId);
+    if (!centre) { if (onArrive) onArrive(); return; }
+
+    const offsetX = (Math.random() - 0.5) * 40;
+    const offsetY = (Math.random() - 0.5) * 20;
+    const targetX = centre.x + offsetX;
+    const targetY = centre.y + offsetY + 15;
+
+    // Flip direction based on horizontal movement
+    const currCentre = House.getRoomCentre(visitor.currentRoom);
+    if (currCentre && targetX < currCentre.x) {
+      visitor.el.style.transform = 'scaleX(-1)';
+    } else {
+      visitor.el.style.transform = '';
+    }
+
+    visitor.currentRoom = roomId;
+    setState(visitor, 'walking');
+
+    // Use CSS transition via transform attribute
+    visitor.el.setAttribute('transform', `translate(${targetX}, ${targetY})`);
+
+    // Listen for transition end
+    function onEnd() {
+      visitor.el.removeEventListener('transitionend', onEnd);
+      if (onArrive) onArrive();
+    }
+    visitor.el.addEventListener('transitionend', onEnd);
+
+    // Fallback timeout in case transitionend doesn't fire (e.g. same position)
+    setTimeout(() => {
+      visitor.el.removeEventListener('transitionend', onEnd);
+      if (onArrive) onArrive();
+    }, 800);
+  }
+
+  /** Swap the visitor's CSS state class. */
+  function setState(visitor, state) {
+    const el = visitor.el;
+    el.classList.remove('visitor--walking', 'visitor--scared', 'visitor--hugging', 'visitor--exiting', 'visitor--riding');
+    el.classList.add(`visitor--${state}`);
+    visitor.state = state;
+
+    // Show/hide smile for exiting state
+    const smile = el.querySelector('.visitor__smile');
+    if (smile) smile.style.display = state === 'exiting' ? '' : 'none';
+  }
+
+  /**
+   * Pick a random adjacent unlocked room for the visitor to wander to.
+   * Avoids immediate backtrack when possible.
+   */
+  function pickNextRoom(visitor) {
+    const adj = GameState.get('adjacency')[visitor.currentRoom];
+    if (!adj) return visitor.currentRoom;
+
+    const rooms = GameState.get('rooms');
+    const unlocked = adj.filter(r => rooms[r] && !rooms[r].locked);
+    if (!unlocked.length) return visitor.currentRoom;
+
+    return unlocked[Math.floor(Math.random() * unlocked.length)];
+  }
+
+  /** Remove a visitor's SVG from the DOM. */
+  function remove(visitor) {
+    if (visitor.el && visitor.el.parentNode) {
+      visitor.el.parentNode.removeChild(visitor.el);
+    }
+  }
+
+  return { create, placeInRoom, moveToRoom, setState, pickNextRoom, remove, CREATURE_ICONS };
 })();
