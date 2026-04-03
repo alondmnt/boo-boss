@@ -1,4 +1,295 @@
-/** Wave — wave state machine, visitor spawning via train, wave completion. */
+/**
+ * Wave — wave state machine, visitor spawning via train, wave completion.
+ * States: idle -> trainArriving -> visiting -> trainDeparting -> summary -> idle.
+ * Uses generation counter to cancel stale callbacks across concurrent wander loops.
+ */
 const Wave = (() => {
-  return {};
+  let _state = 'idle';
+  let _generation = 0;
+  let _waveNum = 0;
+  let _visitors = [];
+  let _exitedCount = 0;
+  let _waveScore = 0;
+  let _scaredVisitorCount = 0;
+  let _onComplete = null;
+
+  /**
+   * Start a new wave.
+   * @param {number} waveNum - wave number (1-based)
+   */
+  function start(waveNum) {
+    const gen = ++_generation;
+    _waveNum = waveNum;
+    _state = 'trainArriving';
+    _visitors = [];
+    _exitedCount = 0;
+    _waveScore = 0;
+    _scaredVisitorCount = 0;
+
+    // Wire up Picker deploy handler for this wave
+    Picker.setDeployHandler((creatureType, roomId) => {
+      _handleDeploy(creatureType, roomId, gen);
+    });
+
+    // Generate visitors
+    const count = CONFIG.waveSizing.base + Math.floor(waveNum * CONFIG.waveSizing.perWave);
+    const creaturePool = GameState.get('creatures');
+
+    // Check for showcase tier (force one visitor to fear a newly unlocked creature)
+    const showcase = Progress.consumeShowcase();
+
+    for (let i = 0; i < count; i++) {
+      const fear = _randomFrom(creaturePool);
+      let love = _randomFrom(creaturePool);
+      while (love === fear) love = _randomFrom(creaturePool);
+
+      const visitor = Visitor.create(fear, love);
+      _visitors.push(visitor);
+    }
+
+    // Apply showcase: first visitor fears the showcase creature
+    if (showcase && _visitors.length > 0) {
+      const showcaseType = showcase.key;
+      if (creaturePool.includes(showcaseType)) {
+        _visitors[0].fear = showcaseType;
+        // Rebuild thought bubble (recreate the SVG)
+        // For simplicity, just update the fear — the SVG was built with the original fear
+        // but since we generate visitors before placing, we can recreate
+        const v = _visitors[0];
+        Visitor.remove(v);
+        _visitors[0] = Visitor.create(showcaseType, v.love === showcaseType ? _randomFrom(creaturePool.filter(c => c !== showcaseType)) : v.love);
+      }
+    }
+
+    Audio.play('waveStart');
+
+    // Animate train entry
+    const route = GameState.getTrackRoute();
+    let visitorIdx = 0;
+
+    Train.animateEntry(
+      // onRoomReached: distribute visitors across rooms
+      (roomId, _stopIdx) => {
+        if (_generation !== gen) return;
+        if (visitorIdx < _visitors.length) {
+          const visitor = _visitors[visitorIdx];
+          Visitor.placeInRoom(visitor, roomId);
+          Visitor.setState(visitor, 'walking');
+          visitorIdx++;
+        }
+      },
+      // onComplete: all rooms passed, remaining visitors go to first room
+      () => {
+        if (_generation !== gen) return;
+        // Place any remaining visitors in random rooms along route
+        while (visitorIdx < _visitors.length) {
+          const roomId = route[visitorIdx % route.length];
+          const visitor = _visitors[visitorIdx];
+          Visitor.placeInRoom(visitor, roomId);
+          Visitor.setState(visitor, 'walking');
+          visitorIdx++;
+        }
+        _state = 'visiting';
+        // Start wander loops for all visitors
+        for (const visitor of _visitors) {
+          _wanderLoop(visitor, gen);
+        }
+      }
+    );
+  }
+
+  /** Handle a creature deployment during this wave. */
+  function _handleDeploy(creatureType, roomId, gen) {
+    if (_generation !== gen) return;
+
+    const creature = ScareFactory.deploy(creatureType, roomId, (expired) => {
+      // onExpire callback: re-enable picker slot
+      if (_generation !== gen) return;
+      Picker.enableSlot(expired.type);
+    });
+
+    if (!creature) {
+      Audio.play('occupied');
+    }
+  }
+
+  /**
+   * Wander loop for a single visitor.
+   * Moves to adjacent rooms, checks for scare encounters, repeats until exit threshold.
+   */
+  function _wanderLoop(visitor, gen) {
+    if (_generation !== gen) return;
+    if (visitor.state === 'exiting' || visitor.state === 'exited') return;
+
+    // Check exit threshold
+    const maxVisits = CONFIG.visitorRoomVisits.min +
+      Math.floor(Math.random() * (CONFIG.visitorRoomVisits.max - CONFIG.visitorRoomVisits.min + 1));
+    if (visitor.roomsVisited >= maxVisits) {
+      _sendToExit(visitor, gen);
+      return;
+    }
+
+    const nextRoom = Visitor.pickNextRoom(visitor);
+    Visitor.moveToRoom(visitor, nextRoom, () => {
+      if (_generation !== gen) return;
+      visitor.roomsVisited++;
+
+      // Check for creature encounter
+      const creature = ScareFactory.getDeployed(nextRoom);
+      if (creature && !visitor._scared) {
+        const result = ScareFactory.evaluate(visitor, creature);
+
+        if (result.result === 'scared') {
+          visitor._scared = true;
+          _waveScore += result.points;
+          _scaredVisitorCount++;
+          _updateScore();
+          Reactions.scared(visitor, creature, () => {
+            visitor._scared = false;
+            if (_generation !== gen) return;
+            _dwellThenWander(visitor, gen);
+          });
+          return;
+        } else if (result.result === 'loved') {
+          visitor._scared = true;
+          Reactions.hugged(visitor, creature, () => {
+            // Cleanup: remove creature, clear room, re-enable picker
+            ScareFactory.clearRoom(creature.roomId);
+            Creatures.remove(creature);
+            Picker.enableSlot(creature.type);
+            visitor._scared = false;
+            if (_generation !== gen) return;
+            _dwellThenWander(visitor, gen);
+          });
+          return;
+        }
+        // neutral: fall through to dwell
+      }
+
+      _dwellThenWander(visitor, gen);
+    });
+  }
+
+  /** Dwell in current room, then continue wandering. */
+  function _dwellThenWander(visitor, gen) {
+    const dwell = CONFIG.visitorDwellMs.min +
+      Math.random() * (CONFIG.visitorDwellMs.max - CONFIG.visitorDwellMs.min);
+    setTimeout(() => {
+      if (_generation !== gen) return;
+      _wanderLoop(visitor, gen);
+    }, dwell);
+  }
+
+  /** Send a visitor toward the exit. */
+  function _sendToExit(visitor, gen) {
+    if (_generation !== gen) return;
+    Reactions.exitHappy(visitor);
+
+    // Move visitor to a room on the track route (nearest exit point)
+    const route = GameState.getTrackRoute();
+    const exitRoom = route[route.length - 1] || visitor.currentRoom;
+
+    Visitor.moveToRoom(visitor, exitRoom, () => {
+      if (_generation !== gen) return;
+      visitor.state = 'exited';
+      Visitor.remove(visitor);
+      _exitedCount++;
+
+      // Check if all visitors have exited
+      if (_exitedCount >= _visitors.length) {
+        _beginExit(gen);
+      }
+    });
+  }
+
+  /** All visitors exited — run exit train and show summary. */
+  function _beginExit(gen) {
+    if (_generation !== gen) return;
+    _state = 'trainDeparting';
+
+    Train.animateExit(() => {
+      if (_generation !== gen) return;
+      _showSummary(gen);
+    });
+  }
+
+  /** Display wave summary overlay. */
+  function _showSummary(gen) {
+    if (_generation !== gen) return;
+    _state = 'summary';
+
+    const totalVisitors = _visitors.length;
+    const scarePct = totalVisitors > 0 ? _scaredVisitorCount / totalVisitors : 0;
+    const hitBonus = scarePct >= CONFIG.scoring.waveBonusThreshold;
+    const bonusPoints = hitBonus ? CONFIG.scoring.waveBonus : 0;
+    const totalPoints = _waveScore + bonusPoints;
+    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0);
+
+    // Populate summary overlay
+    const overlay = document.getElementById('wave-summary');
+    const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
+    if (content) {
+      content.innerHTML = `
+        <div class="wave-summary__title">Wave ${_waveNum} Complete</div>
+        <div class="wave-summary__stat">Scared: ${_scaredVisitorCount}/${totalVisitors} visitors</div>
+        <div class="wave-summary__stat">Score: +${_waveScore}${bonusPoints ? ` + ${bonusPoints} bonus` : ''}</div>
+        <div class="wave-summary__stat">Coins: +${coinsEarned}</div>
+        ${hitBonus ? '<div class="wave-summary__bonus">Wave bonus!</div>' : ''}
+      `;
+    }
+    if (overlay) overlay.classList.remove('overlay--hidden');
+
+    Audio.play('waveEnd');
+    if (hitBonus) Audio.play('coin');
+
+    // Award coins (triggers unlock check)
+    Progress.addCoins(coinsEarned);
+
+    // Dismiss on tap
+    function dismiss(e) {
+      if (e) e.preventDefault();
+      if (overlay) overlay.classList.add('overlay--hidden');
+      overlay.removeEventListener('click', dismiss);
+      overlay.removeEventListener('touchend', dismiss);
+      _state = 'idle';
+      ScareFactory.clearAll();
+      Picker.cleanup();
+      if (_onComplete) _onComplete({ totalPoints, coinsEarned, hitBonus });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', dismiss);
+      overlay.addEventListener('touchend', dismiss);
+    }
+  }
+
+  /** Update the score display during the wave. */
+  function _updateScore() {
+    const el = document.getElementById('score-value');
+    if (el) el.textContent = parseInt(el.textContent || '0') + 0;
+    // Score is managed by Game — Wave just tracks wave-local score
+  }
+
+  /** Pick a random element from an array. */
+  function _randomFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /** Register wave completion handler. */
+  function onComplete(callback) { _onComplete = callback; }
+
+  /** Abort the current wave (reset). */
+  function reset() {
+    _generation++;
+    _state = 'idle';
+    Train.stop();
+    for (const v of _visitors) Visitor.remove(v);
+    _visitors = [];
+    ScareFactory.clearAll();
+    Picker.cleanup();
+  }
+
+  /** Return current wave state. */
+  function getState() { return _state; }
+
+  return { start, reset, onComplete, getState };
 })();
