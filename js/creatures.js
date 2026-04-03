@@ -70,6 +70,54 @@ const Creatures = (() => {
               <stop offset="100%" stop-color="#228822"/>
             </radialGradient>
           </defs>`;
+      case 'owl':
+        return `
+          <defs>
+            <radialGradient id="owl-body-grad" cx="45%" cy="35%" r="55%">
+              <stop offset="0%" stop-color="#8a6a3a"/>
+              <stop offset="100%" stop-color="#4a3018"/>
+            </radialGradient>
+            <radialGradient id="owl-eye-grad" cx="35%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#ffcc00"/>
+              <stop offset="100%" stop-color="#cc8800"/>
+            </radialGradient>
+            <radialGradient id="owl-eye-scare" cx="35%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#ffee44"/>
+              <stop offset="100%" stop-color="#ffaa00"/>
+            </radialGradient>
+          </defs>`;
+      case 'snake':
+        return `
+          <defs>
+            <radialGradient id="snake-body-grad" cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stop-color="#2a8a3a"/>
+              <stop offset="100%" stop-color="#0a4a1a"/>
+            </radialGradient>
+            <radialGradient id="snake-belly-grad" cx="50%" cy="60%" r="50%">
+              <stop offset="0%" stop-color="#ccaa44"/>
+              <stop offset="100%" stop-color="#8a7a22"/>
+            </radialGradient>
+            <radialGradient id="snake-hood-grad" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stop-color="#3aaa4a"/>
+              <stop offset="100%" stop-color="#1a6a2a"/>
+            </radialGradient>
+          </defs>`;
+      case 'rat':
+        return `
+          <defs>
+            <radialGradient id="rat-body-grad" cx="45%" cy="35%" r="55%">
+              <stop offset="0%" stop-color="#7a6a5a"/>
+              <stop offset="100%" stop-color="#3a302a"/>
+            </radialGradient>
+            <radialGradient id="rat-ear-grad" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stop-color="#e8a0a0"/>
+              <stop offset="100%" stop-color="#cc7a7a"/>
+            </radialGradient>
+            <radialGradient id="rat-nose-grad" cx="40%" cy="35%" r="50%">
+              <stop offset="0%" stop-color="#ee99aa"/>
+              <stop offset="100%" stop-color="#cc6677"/>
+            </radialGradient>
+          </defs>`;
       default:
         return '<defs></defs>';
     }
@@ -678,6 +726,443 @@ const Creatures = (() => {
     return `${_defs('cat')}${idle}${scare}${hug}`;
   }
 
+  /* ─── Owl factory (~45x50 centred at origin) ─── */
+
+  function _owl() {
+    /* Shared feather texture strokes on the body */
+    const featherTexture = `
+      <!-- V-shaped chest feather markings -->
+      <line x1="-3" y1="4" x2="-1" y2="7" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="-1" y1="7" x2="1" y2="4" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="-5" y1="8" x2="-3" y2="11" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="-3" y1="11" x2="-1" y2="8" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="1" y1="8" x2="3" y2="11" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="3" y1="11" x2="5" y2="8" stroke="#5a3a18" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="-4" y1="13" x2="-2" y2="16" stroke="#5a3a18" stroke-width="0.4" stroke-linecap="round"/>
+      <line x1="-2" y1="16" x2="0" y2="13" stroke="#5a3a18" stroke-width="0.4" stroke-linecap="round"/>
+      <line x1="0" y1="13" x2="2" y2="16" stroke="#5a3a18" stroke-width="0.4" stroke-linecap="round"/>
+      <line x1="2" y1="16" x2="4" y2="13" stroke="#5a3a18" stroke-width="0.4" stroke-linecap="round"/>
+    `;
+    /* Ear tufts (feathered points atop the head) */
+    const earTufts = (spread = 0) => `
+      <path d="M-8,-16 L-10,${-26 - spread} L-6,-18" fill="#6a4a22" stroke="#4a3018" stroke-width="0.5"/>
+      <path d="M-8.5,-20 L-9.5,${-24 - spread} L-6.5,-19" fill="#8a6a3a" opacity="0.5"/>
+      <path d="M8,-16 L10,${-26 - spread} L6,-18" fill="#6a4a22" stroke="#4a3018" stroke-width="0.5"/>
+      <path d="M8.5,-20 L9.5,${-24 - spread} L6.5,-19" fill="#8a6a3a" opacity="0.5"/>
+    `;
+    /* Beak */
+    const beak = `
+      <path d="M-2,-6 L0,-3 L2,-6" fill="#cc8822" stroke="#aa6611" stroke-width="0.5"/>
+    `;
+    /* Talons */
+    const talons = `
+      <path d="M-4,20 L-6,23 M-4,20 L-3,23 M-4,20 L-5.5,22" stroke="#8a6a3a" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M4,20 L6,23 M4,20 L3,23 M4,20 L5.5,22" stroke="#8a6a3a" stroke-width="0.7" stroke-linecap="round"/>
+    `;
+
+    /* ── idle: perched, huge open eyes, slight head tilt ── */
+    const idle = `
+      <g class="creature__pose creature__pose--idle">
+        <!-- plump body -->
+        <ellipse cx="0" cy="6" rx="14" ry="16" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.7"/>
+        <!-- body sheen -->
+        <ellipse cx="-3" cy="2" rx="5" ry="8" fill="#aa8a4a" opacity="0.15"/>
+        ${featherTexture}
+        <!-- wings tucked to sides -->
+        <path d="M-13,0 Q-18,8 -16,16 Q-14,20 -10,18" fill="#5a3a18" stroke="#3a2010" stroke-width="0.6" opacity="0.7"/>
+        <path d="M13,0 Q18,8 16,16 Q14,20 10,18" fill="#5a3a18" stroke="#3a2010" stroke-width="0.6" opacity="0.7"/>
+        <!-- wing feather strokes -->
+        <line x1="-14" y1="6" x2="-17" y2="10" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="-13" y1="10" x2="-16" y2="14" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="14" y1="6" x2="17" y2="10" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="13" y1="10" x2="16" y2="14" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        ${talons}
+        <!-- head (slight tilt) -->
+        <g transform="rotate(5, 0, -12)">
+          <ellipse cx="0" cy="-12" rx="12" ry="10" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.6"/>
+          <!-- facial disc (lighter feathered ring around eyes) -->
+          <ellipse cx="0" cy="-12" rx="10" ry="8.5" fill="#9a7a4a" opacity="0.3"/>
+          ${earTufts(0)}
+          <!-- HUGE eyes: the owl's most prominent feature -->
+          <circle cx="-4.5" cy="-13" r="4.5" fill="url(#owl-eye-grad)" stroke="#3a2010" stroke-width="0.5"/>
+          <circle cx="-4.5" cy="-13" r="2.5" fill="#1a0a00"/>
+          <circle cx="-3.5" cy="-14" r="0.9" fill="#fff" opacity="0.85"/>
+          <circle cx="-5.5" cy="-12" r="0.4" fill="#fff" opacity="0.5"/>
+          <circle cx="4.5" cy="-13" r="4.5" fill="url(#owl-eye-grad)" stroke="#3a2010" stroke-width="0.5"/>
+          <circle cx="4.5" cy="-13" r="2.5" fill="#1a0a00"/>
+          <circle cx="5.5" cy="-14" r="0.9" fill="#fff" opacity="0.85"/>
+          <circle cx="3.5" cy="-12" r="0.4" fill="#fff" opacity="0.5"/>
+          ${beak}
+        </g>
+      </g>`;
+
+    /* ── scare: head rotated, eyes wide with tiny pupils, wings spread, tufts up ── */
+    const scare = `
+      <g class="creature__pose creature__pose--scare" style="display:none">
+        <!-- plump body -->
+        <ellipse cx="0" cy="6" rx="14" ry="16" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.7"/>
+        <ellipse cx="-3" cy="2" rx="5" ry="8" fill="#aa8a4a" opacity="0.15"/>
+        ${featherTexture}
+        <!-- wings spread slightly outward -->
+        <path d="M-13,-2 Q-22,2 -24,12 Q-22,18 -16,18 Q-12,16 -10,12"
+              fill="#5a3a18" stroke="#3a2010" stroke-width="0.7"/>
+        <line x1="-14" y1="2" x2="-21" y2="6" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="-14" y1="6" x2="-21" y2="10" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="-13" y1="10" x2="-20" y2="14" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <path d="M13,-2 Q22,2 24,12 Q22,18 16,18 Q12,16 10,12"
+              fill="#5a3a18" stroke="#3a2010" stroke-width="0.7"/>
+        <line x1="14" y1="2" x2="21" y2="6" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="14" y1="6" x2="21" y2="10" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="13" y1="10" x2="20" y2="14" stroke="#4a2a10" stroke-width="0.4" stroke-linecap="round"/>
+        <!-- talons gripping -->
+        <path d="M-4,20 L-7,23 M-4,20 L-3,24 M-4,20 L-6,22.5" stroke="#8a6a3a" stroke-width="0.9" stroke-linecap="round"/>
+        <path d="M4,20 L7,23 M4,20 L3,24 M4,20 L6,22.5" stroke="#8a6a3a" stroke-width="0.9" stroke-linecap="round"/>
+        <!-- head rotated dramatically -->
+        <g transform="rotate(-18, 0, -12)">
+          <ellipse cx="0" cy="-12" rx="12" ry="10" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.6"/>
+          <ellipse cx="0" cy="-12" rx="10" ry="8.5" fill="#9a7a4a" opacity="0.3"/>
+          <!-- tufts stand up straighter -->
+          ${earTufts(4)}
+          <!-- eyes widened: larger iris, tiny pupil -->
+          <circle cx="-4.5" cy="-13" r="5" fill="url(#owl-eye-scare)" stroke="#3a2010" stroke-width="0.6"/>
+          <circle cx="-4.5" cy="-13" r="1.2" fill="#1a0a00"/>
+          <circle cx="-3.8" cy="-14.2" r="0.7" fill="#fff" opacity="0.9"/>
+          <circle cx="4.5" cy="-13" r="5" fill="url(#owl-eye-scare)" stroke="#3a2010" stroke-width="0.6"/>
+          <circle cx="4.5" cy="-13" r="1.2" fill="#1a0a00"/>
+          <circle cx="5.2" cy="-14.2" r="0.7" fill="#fff" opacity="0.9"/>
+          ${beak}
+        </g>
+      </g>`;
+
+    /* ── hug: wings wrapped forward, half-closed content eyes, blush ── */
+    const hug = `
+      <g class="creature__pose creature__pose--hug" style="display:none">
+        <!-- plump body (slightly rounder) -->
+        <ellipse cx="0" cy="6" rx="15" ry="17" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.7"/>
+        <ellipse cx="-3" cy="2" rx="6" ry="9" fill="#aa8a4a" opacity="0.12"/>
+        ${featherTexture}
+        <!-- wings wrapped forward in embrace -->
+        <path d="M-14,0 Q-20,6 -18,14 Q-16,20 -8,20 Q-2,18 0,14"
+              fill="#5a3a18" stroke="#3a2010" stroke-width="0.6" opacity="0.8"/>
+        <path d="M14,0 Q20,6 18,14 Q16,20 8,20 Q2,18 0,14"
+              fill="#5a3a18" stroke="#3a2010" stroke-width="0.6" opacity="0.8"/>
+        <!-- wing feather details -->
+        <line x1="-12" y1="6" x2="-17" y2="10" stroke="#4a2a10" stroke-width="0.3" stroke-linecap="round" opacity="0.5"/>
+        <line x1="12" y1="6" x2="17" y2="10" stroke="#4a2a10" stroke-width="0.3" stroke-linecap="round" opacity="0.5"/>
+        ${talons}
+        <!-- head (no tilt, relaxed) -->
+        <ellipse cx="0" cy="-12" rx="12" ry="10" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.6"/>
+        <ellipse cx="0" cy="-12" rx="10" ry="8.5" fill="#9a7a4a" opacity="0.25"/>
+        ${earTufts(0)}
+        <!-- half-closed content eyes -->
+        <ellipse cx="-4.5" cy="-13" rx="4" ry="2" fill="url(#owl-eye-grad)" stroke="#3a2010" stroke-width="0.4"/>
+        <ellipse cx="-4.5" cy="-13" rx="1.5" ry="1.2" fill="#1a0a00"/>
+        <circle cx="-3.8" cy="-13.5" r="0.5" fill="#fff" opacity="0.6"/>
+        <ellipse cx="4.5" cy="-13" rx="4" ry="2" fill="url(#owl-eye-grad)" stroke="#3a2010" stroke-width="0.4"/>
+        <ellipse cx="4.5" cy="-13" rx="1.5" ry="1.2" fill="#1a0a00"/>
+        <circle cx="5.2" cy="-13.5" r="0.5" fill="#fff" opacity="0.6"/>
+        ${beak}
+        <!-- soft smile line -->
+        <path d="M-2,-4 Q0,-2.5 2,-4" fill="none" stroke="#6a4a22" stroke-width="0.5" stroke-linecap="round"/>
+        <!-- blush marks -->
+        <ellipse cx="-7" cy="-10" rx="2" ry="1" fill="#ff6688" opacity="0.35"/>
+        <ellipse cx="7" cy="-10" rx="2" ry="1" fill="#ff6688" opacity="0.35"/>
+      </g>`;
+
+    return `${_defs('owl')}${idle}${scare}${hug}`;
+  }
+
+  /* ─── Snake factory (~70x35 centred at origin) ─── */
+
+  function _snake() {
+    /* Scale pattern: diagonal hatch lines overlaid on body sections */
+    const scalePattern = (x, y, len, angle = 30) => {
+      const lines = [];
+      for (let i = 0; i < len; i += 3) {
+        const offset = i - len / 2;
+        lines.push(
+          `<line x1="${x + offset}" y1="${y - 1.5}" x2="${x + offset + 1.5}" y2="${y + 1.5}" stroke="#0a3a0a" stroke-width="0.3" opacity="0.4" stroke-linecap="round"/>`
+        );
+      }
+      return lines.join('\n');
+    };
+
+    /* Forked tongue helper */
+    const tongue = (extend = 0) => `
+      <line x1="0" y1="-18" x2="0" y2="${-21 - extend}" stroke="#cc2222" stroke-width="0.6" stroke-linecap="round"/>
+      <line x1="0" y1="${-21 - extend}" x2="-1.5" y2="${-23 - extend}" stroke="#cc2222" stroke-width="0.4" stroke-linecap="round"/>
+      <line x1="0" y1="${-21 - extend}" x2="1.5" y2="${-23 - extend}" stroke="#cc2222" stroke-width="0.4" stroke-linecap="round"/>
+    `;
+
+    /* ── idle: relaxed coiled S-shape, tongue barely visible, hood down ── */
+    const idle = `
+      <g class="creature__pose creature__pose--idle">
+        <!-- coiled body: relaxed S-curve -->
+        <path d="M-25,12 Q-20,2 -10,2 Q0,2 5,8 Q10,14 20,14 Q28,14 30,8 Q32,2 28,-2 Q24,-6 18,-6 Q12,-6 8,-2 Q4,2 0,2"
+              fill="none" stroke="url(#snake-body-grad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- belly highlight along body -->
+        <path d="M-24,13 Q-20,3.5 -10,3.5 Q0,3.5 5,9.5 Q10,15.5 20,15.5 Q28,15.5 30,9.5"
+              fill="none" stroke="url(#snake-belly-grad)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <!-- scale hatch marks along body -->
+        ${scalePattern(-18, 6, 12)}
+        ${scalePattern(0, 5, 10)}
+        ${scalePattern(18, 10, 12)}
+        <!-- head rising from coil -->
+        <ellipse cx="0" cy="-14" rx="5" ry="6" fill="url(#snake-body-grad)" stroke="#0a3a0a" stroke-width="0.6"/>
+        <!-- head sheen -->
+        <ellipse cx="-1.5" cy="-16" rx="2" ry="2.5" fill="#4aaa5a" opacity="0.2"/>
+        <!-- hood (down, subtle) -->
+        <path d="M-4,-10 Q-6,-12 -5,-15 Q-4,-17 -3,-14" fill="#2a7a3a" stroke="#0a4a1a" stroke-width="0.4" opacity="0.5"/>
+        <path d="M4,-10 Q6,-12 5,-15 Q4,-17 3,-14" fill="#2a7a3a" stroke="#0a4a1a" stroke-width="0.4" opacity="0.5"/>
+        <!-- eyes (beady black with yellow iris) -->
+        <circle cx="-2.5" cy="-16" r="1.5" fill="#ccaa00" stroke="#0a3a0a" stroke-width="0.3"/>
+        <circle cx="-2.5" cy="-16" r="0.7" fill="#0a0a0a"/>
+        <circle cx="-2" cy="-16.5" r="0.3" fill="#fff" opacity="0.7"/>
+        <circle cx="2.5" cy="-16" r="1.5" fill="#ccaa00" stroke="#0a3a0a" stroke-width="0.3"/>
+        <circle cx="2.5" cy="-16" r="0.7" fill="#0a0a0a"/>
+        <circle cx="3" cy="-16.5" r="0.3" fill="#fff" opacity="0.7"/>
+        <!-- tongue barely visible -->
+        ${tongue(0)}
+        <!-- tail tip (tapered end of coil) -->
+        <path d="M-25,12 Q-28,14 -30,12 Q-32,10 -33,8" fill="none" stroke="#1a6a2a" stroke-width="2" stroke-linecap="round"/>
+      </g>`;
+
+    /* ── scare: hood flares wide, body coils up, tongue fully out, menacing ── */
+    const scare = `
+      <g class="creature__pose creature__pose--scare" style="display:none">
+        <!-- tight coiled base -->
+        <path d="M-18,14 Q-12,8 -6,10 Q0,12 6,10 Q12,8 18,12 Q22,16 16,18 Q10,20 4,18 Q-2,16 -8,18 Q-14,20 -18,16"
+              fill="none" stroke="url(#snake-body-grad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- belly highlight on coils -->
+        <path d="M-17,15.5 Q-12,9.5 -6,11.5 Q0,13.5 6,11.5 Q12,9.5 18,13.5"
+              fill="none" stroke="url(#snake-belly-grad)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <!-- scale hatching on coils -->
+        ${scalePattern(-12, 12, 10)}
+        ${scalePattern(6, 11, 10)}
+        <!-- body rising up from coil -->
+        <path d="M0,10 Q-2,4 -1,-2 Q0,-8 0,-10" fill="none" stroke="url(#snake-body-grad)" stroke-width="6.5" stroke-linecap="round"/>
+        <path d="M0.5,10 Q-1.5,4.5 -0.5,-1.5 Q0.5,-7.5 0.5,-9.5" fill="none" stroke="url(#snake-belly-grad)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <!-- hood flared dramatically wide -->
+        <path d="M-5,-10 Q-14,-14 -16,-8 Q-16,-4 -10,-2 Q-6,0 -4,-4"
+              fill="url(#snake-hood-grad)" stroke="#0a4a1a" stroke-width="0.7"/>
+        <path d="M5,-10 Q14,-14 16,-8 Q16,-4 10,-2 Q6,0 4,-4"
+              fill="url(#snake-hood-grad)" stroke="#0a4a1a" stroke-width="0.7"/>
+        <!-- hood pattern markings -->
+        <circle cx="-9" cy="-8" r="1.5" fill="#0a3a0a" opacity="0.5"/>
+        <circle cx="-9" cy="-8" r="0.8" fill="#ccaa00" opacity="0.4"/>
+        <circle cx="9" cy="-8" r="1.5" fill="#0a3a0a" opacity="0.5"/>
+        <circle cx="9" cy="-8" r="0.8" fill="#ccaa00" opacity="0.4"/>
+        <!-- head (raised, menacing) -->
+        <ellipse cx="0" cy="-14" rx="5.5" ry="6" fill="url(#snake-body-grad)" stroke="#0a3a0a" stroke-width="0.7"/>
+        <ellipse cx="-1" cy="-16" rx="2" ry="2.5" fill="#4aaa5a" opacity="0.2"/>
+        <!-- eyes glinting -->
+        <circle cx="-2.5" cy="-16" r="1.8" fill="#eebb00" stroke="#0a3a0a" stroke-width="0.4"/>
+        <circle cx="-2.5" cy="-16" r="0.6" fill="#0a0a0a"/>
+        <circle cx="-1.8" cy="-16.8" r="0.4" fill="#fff" opacity="0.9"/>
+        <circle cx="2.5" cy="-16" r="1.8" fill="#eebb00" stroke="#0a3a0a" stroke-width="0.4"/>
+        <circle cx="2.5" cy="-16" r="0.6" fill="#0a0a0a"/>
+        <circle cx="3.2" cy="-16.8" r="0.4" fill="#fff" opacity="0.9"/>
+        <!-- tongue fully extended and forked -->
+        ${tongue(5)}
+        <!-- open mouth hint -->
+        <path d="M-2,-11 Q0,-10 2,-11" fill="#1a0a0a" opacity="0.4"/>
+      </g>`;
+
+    /* ── hug: gentle relaxed curve, hood down, soft eyes, blush ── */
+    const hug = `
+      <g class="creature__pose creature__pose--hug" style="display:none">
+        <!-- gentle relaxed curve (not coiled tight) -->
+        <path d="M-28,10 Q-18,0 -8,4 Q0,8 8,4 Q18,0 24,6 Q28,10 26,14"
+              fill="none" stroke="url(#snake-body-grad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- belly highlight -->
+        <path d="M-27,11.5 Q-18,1.5 -8,5.5 Q0,9.5 8,5.5 Q18,1.5 24,7.5"
+              fill="none" stroke="url(#snake-belly-grad)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <!-- scale marks -->
+        ${scalePattern(-16, 4, 10)}
+        ${scalePattern(4, 5, 10)}
+        ${scalePattern(20, 8, 8)}
+        <!-- head (relaxed, slightly lowered) -->
+        <ellipse cx="-28" cy="-2" rx="5" ry="5.5" fill="url(#snake-body-grad)" stroke="#0a3a0a" stroke-width="0.6"/>
+        <ellipse cx="-29" cy="-4" rx="2" ry="2.5" fill="#4aaa5a" opacity="0.15"/>
+        <!-- hood completely down -->
+        <!-- soft content eyes -->
+        <ellipse cx="-30" cy="-4" rx="1.5" ry="0.8" fill="#ccaa00" stroke="#0a3a0a" stroke-width="0.3"/>
+        <circle cx="-30" cy="-4" r="0.5" fill="#0a0a0a"/>
+        <circle cx="-29.5" cy="-4.3" r="0.2" fill="#fff" opacity="0.6"/>
+        <ellipse cx="-26" cy="-4" rx="1.5" ry="0.8" fill="#ccaa00" stroke="#0a3a0a" stroke-width="0.3"/>
+        <circle cx="-26" cy="-4" r="0.5" fill="#0a0a0a"/>
+        <circle cx="-25.5" cy="-4.3" r="0.2" fill="#fff" opacity="0.6"/>
+        <!-- tiny content smile -->
+        <path d="M-29.5,-0.5 Q-28,0.5 -26.5,-0.5" fill="none" stroke="#1a5a2a" stroke-width="0.5" stroke-linecap="round"/>
+        <!-- blush marks -->
+        <ellipse cx="-31.5" cy="-2" rx="1.5" ry="0.8" fill="#ff6688" opacity="0.35"/>
+        <ellipse cx="-24.5" cy="-2" rx="1.5" ry="0.8" fill="#ff6688" opacity="0.35"/>
+        <!-- tail tip curled gently -->
+        <path d="M26,14 Q28,16 27,18 Q25,19 24,17" fill="none" stroke="#1a6a2a" stroke-width="2" stroke-linecap="round"/>
+      </g>`;
+
+    return `${_defs('snake')}${idle}${scare}${hug}`;
+  }
+
+  /* ─── Rat factory (~40x35 centred at origin) ─── */
+
+  function _rat() {
+    /* Whisker helper: 3 whiskers per side */
+    const whiskers = (side, spread = 0) => {
+      const s = side === 'left' ? -1 : 1;
+      return `
+        <line x1="${s * 7}" y1="-10" x2="${s * (16 + spread)}" y2="-14" stroke="#aaa" stroke-width="0.35" stroke-linecap="round"/>
+        <line x1="${s * 7}" y1="-9" x2="${s * (17 + spread)}" y2="-9" stroke="#aaa" stroke-width="0.35" stroke-linecap="round"/>
+        <line x1="${s * 7}" y1="-8" x2="${s * (16 + spread)}" y2="-5" stroke="#aaa" stroke-width="0.35" stroke-linecap="round"/>
+      `;
+    };
+    /* Large round ears */
+    const ears = (back = false) => `
+      <!-- oversized round ears -->
+      <ellipse cx="-8" cy="-18" rx="6" ry="7" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.5"/>
+      <ellipse cx="-8" cy="-18" rx="4" ry="5" fill="url(#rat-ear-grad)" opacity="0.7"/>
+      <ellipse cx="8" cy="-18" rx="6" ry="7" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.5"/>
+      <ellipse cx="8" cy="-18" rx="4" ry="5" fill="url(#rat-ear-grad)" opacity="0.7"/>
+      ${back ? `
+        <!-- ears laid back -->
+        <g transform="rotate(-15, -8, -18)"><ellipse cx="-8" cy="-20" rx="1" ry="2" fill="#5a4a3a" opacity="0.3"/></g>
+        <g transform="rotate(15, 8, -18)"><ellipse cx="8" cy="-20" rx="1" ry="2" fill="#5a4a3a" opacity="0.3"/></g>
+      ` : ''}
+    `;
+    /* Pink nose */
+    const nose = `
+      <ellipse cx="0" cy="-7" rx="2" ry="1.5" fill="url(#rat-nose-grad)" stroke="#aa5566" stroke-width="0.3"/>
+      <!-- nostril dots -->
+      <circle cx="-0.7" cy="-6.8" r="0.3" fill="#8a4455"/>
+      <circle cx="0.7" cy="-6.8" r="0.3" fill="#8a4455"/>
+    `;
+    /* Tail helper */
+    const tail = (curl = false) => curl
+      ? `<path d="M0,14 Q8,18 12,14 Q16,8 14,4 Q12,0 10,2" fill="none" stroke="#dda0a0" stroke-width="1.2" stroke-linecap="round"/>`
+      : `<path d="M0,14 Q10,20 18,16 Q24,12 28,8" fill="none" stroke="#dda0a0" stroke-width="1.2" stroke-linecap="round"/>`;
+
+    /* ── idle: hunched sitting, whiskers spread, alert ears, one paw raised ── */
+    const idle = `
+      <g class="creature__pose creature__pose--idle">
+        <!-- tail -->
+        ${tail(false)}
+        <!-- rounded body -->
+        <ellipse cx="0" cy="4" rx="12" ry="12" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.6"/>
+        <!-- body sheen -->
+        <ellipse cx="-2" cy="0" rx="4" ry="6" fill="#8a7a6a" opacity="0.15"/>
+        <!-- fur texture -->
+        <line x1="-10" y1="-2" x2="-13" y2="-3" stroke="#3a302a" stroke-width="0.5" stroke-linecap="round"/>
+        <line x1="-9" y1="4" x2="-12" y2="5" stroke="#3a302a" stroke-width="0.5" stroke-linecap="round"/>
+        <line x1="10" y1="-2" x2="13" y2="-3" stroke="#3a302a" stroke-width="0.5" stroke-linecap="round"/>
+        <line x1="9" y1="4" x2="12" y2="5" stroke="#3a302a" stroke-width="0.5" stroke-linecap="round"/>
+        <!-- hind paws -->
+        <ellipse cx="-6" cy="15" rx="3.5" ry="2" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <ellipse cx="6" cy="15" rx="3.5" ry="2" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <!-- front paws (one slightly raised) -->
+        <ellipse cx="-4" cy="12" rx="2.5" ry="1.8" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <ellipse cx="4" cy="10" rx="2.5" ry="1.8" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3" transform="rotate(-10, 4, 10)"/>
+        <!-- pointed snout / head -->
+        <ellipse cx="0" cy="-8" rx="9" ry="7" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.5"/>
+        <!-- snout ridge -->
+        <ellipse cx="0" cy="-5" rx="4" ry="3" fill="#6a5a4a" opacity="0.2"/>
+        ${ears(false)}
+        <!-- small bright bead eyes -->
+        <circle cx="-3.5" cy="-10" r="1.8" fill="#0a0a0a"/>
+        <circle cx="-3.5" cy="-10" r="1.2" fill="#1a1a1a"/>
+        <circle cx="-3" cy="-10.5" r="0.5" fill="#fff" opacity="0.8"/>
+        <circle cx="3.5" cy="-10" r="1.8" fill="#0a0a0a"/>
+        <circle cx="3.5" cy="-10" r="1.2" fill="#1a1a1a"/>
+        <circle cx="4" cy="-10.5" r="0.5" fill="#fff" opacity="0.8"/>
+        ${nose}
+        ${whiskers('left', 0)}
+        ${whiskers('right', 0)}
+      </g>`;
+
+    /* ── scare: standing on hind legs, mouth open with front teeth, ears back ── */
+    const scare = `
+      <g class="creature__pose creature__pose--scare" style="display:none">
+        <!-- tail (stiff and raised) -->
+        <path d="M0,16 Q-8,20 -14,16 Q-20,10 -22,4" fill="none" stroke="#dda0a0" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- body upright, standing on hind legs -->
+        <ellipse cx="0" cy="4" rx="11" ry="14" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.7"/>
+        <ellipse cx="-2" cy="0" rx="4" ry="7" fill="#8a7a6a" opacity="0.15"/>
+        <!-- belly lighter patch -->
+        <ellipse cx="0" cy="6" rx="6" ry="8" fill="#7a6a5a" opacity="0.2"/>
+        <!-- fur on end -->
+        <line x1="-10" y1="-4" x2="-13" y2="-7" stroke="#3a302a" stroke-width="0.6" stroke-linecap="round"/>
+        <line x1="-9" y1="0" x2="-13" y2="-1" stroke="#3a302a" stroke-width="0.6" stroke-linecap="round"/>
+        <line x1="10" y1="-4" x2="13" y2="-7" stroke="#3a302a" stroke-width="0.6" stroke-linecap="round"/>
+        <line x1="9" y1="0" x2="13" y2="-1" stroke="#3a302a" stroke-width="0.6" stroke-linecap="round"/>
+        <!-- hind paws planted wide -->
+        <ellipse cx="-6" cy="17" rx="4" ry="2.5" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <ellipse cx="6" cy="17" rx="4" ry="2.5" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <!-- front paws raised, claws out -->
+        <path d="M-8,-2 Q-12,-6 -14,-4" fill="none" stroke="#5a4a3a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="-14" y1="-4" x2="-16" y2="-6" stroke="#5a4a3a" stroke-width="0.6" stroke-linecap="round"/>
+        <line x1="-14" y1="-4" x2="-15.5" y2="-3" stroke="#5a4a3a" stroke-width="0.6" stroke-linecap="round"/>
+        <path d="M8,-2 Q12,-6 14,-4" fill="none" stroke="#5a4a3a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="14" y1="-4" x2="16" y2="-6" stroke="#5a4a3a" stroke-width="0.6" stroke-linecap="round"/>
+        <line x1="14" y1="-4" x2="15.5" y2="-3" stroke="#5a4a3a" stroke-width="0.6" stroke-linecap="round"/>
+        <!-- head -->
+        <ellipse cx="0" cy="-10" rx="9" ry="7.5" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.6"/>
+        <ellipse cx="0" cy="-7" rx="4" ry="3" fill="#6a5a4a" opacity="0.2"/>
+        ${ears(true)}
+        <!-- wide alarmed eyes -->
+        <circle cx="-3.5" cy="-12" r="2.2" fill="#0a0a0a"/>
+        <circle cx="-3.5" cy="-12" r="1.5" fill="#1a1a1a"/>
+        <circle cx="-3" cy="-12.8" r="0.6" fill="#fff" opacity="0.9"/>
+        <circle cx="3.5" cy="-12" r="2.2" fill="#0a0a0a"/>
+        <circle cx="3.5" cy="-12" r="1.5" fill="#1a1a1a"/>
+        <circle cx="4" cy="-12.8" r="0.6" fill="#fff" opacity="0.9"/>
+        ${nose}
+        <!-- open mouth showing two prominent front teeth -->
+        <ellipse cx="0" cy="-3.5" rx="3" ry="2.5" fill="#2a0a0a"/>
+        <rect x="-1.8" y="-5.5" width="1.5" height="2.5" rx="0.4" fill="#e8e0d0"/>
+        <rect x="0.3" y="-5.5" width="1.5" height="2.5" rx="0.4" fill="#e8e0d0"/>
+        <!-- tongue -->
+        <ellipse cx="0" cy="-2" rx="1.5" ry="0.8" fill="#cc7788" opacity="0.5"/>
+        ${whiskers('left', 4)}
+        ${whiskers('right', 4)}
+      </g>`;
+
+    /* ── hug: rolled onto side, gentle face, tail curled, paws together ── */
+    const hug = `
+      <g class="creature__pose creature__pose--hug" style="display:none">
+        <!-- tail curled around body -->
+        ${tail(true)}
+        <!-- body on side (slightly wider, relaxed) -->
+        <ellipse cx="0" cy="4" rx="13" ry="11" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.6"/>
+        <ellipse cx="-2" cy="2" rx="5" ry="6" fill="#8a7a6a" opacity="0.12"/>
+        <!-- belly showing (lighter) -->
+        <ellipse cx="2" cy="6" rx="6" ry="5" fill="#7a6a5a" opacity="0.2"/>
+        <!-- fur strokes (soft) -->
+        <line x1="-11" y1="0" x2="-13" y2="0" stroke="#3a302a" stroke-width="0.4" stroke-linecap="round"/>
+        <line x1="-10" y1="6" x2="-12" y2="7" stroke="#3a302a" stroke-width="0.4" stroke-linecap="round"/>
+        <!-- hind paw tucked -->
+        <ellipse cx="-5" cy="14" rx="3" ry="2" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <!-- front paws together -->
+        <ellipse cx="-3" cy="10" rx="2.5" ry="1.8" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <ellipse cx="1" cy="10" rx="2.5" ry="1.8" fill="#5a4a3a" stroke="#2a201a" stroke-width="0.3"/>
+        <!-- head -->
+        <ellipse cx="0" cy="-8" rx="9" ry="7" fill="url(#rat-body-grad)" stroke="#2a201a" stroke-width="0.5"/>
+        <ellipse cx="0" cy="-5" rx="4" ry="3" fill="#6a5a4a" opacity="0.15"/>
+        ${ears(false)}
+        <!-- squinted happy eyes -->
+        <path d="M-5,-10 Q-3.5,-8 -2,-10" fill="none" stroke="#2a201a" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M2,-10 Q3.5,-8 5,-10" fill="none" stroke="#2a201a" stroke-width="0.8" stroke-linecap="round"/>
+        ${nose}
+        <!-- gentle little smile -->
+        <path d="M-1.5,-5 Q0,-3.5 1.5,-5" fill="none" stroke="#5a4a3a" stroke-width="0.5" stroke-linecap="round"/>
+        <!-- blush marks -->
+        <ellipse cx="-6" cy="-7" rx="2" ry="1" fill="#ff6688" opacity="0.35"/>
+        <ellipse cx="6" cy="-7" rx="2" ry="1" fill="#ff6688" opacity="0.35"/>
+        ${whiskers('left', 0)}
+        ${whiskers('right', 0)}
+      </g>`;
+
+    return `${_defs('rat')}${idle}${scare}${hug}`;
+  }
+
   /* ─── Unlockable creature stubs (placeholder circles with icon) ─── */
 
   function _placeholder(icon) {
@@ -700,9 +1185,9 @@ const Creatures = (() => {
     gorilla: _gorilla,
     bat:     _bat,
     cat:     _cat,
-    owl:     () => _placeholder('🦉'),
-    snake:   () => _placeholder('🐍'),
-    rat:     () => _placeholder('🐀'),
+    owl:     _owl,
+    snake:   _snake,
+    rat:     _rat,
   };
 
   /* ─── Public API ─── */
