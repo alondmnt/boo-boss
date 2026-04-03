@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Boo Boss: Haunted House Manager</title>
+  <meta name="description" content="A free haunted house management game for kids — deploy spooky creatures to scare visitors riding through your dark-ride attraction. No ads, no sign-up.">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Boo Boss: Haunted House Manager">
+  <meta property="og:description" content="A free haunted house management game for kids — deploy spooky creatures to scare visitors. No ads, no sign-up.">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Boo Boss",
+    "description": "A haunted house management game — deploy spooky creatures to scare visitors riding through your dark-ride attraction.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>👻</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <noscript>
+    <h1>Boo Boss: Haunted House Manager</h1>
+    <p>A free browser game for kids. Deploy spooky creatures to scare visitors riding through your haunted house attraction. No ads, no sign-up — just tap and play.</p>
+  </noscript>
+
+  <!-- Tap-to-start splash (satisfies autoplay policy) -->
+  <div id="splash" class="splash">
+    <div class="splash__content">
+      <div class="splash__icon">👻</div>
+      <div class="splash__title">Boo Boss</div>
+    </div>
+  </div>
+
+  <!-- Top bar: score, wave counter, sound toggle, reset -->
+  <div id="top-bar">
+    <div id="score-display">Score: <span id="score-value">0</span></div>
+    <div id="wave-display">Wave <span id="wave-value">1</span></div>
+    <button id="sound-btn" aria-label="Toggle sound">🔊</button>
+    <button id="reset-btn" aria-label="Reset">↻</button>
+  </div>
+
+  <!-- Main game area — house SVG injected here -->
+  <div id="house-container"></div>
+
+  <!-- Scare creature panel (bottom) -->
+  <div id="scare-panel"></div>
+
+  <!-- Progress bar (coins toward next unlock) -->
+  <div id="progress-bar">
+    <div id="progress-fill"></div>
+    <div id="progress-count">0</div>
+  </div>
+
+  <!-- Unlock preview (next unlock icon + bar) -->
+  <div id="unlock-preview"></div>
+
+  <!-- Unlock fanfare overlay -->
+  <div id="unlock-fanfare" class="overlay overlay--hidden">
+    <div class="unlock-fanfare__content">
+      <div class="unlock-fanfare__icon"></div>
+      <div class="unlock-fanfare__label"></div>
+    </div>
+  </div>
+
+  <!-- Wave summary overlay -->
+  <div id="wave-summary" class="overlay overlay--hidden">
+    <div class="wave-summary__content"></div>
+  </div>
+
+  <!-- Scripts in dependency order -->
+  <script src="js/config.js"></script>
+  <script src="js/game-state.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/house.js"></script>
+  <script src="js/train.js"></script>
+  <script src="js/visitor.js"></script>
+  <script src="js/creatures.js"></script>
+  <script src="js/monster-types.js"></script>
+  <script src="js/actions.js"></script>
+  <script src="js/scare-factory.js"></script>
+  <script src="js/reactions.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/picker.js"></script>
+  <script src="js/wave.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

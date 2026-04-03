@@ -1,0 +1,94 @@
+/**
+ * GameState — runtime overlay on frozen CONFIG.
+ * Tracks unlocked creatures, rooms, and upgrades. Consumers call get(key)
+ * instead of reading CONFIG directly, so unlocks merge transparently.
+ */
+const GameState = (() => {
+  const _arrays = {};
+  const _booleans = {};
+  const _objects = {};
+
+  /** Maps UNLOCK_TIERS keys to state mutations. */
+  const TIER_ACTIONS = {
+    owl:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'owl']; },
+    snake: () => { _arrays.creatures = [...(_arrays.creatures || []), 'snake']; },
+    rat:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'rat']; },
+
+    attic: () => {
+      // Unlock attic room
+      if (!_objects.rooms) _objects.rooms = {};
+      _objects.rooms.attic = { locked: false };
+    },
+
+    fasterCooldowns: () => {
+      // 25% reduction to all cooldowns
+      const reduced = {};
+      const base = CONFIG.creatureCooldowns;
+      for (const k of Object.keys(base)) {
+        reduced[k] = Math.round(base[k] * 0.75);
+      }
+      _objects.creatureCooldowns = reduced;
+    },
+
+    endlessMode: () => { _booleans.endlessMode = true; },
+  };
+
+  /**
+   * Merged view: frozen CONFIG + runtime unlocks.
+   * Arrays are concatenated, objects are shallow-merged (one level deep for
+   * rooms so each room's properties merge individually), booleans are direct.
+   */
+  function get(key) {
+    if (key in _booleans) return _booleans[key];
+    if (key in _objects) {
+      const base = CONFIG[key];
+      if (base && typeof base === 'object' && !Array.isArray(base)) {
+        // Deep merge one level — needed for rooms (each room is an object)
+        const merged = {};
+        for (const k of Object.keys(base)) {
+          merged[k] = _objects[key][k]
+            ? { ...base[k], ..._objects[key][k] }
+            : base[k];
+        }
+        return merged;
+      }
+      return { ...base, ..._objects[key] };
+    }
+    if (key in _arrays) return [...CONFIG[key], ..._arrays[key]];
+    return CONFIG[key];
+  }
+
+  /**
+   * Computed track route — filters full route to unlocked rooms only.
+   * Called by Train and Wave modules whenever they need the current route.
+   */
+  function getTrackRoute() {
+    const rooms = get('rooms');
+    return CONFIG.fullTrackRoute.filter(r => rooms[r] && !rooms[r].locked);
+  }
+
+  /** Apply a single tier's effects via TIER_ACTIONS or generic array merge. */
+  function applyTier(tier) {
+    const action = TIER_ACTIONS[tier.key];
+    if (action) { action(); return; }
+    // Generic array merge fallback (if tier has items)
+    if (!tier.items || !tier.items.length) return;
+    if (!Array.isArray(CONFIG[tier.key])) return;
+    const existing = _arrays[tier.key] || [];
+    for (const item of tier.items) {
+      if (!CONFIG[tier.key].includes(item) && !existing.includes(item)) {
+        existing.push(item);
+      }
+    }
+    _arrays[tier.key] = existing;
+  }
+
+  /** Clear all runtime state (on full progress reset). */
+  function reset() {
+    for (const k of Object.keys(_arrays)) delete _arrays[k];
+    for (const k of Object.keys(_booleans)) delete _booleans[k];
+    for (const k of Object.keys(_objects)) delete _objects[k];
+  }
+
+  return { get, getTrackRoute, applyTier, reset };
+})();
