@@ -289,33 +289,42 @@ const Creatures = (() => {
     /* ── idle: knuckle-standing, one hand slightly raised ── */
     const idle = `
       <g class="creature__pose creature__pose--idle">
-        <!-- body -->
-        <ellipse cx="0" cy="5" rx="18" ry="22" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
-        <!-- chest highlight -->
-        <ellipse cx="0" cy="8" rx="10" ry="12" fill="#3a3a3a" opacity="0.3"/>
+        <!-- body (massive barrel torso) -->
+        <ellipse cx="0" cy="5" rx="20" ry="24" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
+        <!-- chest plate (silverback highlight) -->
+        <ellipse cx="0" cy="6" rx="12" ry="14" fill="#4a4a4a" opacity="0.3"/>
+        <!-- pectoral definition -->
+        <path d="M-8,-2 Q0,4 8,-2" fill="none" stroke="#2a2a2a" stroke-width="0.8" opacity="0.5"/>
         <!-- fur texture strokes -->
-        <line x1="-14" y1="-5" x2="-17" y2="-6" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
-        <line x1="-15" y1="0" x2="-18" y2="0" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
-        <line x1="14" y1="-5" x2="17" y2="-6" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
-        <line x1="15" y1="0" x2="18" y2="0" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
-        <line x1="-12" y1="15" x2="-15" y2="17" stroke="#2a2a2a" stroke-width="0.6" stroke-linecap="round"/>
-        <line x1="12" y1="15" x2="15" y2="17" stroke="#2a2a2a" stroke-width="0.6" stroke-linecap="round"/>
-        <!-- broad shoulders -->
-        <ellipse cx="0" cy="-8" rx="22" ry="10" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
-        <!-- left arm (knuckle-standing) -->
-        <path d="M-18,-5 Q-26,8 -24,22 Q-23,26 -20,27" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+        <line x1="-16" y1="-5" x2="-20" y2="-7" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
+        <line x1="-17" y1="0" x2="-21" y2="0" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
+        <line x1="16" y1="-5" x2="20" y2="-7" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
+        <line x1="17" y1="0" x2="21" y2="0" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
+        <line x1="-14" y1="15" x2="-17" y2="17" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
+        <line x1="14" y1="15" x2="17" y2="17" stroke="#2a2a2a" stroke-width="0.7" stroke-linecap="round"/>
+        <!-- massive shoulders -->
+        <ellipse cx="0" cy="-8" rx="26" ry="12" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
+        <!-- shoulder muscle caps -->
+        <ellipse cx="-20" cy="-6" rx="8" ry="6" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.4"/>
+        <ellipse cx="20" cy="-6" rx="8" ry="6" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.4"/>
+        <!-- left arm (knuckle-standing, thick with muscle bulge) -->
+        <path d="M-22,-4 Q-30,6 -28,18 Q-27,24 -23,27" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <!-- left bicep highlight -->
+        <path d="M-24,2 Q-27,6 -26,10" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
         <!-- left fist -->
-        <ellipse cx="-20" cy="28" rx="4" ry="3" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
-        <!-- right arm (slightly raised) -->
-        <path d="M18,-5 Q26,5 25,16 Q24,19 22,20" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="-23" cy="28" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <!-- right arm (slightly raised, thick) -->
+        <path d="M22,-4 Q30,4 28,14 Q27,18 25,20" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <!-- right bicep highlight -->
+        <path d="M25,0 Q28,4 27,8" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
         <!-- right hand open -->
-        <ellipse cx="22" cy="21" rx="4" ry="3.5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
-        <!-- compact legs -->
-        <path d="M-8,24 Q-10,30 -9,35" fill="none" stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M8,24 Q10,30 9,35" fill="none" stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round"/>
+        <ellipse cx="25" cy="21" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <!-- thick legs -->
+        <path d="M-9,24 Q-12,30 -10,36" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/>
+        <path d="M9,24 Q12,30 10,36" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/>
         <!-- feet -->
-        <ellipse cx="-9" cy="36" rx="5" ry="2.5" fill="#2a1a1a"/>
-        <ellipse cx="9" cy="36" rx="5" ry="2.5" fill="#2a1a1a"/>
+        <ellipse cx="-10" cy="37" rx="6" ry="3" fill="#2a1a1a"/>
+        <ellipse cx="10" cy="37" rx="6" ry="3" fill="#2a1a1a"/>
         <!-- head -->
         <ellipse cx="0" cy="-18" rx="13" ry="11" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
         <!-- brow ridge -->
@@ -346,25 +355,36 @@ const Creatures = (() => {
     const scare = `
       <g class="creature__pose creature__pose--scare" style="display:none">
         <!-- body upright, puffed chest -->
-        <ellipse cx="0" cy="2" rx="20" ry="24" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
-        <ellipse cx="0" cy="4" rx="13" ry="14" fill="#3a3a3a" opacity="0.25"/>
-        <!-- shoulders raised higher -->
-        <ellipse cx="0" cy="-14" rx="24" ry="11" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
-        <!-- arms spread wide -->
-        <path d="M-22,-10 Q-32,-8 -36,0 Q-38,4 -36,8" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <ellipse cx="-36" cy="10" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <ellipse cx="0" cy="2" rx="22" ry="26" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
+        <!-- chest plate bulging -->
+        <ellipse cx="0" cy="2" rx="14" ry="16" fill="#4a4a4a" opacity="0.25"/>
+        <path d="M-10,-4 Q0,4 10,-4" fill="none" stroke="#2a2a2a" stroke-width="1" opacity="0.4"/>
+        <!-- massive raised shoulders -->
+        <ellipse cx="0" cy="-16" rx="28" ry="13" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
+        <!-- shoulder muscle caps (bigger when flexed) -->
+        <ellipse cx="-24" cy="-12" rx="9" ry="7" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.4"/>
+        <ellipse cx="24" cy="-12" rx="9" ry="7" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.4"/>
+        <!-- arms spread wide (thick, muscular) -->
+        <path d="M-26,-8 Q-36,-6 -40,2 Q-42,6 -40,10" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+        <!-- left bicep bulge -->
+        <path d="M-30,-4 Q-34,0 -33,4" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <ellipse cx="-40" cy="12" rx="6" ry="5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
         <!-- fingers spread -->
-        <line x1="-36" y1="6" x2="-39" y2="4" stroke="#3a2a1a" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="-37" y1="8" x2="-41" y2="7" stroke="#3a2a1a" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M22,-10 Q32,-8 36,0 Q38,4 36,8" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <ellipse cx="36" cy="10" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
-        <line x1="36" y1="6" x2="39" y2="4" stroke="#3a2a1a" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="37" y1="8" x2="41" y2="7" stroke="#3a2a1a" stroke-width="1.2" stroke-linecap="round"/>
-        <!-- legs planted -->
-        <path d="M-9,22 Q-12,28 -11,35" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <path d="M9,22 Q12,28 11,35" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <ellipse cx="-11" cy="36" rx="6" ry="2.5" fill="#2a1a1a"/>
-        <ellipse cx="11" cy="36" rx="6" ry="2.5" fill="#2a1a1a"/>
+        <line x1="-40" y1="8" x2="-44" y2="5" stroke="#3a2a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="-41" y1="10" x2="-46" y2="9" stroke="#3a2a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="-41" y1="12" x2="-45" y2="13" stroke="#3a2a1a" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M26,-8 Q36,-6 40,2 Q42,6 40,10" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+        <!-- right bicep bulge -->
+        <path d="M30,-4 Q34,0 33,4" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <ellipse cx="40" cy="12" rx="6" ry="5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <line x1="40" y1="8" x2="44" y2="5" stroke="#3a2a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="41" y1="10" x2="46" y2="9" stroke="#3a2a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="41" y1="12" x2="45" y2="13" stroke="#3a2a1a" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- thick legs planted wide -->
+        <path d="M-10,24 Q-14,30 -13,36" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <path d="M10,24 Q14,30 13,36" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="-13" cy="37" rx="7" ry="3" fill="#2a1a1a"/>
+        <ellipse cx="13" cy="37" rx="7" ry="3" fill="#2a1a1a"/>
         <!-- fur strokes (agitated) -->
         <line x1="-18" y1="-8" x2="-22" y2="-10" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
         <line x1="18" y1="-8" x2="22" y2="-10" stroke="#2a2a2a" stroke-width="0.8" stroke-linecap="round"/>
@@ -400,21 +420,23 @@ const Creatures = (() => {
     /* ── hug: sitting, arms open, gentle head tilt ── */
     const hug = `
       <g class="creature__pose creature__pose--hug" style="display:none">
-        <!-- body sitting -->
-        <ellipse cx="0" cy="10" rx="19" ry="20" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
-        <ellipse cx="0" cy="12" rx="12" ry="12" fill="#3a3a3a" opacity="0.25"/>
-        <!-- shoulders relaxed -->
-        <ellipse cx="0" cy="-4" rx="20" ry="9" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
-        <!-- arms open forward (inviting) -->
-        <path d="M-18,-2 Q-26,4 -28,14 Q-28,18 -24,20" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
-        <ellipse cx="-23" cy="21" rx="4.5" ry="3.5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
-        <path d="M18,-2 Q26,4 28,14 Q28,18 24,20" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
-        <ellipse cx="23" cy="21" rx="4.5" ry="3.5" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <!-- body sitting (still massive) -->
+        <ellipse cx="0" cy="10" rx="21" ry="22" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
+        <ellipse cx="0" cy="12" rx="13" ry="13" fill="#4a4a4a" opacity="0.25"/>
+        <!-- shoulders relaxed but broad -->
+        <ellipse cx="0" cy="-4" rx="24" ry="10" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
+        <ellipse cx="-19" cy="-2" rx="7" ry="5" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.3"/>
+        <ellipse cx="19" cy="-2" rx="7" ry="5" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.3"/>
+        <!-- arms open forward (inviting, thick) -->
+        <path d="M-22,0 Q-30,6 -30,16 Q-30,20 -26,22" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="-25" cy="23" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
+        <path d="M22,0 Q30,6 30,16 Q30,20 26,22" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="25" cy="23" rx="5" ry="4" fill="#3a2a1a" stroke="#1a1a1a" stroke-width="0.6"/>
         <!-- legs folded sitting -->
-        <path d="M-10,26 Q-14,30 -16,32 Q-16,35 -10,35" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <path d="M10,26 Q14,30 16,32 Q16,35 10,35" fill="none" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
-        <ellipse cx="-8" cy="35" rx="5" ry="2.5" fill="#2a1a1a"/>
-        <ellipse cx="8" cy="35" rx="5" ry="2.5" fill="#2a1a1a"/>
+        <path d="M-10,28 Q-15,32 -17,34 Q-17,37 -10,37" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/>
+        <path d="M10,28 Q15,32 17,34 Q17,37 10,37" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="-8" cy="37" rx="6" ry="3" fill="#2a1a1a"/>
+        <ellipse cx="8" cy="37" rx="6" ry="3" fill="#2a1a1a"/>
         <!-- head (slightly tilted) -->
         <g transform="rotate(8, 0, -16)">
           <ellipse cx="0" cy="-16" rx="13" ry="11" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.6"/>
