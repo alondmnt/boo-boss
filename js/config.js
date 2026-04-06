@@ -34,21 +34,22 @@ const CONFIG = {
     observatory: { floor: 3, col: 1, label: 'Observatory',   colour: '#191970', locked: true },
   },
 
-  /** Room adjacency — rooms connected on foot (same floor). */
+  /** Room adjacency — rooms connected on foot (same floor + staircases). */
   adjacency: {
-    entrance:    ['kitchen'],
+    entrance:    ['kitchen', 'bedroom'],
     kitchen:     ['entrance'],
-    bedroom:     ['attic'],
+    bedroom:     ['attic', 'entrance', 'tower'],
     attic:       ['bedroom'],
-    tower:       ['observatory'],
+    tower:       ['observatory', 'bedroom'],
     observatory: ['tower'],
   },
 
   /**
    * Full track route order (top-level, ordered for the dark ride).
-   * GameState.getTrackRoute() filters this to unlocked rooms only.
+   * Snakes through house left-right, bottom-up. GameState.getTrackRoute()
+   * filters this to unlocked rooms only.
    */
-  fullTrackRoute: ['entrance', 'bedroom', 'attic', 'tower', 'observatory', 'kitchen'],
+  fullTrackRoute: ['entrance', 'kitchen', 'bedroom', 'attic', 'tower', 'observatory'],
 
   /* ─── House SVG layout (px, viewBox-relative) ─── */
   house: {

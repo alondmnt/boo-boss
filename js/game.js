@@ -14,6 +14,8 @@ const Game = (() => {
     Picker.init(document.getElementById('scare-panel'));
 
     Progress.load();
+    _syncRoomVisuals();
+    Train.extendTrack();
     Picker.render();
 
     // Splash screen: tap to start (unlocks AudioContext)
@@ -57,6 +59,17 @@ const Game = (() => {
     });
   }
 
+  /** Sync room visuals with GameState (unlock rooms that are unlocked in state). */
+  function _syncRoomVisuals() {
+    const rooms = GameState.get('rooms');
+    const baseRooms = CONFIG.rooms;
+    for (const [id, def] of Object.entries(rooms)) {
+      if (baseRooms[id].locked && !def.locked) {
+        House.unlockRoom(id);
+      }
+    }
+  }
+
   /** Start the game from splash screen. */
   function _start() {
     Audio.unlock();
@@ -82,6 +95,9 @@ const Game = (() => {
     Wave.onComplete((results) => {
       _totalScore += results.totalPoints;
       _updateScoreDisplay();
+      _syncRoomVisuals();
+      Train.extendTrack();
+      Picker.render();
 
       const maxWaves = GameState.get('endlessMode') ? Infinity : CONFIG.totalWaves;
       if (n >= maxWaves) {

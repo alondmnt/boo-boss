@@ -100,17 +100,23 @@ const Visitor = (() => {
     return visitor;
   }
 
+  /** Compute a random position within a room, clamped to bounds. */
+  function _randomRoomPos(roomId) {
+    const rect = House.getRoomRect(roomId);
+    const centre = House.getRoomCentre(roomId);
+    if (!rect || !centre) return centre || { x: 0, y: 0 };
+    const margin = 18;
+    const x = rect.x + margin + Math.random() * (rect.w - margin * 2);
+    const y = rect.y + margin + Math.random() * (rect.h - margin * 2);
+    return { x, y };
+  }
+
   /** Place a visitor in a room (instant, no animation). */
   function placeInRoom(visitor, roomId) {
-    const centre = House.getRoomCentre(roomId);
-    if (!centre) return;
+    const pos = _randomRoomPos(roomId);
+    if (!pos) return;
 
-    // Offset slightly so visitors don't all stack on the exact centre
-    const offsetX = (Math.random() - 0.5) * 40;
-    const offsetY = (Math.random() - 0.5) * 20;
-
-    visitor.el.setAttribute('transform',
-      `translate(${centre.x + offsetX}, ${centre.y + offsetY + 15})`);
+    visitor.el.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
     visitor.currentRoom = roomId;
 
     // Ensure visitor is in the visitor layer
@@ -120,42 +126,15 @@ const Visitor = (() => {
     }
   }
 
-  /** Animate visitor moving to a new room. Calls onArrive when done. */
+  /** Move visitor to a new room. Instant placement, calls onArrive after brief delay. */
   function moveToRoom(visitor, roomId, onArrive) {
-    const centre = House.getRoomCentre(roomId);
-    if (!centre) { if (onArrive) onArrive(); return; }
-
-    const offsetX = (Math.random() - 0.5) * 40;
-    const offsetY = (Math.random() - 0.5) * 20;
-    const targetX = centre.x + offsetX;
-    const targetY = centre.y + offsetY + 15;
-
-    // Flip direction based on horizontal movement
-    const currCentre = House.getRoomCentre(visitor.currentRoom);
-    if (currCentre && targetX < currCentre.x) {
-      visitor.el.style.transform = 'scaleX(-1)';
-    } else {
-      visitor.el.style.transform = '';
-    }
+    const pos = _randomRoomPos(roomId);
+    if (!pos) { if (onArrive) onArrive(); return; }
 
     visitor.currentRoom = roomId;
     setState(visitor, 'walking');
-
-    // Use CSS transition via transform attribute
-    visitor.el.setAttribute('transform', `translate(${targetX}, ${targetY})`);
-
-    // Listen for transition end
-    function onEnd() {
-      visitor.el.removeEventListener('transitionend', onEnd);
-      if (onArrive) onArrive();
-    }
-    visitor.el.addEventListener('transitionend', onEnd);
-
-    // Fallback timeout in case transitionend doesn't fire (e.g. same position)
-    setTimeout(() => {
-      visitor.el.removeEventListener('transitionend', onEnd);
-      if (onArrive) onArrive();
-    }, 800);
+    visitor.el.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+    setTimeout(() => { if (onArrive) onArrive(); }, 300);
   }
 
   /** Swap the visitor's CSS state class. */

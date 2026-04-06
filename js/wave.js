@@ -121,10 +121,12 @@ const Wave = (() => {
     if (_generation !== gen) return;
     if (visitor.state === 'exiting' || visitor.state === 'exited') return;
 
-    // Check exit threshold
-    const maxVisits = CONFIG.visitorRoomVisits.min +
-      Math.floor(Math.random() * (CONFIG.visitorRoomVisits.max - CONFIG.visitorRoomVisits.min + 1));
-    if (visitor.roomsVisited >= maxVisits) {
+    // Exit threshold set once per visitor
+    if (visitor._maxVisits == null) {
+      visitor._maxVisits = CONFIG.visitorRoomVisits.min +
+        Math.floor(Math.random() * (CONFIG.visitorRoomVisits.max - CONFIG.visitorRoomVisits.min + 1));
+    }
+    if (visitor.roomsVisited >= visitor._maxVisits) {
       _sendToExit(visitor, gen);
       return;
     }

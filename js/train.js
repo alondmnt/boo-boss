@@ -31,7 +31,8 @@ const Train = (() => {
 
   /**
    * Compute the SVG path through the current track route.
-   * Returns the path "d" attribute string and an array of stop distances.
+   * Route snakes left-right per floor, with vertical transitions at the
+   * left wall column (staircase area) between floors.
    */
   function _computeTrack() {
     const route = GameState.getTrackRoute();
@@ -41,37 +42,33 @@ const Train = (() => {
     const svgW = 2 * L.roomW + 3 * L.wallT;
     const centres = route.map(r => House.getRoomCentre(r));
 
-    // Entry point: left of house
+    const entryX = -20;
     const entryY = centres[0].y;
-    const entryX = -30;
-    // Exit point: right of house
-    const lastRoom = route[route.length - 1];
-    const exitCentre = House.getRoomCentre(lastRoom);
+    const exitCentre = centres[centres.length - 1];
+    const exitX = svgW + 20;
     const exitY = exitCentre.y;
-    const exitX = svgW + 30;
 
-    // Build path: entry -> room centres -> exit
-    let d = `M${entryX},${entryY}`;
-    // Straight into first room
-    d += ` L${centres[0].x},${centres[0].y}`;
+    let d = `M${entryX},${entryY} L${centres[0].x},${centres[0].y}`;
 
-    // Through each room with curves between floors
     for (let i = 1; i < centres.length; i++) {
       const prev = centres[i - 1];
       const curr = centres[i];
-      if (Math.abs(prev.y - curr.y) > 10) {
-        // Different floor: use a curve
-        const midX = (prev.x + curr.x) / 2;
-        d += ` C${prev.x},${(prev.y + curr.y) / 2} ${curr.x},${(prev.y + curr.y) / 2} ${curr.x},${curr.y}`;
+      const dy = Math.abs(prev.y - curr.y);
+
+      if (dy < 10) {
+        // Same floor: straight horizontal
+        d += ` L${curr.x},${curr.y}`;
       } else {
-        // Same floor: straight line
+        // Floor transition: go to staircase column, vertical, then to room
+        const stairX = L.wallT + 20;
+        const midY = (prev.y + curr.y) / 2;
+        d += ` L${stairX},${prev.y}`;
+        d += ` Q${stairX},${midY} ${stairX},${curr.y}`;
         d += ` L${curr.x},${curr.y}`;
       }
     }
 
-    // Exit straight out
     d += ` L${exitX},${exitY}`;
-
     return { d, route };
   }
 
@@ -171,6 +168,7 @@ const Train = (() => {
    * Calls onComplete() when train exits.
    */
   function animateEntry(onRoomReached, onComplete) {
+    if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
     if (!_pathEl) { if (onComplete) onComplete(); return; }
 
     const { route } = _computeTrack();
@@ -231,6 +229,7 @@ const Train = (() => {
    * Calls onComplete() when train exits the screen.
    */
   function animateExit(onComplete) {
+    if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
     if (!_pathEl) { if (onComplete) onComplete(); return; }
 
     const totalLen = _pathEl.getTotalLength();
