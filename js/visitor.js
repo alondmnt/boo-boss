@@ -68,19 +68,16 @@ const Visitor = (() => {
     svg += `<path d="M-2.5 -30 Q0 -28 2.5 -30" stroke="#333" stroke-width="0.6" fill="none"
                   class="visitor__smile" style="display:none"/>`;
 
-    // Fear thought bubble (red jagged starburst)
-    svg += `<g class="visitor__bubble visitor__bubble--fear" transform="translate(-14, -52)">`;
-    svg += `  <polygon points="0,-9 3,-6 6,-9 7,-5 10,-4 7,-1 10,2 6,2 4,5 2,2 -2,3 -1,-1 -4,-3 -1,-5"
-                       fill="#ff4444" opacity="0.85" stroke="#cc0000" stroke-width="0.5"/>`;
-    svg += `  <text x="3" y="0" font-size="7" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[fear] || '?'}</text>`;
+    // Fear bubble (left shoulder, green circle)
+    svg += `<g class="visitor__bubble visitor__bubble--fear">`;
+    svg += `  <circle cx="-18" cy="-18" r="10" fill="#44cc66" opacity="0.9" stroke="#228844" stroke-width="1"/>`;
+    svg += `  <text x="-18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[fear] || '?'}</text>`;
     svg += `</g>`;
 
-    // Love thought bubble (pink heart shape)
-    svg += `<g class="visitor__bubble visitor__bubble--love" transform="translate(8, -52)">`;
-    svg += `  <path d="M4,-2 C4,-6 0,-7 0,-4 C0,-7 -4,-6 -4,-2 C-4,1 0,5 0,5 C0,5 4,1 4,-2 Z"
-                    fill="#ff88aa" opacity="0.85" stroke="#cc4477" stroke-width="0.5"
-                    transform="translate(3, -2) scale(1.3)"/>`;
-    svg += `  <text x="3" y="0" font-size="7" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[love] || '?'}</text>`;
+    // Love bubble (right shoulder, pink circle)
+    svg += `<g class="visitor__bubble visitor__bubble--love">`;
+    svg += `  <circle cx="18" cy="-18" r="10" fill="#ff88bb" opacity="0.9" stroke="#cc4477" stroke-width="1"/>`;
+    svg += `  <text x="18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[love] || '?'}</text>`;
     svg += `</g>`;
 
     g.innerHTML = svg;

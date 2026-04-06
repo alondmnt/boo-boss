@@ -87,7 +87,6 @@ html, body {
 
 /* ===== Visitors ===== */
 .visitor {
-  transition: transform 0.6s ease-in-out;
   pointer-events: none;
 }
 .visitor--walking .visitor__leg-l { animation: visitor-walk-l 0.4s steps(2) infinite; }
