@@ -31,8 +31,9 @@ const Train = (() => {
 
   /**
    * Compute the SVG path through the current track route.
-   * Route snakes left-right per floor, with vertical transitions at the
-   * left wall column (staircase area) between floors.
+   * The track winds like a dark ride — gentle dips through rooms,
+   * tight arcs for floor transitions. Return path spirals down
+   * the outside of the house to keep room interiors clear.
    */
   function _computeTrack() {
     const route = GameState.getTrackRoute();
@@ -42,39 +43,55 @@ const Train = (() => {
     const svgW = 2 * L.roomW + 3 * L.wallT;
     const centres = route.map(r => House.getRoomCentre(r));
 
-    const entryX = -20;
-    const entryY = centres[0].y;
-    const exitCentre = centres[centres.length - 1];
-    const exitX = svgW + 20;
-    const exitY = exitCentre.y;
+    // Centre divider X
+    const divX = L.wallT + L.roomW + L.wallT / 2;
+    const dip = 8;
 
-    let d = `M${entryX},${entryY} L${centres[0].x},${centres[0].y}`;
+    // Entry: gentle curve in from left
+    const entryY = centres[0].y;
+    let d = `M${-20},${entryY} Q${centres[0].x * 0.4},${entryY + dip} ${centres[0].x},${centres[0].y}`;
 
     for (let i = 1; i < centres.length; i++) {
       const prev = centres[i - 1];
       const curr = centres[i];
-      const dy = Math.abs(prev.y - curr.y);
+      const floorChange = Math.abs(prev.y - curr.y) > 10;
 
-      if (dy < 10) {
-        // Same floor: straight horizontal
-        d += ` L${curr.x},${curr.y}`;
+      if (!floorChange) {
+        // Same floor: gentle dip
+        const midX = (prev.x + curr.x) / 2;
+        d += ` Q${midX},${prev.y + dip} ${curr.x},${curr.y}`;
       } else {
-        // Floor transition: go to staircase column, vertical, then to room
-        const stairX = L.wallT + 20;
-        const midY = (prev.y + curr.y) / 2;
-        d += ` L${stairX},${prev.y}`;
-        d += ` Q${stairX},${midY} ${stairX},${curr.y}`;
-        d += ` L${curr.x},${curr.y}`;
+        // Floor transition: tight curve hugging the divider
+        d += ` Q${divX},${prev.y} ${divX},${(prev.y + curr.y) / 2}`;
+        d += ` Q${divX},${curr.y} ${curr.x},${curr.y}`;
       }
     }
 
-    // Return path: from last room (top-right), down the right wall to ground, exit right
+    // Return path: corkscrew down the exterior right wall
     const lastCentre = centres[centres.length - 1];
-    const groundY = centres[0].y; // entrance Y (ground floor)
-    const rightWallX = svgW - L.wallT - 20;
-    d += ` L${rightWallX},${lastCentre.y}`;
-    d += ` Q${rightWallX},${(lastCentre.y + groundY) / 2} ${rightWallX},${groundY}`;
-    d += ` L${svgW + 20},${groundY}`;
+    const groundY = centres[0].y;
+    const wallX = svgW + 18;    // clear of the right wall
+    const loopR = 14;           // loop radius
+    const loops = 5;            // number of full sine loops
+    const totalDrop = groundY - lastCentre.y;
+
+    // Exit right from last room
+    d += ` L${wallX},${lastCentre.y}`;
+
+    // Smooth corkscrew: cubic bezier S-curves down the wall
+    const loopH = totalDrop / loops;
+    for (let i = 0; i < loops; i++) {
+      const y0 = lastCentre.y + i * loopH;
+      const y1 = y0 + loopH / 2;
+      const y2 = y0 + loopH;
+      // First half: bulge right
+      d += ` C${wallX + loopR},${y0} ${wallX + loopR},${y1} ${wallX},${y1}`;
+      // Second half: bulge left
+      d += ` C${wallX - loopR},${y1} ${wallX - loopR},${y2} ${wallX},${y2}`;
+    }
+
+    // Curve back to ground exit
+    d += ` Q${wallX + loopR},${groundY + 5} ${svgW + 30},${groundY}`;
 
     return { d, route };
   }

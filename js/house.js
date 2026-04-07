@@ -154,7 +154,10 @@ const House = (() => {
     const L = _layout();
     const rooms = GameState.get('rooms');
 
-    let svg = `<svg xmlns="${NS}" viewBox="0 0 ${L.svgW} ${L.svgH}"
+    // Extra width for exterior return track on the right side
+    const trackMargin = 50;
+    const vbW = L.svgW + trackMargin;
+    let svg = `<svg xmlns="${NS}" viewBox="-20 0 ${vbW + 20} ${L.svgH}"
                     class="house" preserveAspectRatio="xMidYMid meet">`;
 
     // Background
