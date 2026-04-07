@@ -114,7 +114,8 @@ const Wave = (() => {
 
   /**
    * Wander loop for a single visitor.
-   * Moves to adjacent rooms, checks for scare encounters, repeats until exit threshold.
+   * Pattern: wander within current room (2-3 steps), check for scare
+   * encounter, then walk to an adjacent room. Repeat until exit threshold.
    */
   function _wanderLoop(visitor, gen) {
     if (_generation !== gen) return;
@@ -130,13 +131,14 @@ const Wave = (() => {
       return;
     }
 
-    const nextRoom = Visitor.pickNextRoom(visitor);
-    Visitor.moveToRoom(visitor, nextRoom, () => {
+    // Step 1: wander within the current room (2-3 steps)
+    const steps = 2 + Math.floor(Math.random() * 2);
+    Visitor.wanderInRoom(visitor, steps, () => {
       if (_generation !== gen) return;
-      visitor.roomsVisited++;
 
-      // Check for creature encounter
-      const creature = ScareFactory.getDeployed(nextRoom);
+      // Check for creature encounter in this room
+      const currentRoom = visitor.currentRoom;
+      const creature = ScareFactory.getDeployed(currentRoom);
       if (creature && !visitor._scared) {
         const result = ScareFactory.evaluate(visitor, creature);
 
@@ -148,30 +150,40 @@ const Wave = (() => {
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;
-            _dwellThenWander(visitor, gen);
+            _moveToNextRoom(visitor, gen);
           });
           return;
         } else if (result.result === 'loved') {
           visitor._scared = true;
           Reactions.hugged(visitor, creature, () => {
-            // Cleanup: remove creature, clear room, re-enable picker
             ScareFactory.clearRoom(creature.roomId);
             Creatures.remove(creature);
             Picker.enableSlot(creature.type);
             visitor._scared = false;
             if (_generation !== gen) return;
-            _dwellThenWander(visitor, gen);
+            _moveToNextRoom(visitor, gen);
           });
           return;
         }
-        // neutral: fall through to dwell
       }
 
+      // No encounter (or neutral): move to next room
+      _moveToNextRoom(visitor, gen);
+    });
+  }
+
+  /** Walk to an adjacent room, then continue the wander loop. */
+  function _moveToNextRoom(visitor, gen) {
+    if (_generation !== gen) return;
+    const nextRoom = Visitor.pickNextRoom(visitor);
+    Visitor.moveToRoom(visitor, nextRoom, () => {
+      if (_generation !== gen) return;
+      visitor.roomsVisited++;
       _dwellThenWander(visitor, gen);
     });
   }
 
-  /** Dwell in current room, then continue wandering. */
+  /** Brief dwell, then continue wandering. */
   function _dwellThenWander(visitor, gen) {
     const dwell = CONFIG.visitorDwellMs.min +
       Math.random() * (CONFIG.visitorDwellMs.max - CONFIG.visitorDwellMs.min);

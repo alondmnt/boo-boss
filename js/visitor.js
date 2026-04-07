@@ -100,12 +100,75 @@ const Visitor = (() => {
   /** Compute a random position within a room, clamped to bounds. */
   function _randomRoomPos(roomId) {
     const rect = House.getRoomRect(roomId);
-    const centre = House.getRoomCentre(roomId);
-    if (!rect || !centre) return centre || { x: 0, y: 0 };
+    if (!rect) return null;
     const margin = 18;
     const x = rect.x + margin + Math.random() * (rect.w - margin * 2);
     const y = rect.y + margin + Math.random() * (rect.h - margin * 2);
     return { x, y };
+  }
+
+  /**
+   * Compute a position at the shared edge between two rooms.
+   * Used for smooth room-to-room transitions: visitor walks to the
+   * exit edge of the current room, then enters from the entry edge
+   * of the next room.
+   */
+  function _edgePosition(roomId, side) {
+    const rect = House.getRoomRect(roomId);
+    if (!rect) return null;
+    const margin = 10;
+    const randY = rect.y + margin + Math.random() * (rect.h - margin * 2);
+    const randX = rect.x + margin + Math.random() * (rect.w - margin * 2);
+    switch (side) {
+      case 'left':   return { x: rect.x + margin, y: randY };
+      case 'right':  return { x: rect.x + rect.w - margin, y: randY };
+      case 'top':    return { x: randX, y: rect.y + margin };
+      case 'bottom': return { x: randX, y: rect.y + rect.h - margin };
+      default:       return { x: rect.cx, y: rect.cy };
+    }
+  }
+
+  /**
+   * Determine which side of fromRoom leads to toRoom.
+   * Based on relative floor and column positions.
+   */
+  function _exitSide(fromRoom, toRoom) {
+    const from = CONFIG.rooms[fromRoom];
+    const to = CONFIG.rooms[toRoom];
+    if (!from || !to) return 'right';
+    if (to.floor > from.floor) return 'top';
+    if (to.floor < from.floor) return 'bottom';
+    if (to.col > from.col) return 'right';
+    return 'left';
+  }
+
+  /** Opposite side for entry into the new room. */
+  function _entrySide(side) {
+    return { left: 'right', right: 'left', top: 'bottom', bottom: 'top' }[side] || 'left';
+  }
+
+  /**
+   * Smoothly walk a visitor to a position using CSS transition.
+   * @param {object} visitor
+   * @param {number} x, y - target position in SVG coords
+   * @param {number} durationMs - transition time
+   * @param {function} onArrive - called when animation completes
+   */
+  function _walkTo(visitor, x, y, durationMs, onArrive) {
+    visitor.el.style.transition = `transform ${durationMs}ms ease-in-out`;
+    visitor.el.setAttribute('transform', `translate(${x}, ${y})`);
+
+    let done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      visitor.el.removeEventListener('transitionend', finish);
+      visitor.el.style.transition = '';
+      if (onArrive) onArrive();
+    }
+    visitor.el.addEventListener('transitionend', finish);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(finish, durationMs + 50);
   }
 
   /** Place a visitor in a room (instant, no animation). */
@@ -113,6 +176,7 @@ const Visitor = (() => {
     const pos = _randomRoomPos(roomId);
     if (!pos) return;
 
+    visitor.el.style.transition = '';
     visitor.el.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
     visitor.currentRoom = roomId;
 
@@ -123,15 +187,54 @@ const Visitor = (() => {
     }
   }
 
-  /** Move visitor to a new room. Instant placement, calls onArrive after brief delay. */
-  function moveToRoom(visitor, roomId, onArrive) {
-    const pos = _randomRoomPos(roomId);
-    if (!pos) { if (onArrive) onArrive(); return; }
+  /**
+   * Wander within the current room: walk to N random positions, then call onDone.
+   * Each step is a smooth CSS transition.
+   */
+  function wanderInRoom(visitor, steps, onDone) {
+    if (steps <= 0) { if (onDone) onDone(); return; }
 
-    visitor.currentRoom = roomId;
+    const pos = _randomRoomPos(visitor.currentRoom);
+    if (!pos) { if (onDone) onDone(); return; }
+
     setState(visitor, 'walking');
-    visitor.el.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
-    setTimeout(() => { if (onArrive) onArrive(); }, 300);
+    _walkTo(visitor, pos.x, pos.y, 600 + Math.random() * 400, () => {
+      wanderInRoom(visitor, steps - 1, onDone);
+    });
+  }
+
+  /**
+   * Move visitor to a new room via edge transition.
+   * Walks to the exit edge of current room, then teleports to the entry edge
+   * of the new room and walks inward.
+   */
+  function moveToRoom(visitor, roomId, onArrive) {
+    const exitSide = _exitSide(visitor.currentRoom, roomId);
+    const entSide = _entrySide(exitSide);
+    const exitPos = _edgePosition(visitor.currentRoom, exitSide);
+    const entryPos = _edgePosition(roomId, entSide);
+    const innerPos = _randomRoomPos(roomId);
+
+    if (!exitPos || !entryPos || !innerPos) {
+      visitor.currentRoom = roomId;
+      if (onArrive) onArrive();
+      return;
+    }
+
+    setState(visitor, 'walking');
+
+    // Step 1: walk to exit edge of current room
+    _walkTo(visitor, exitPos.x, exitPos.y, 400, () => {
+      // Step 2: teleport to entry edge of new room
+      visitor.el.style.transition = '';
+      visitor.el.setAttribute('transform', `translate(${entryPos.x}, ${entryPos.y})`);
+      visitor.currentRoom = roomId;
+
+      // Step 3: walk inward from the edge
+      _walkTo(visitor, innerPos.x, innerPos.y, 500, () => {
+        if (onArrive) onArrive();
+      });
+    });
   }
 
   /** Swap the visitor's CSS state class. */
@@ -168,5 +271,5 @@ const Visitor = (() => {
     }
   }
 
-  return { create, placeInRoom, moveToRoom, setState, pickNextRoom, remove, CREATURE_ICONS };
+  return { create, placeInRoom, wanderInRoom, moveToRoom, setState, pickNextRoom, remove, CREATURE_ICONS };
 })();
