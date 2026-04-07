@@ -25,31 +25,40 @@ const CONFIG = {
   },
 
   /* ─── Rooms ─── */
+  /*
+   * Layout (side-view cutaway):
+   *   F3:  Attic (left)    | Tower (right)
+   *   F2:  Bathroom (left) | Bedroom (right)
+   *   F1:  Entrance (left) | Kitchen (right)
+   *
+   * Track snakes: entrance -> kitchen -> bedroom -> bathroom -> attic -> tower -> (back down, exit)
+   * Locked rooms are still part of the track (train passes through, doesn't stop).
+   */
   rooms: {
-    entrance:    { floor: 1, col: 0, label: 'Entrance Hall', colour: '#8B6914', locked: false },
-    kitchen:     { floor: 1, col: 1, label: 'Kitchen',       colour: '#708090', locked: false },
-    bedroom:     { floor: 2, col: 0, label: 'Bedroom',       colour: '#4B0082', locked: false },
-    attic:       { floor: 2, col: 1, label: 'Attic',         colour: '#696969', locked: true },
-    tower:       { floor: 3, col: 0, label: 'Tower',         colour: '#2F4F4F', locked: true },
-    observatory: { floor: 3, col: 1, label: 'Observatory',   colour: '#191970', locked: true },
+    entrance: { floor: 1, col: 0, label: 'Entrance Hall', colour: '#8B6914', locked: false },
+    kitchen:  { floor: 1, col: 1, label: 'Kitchen',       colour: '#708090', locked: false },
+    bathroom: { floor: 2, col: 0, label: 'Bathroom',      colour: '#4a6a6a', locked: true },
+    bedroom:  { floor: 2, col: 1, label: 'Bedroom',       colour: '#4B0082', locked: false },
+    attic:    { floor: 3, col: 0, label: 'Attic',         colour: '#696969', locked: true },
+    tower:    { floor: 3, col: 1, label: 'Tower',         colour: '#2F4F4F', locked: true },
   },
 
   /** Room adjacency — rooms connected on foot (same floor + staircases). */
   adjacency: {
-    entrance:    ['kitchen', 'bedroom'],
-    kitchen:     ['entrance'],
-    bedroom:     ['attic', 'entrance', 'tower'],
-    attic:       ['bedroom'],
-    tower:       ['observatory', 'bedroom'],
-    observatory: ['tower'],
+    entrance: ['kitchen', 'bedroom'],
+    kitchen:  ['entrance'],
+    bedroom:  ['bathroom', 'entrance', 'attic'],
+    bathroom: ['bedroom'],
+    attic:    ['tower', 'bathroom'],
+    tower:    ['attic'],
   },
 
   /**
-   * Full track route order (top-level, ordered for the dark ride).
-   * Snakes through house left-right, bottom-up. GameState.getTrackRoute()
-   * filters this to unlocked rooms only.
+   * Full track route — the dark ride always runs this path.
+   * Snakes right on F1, up, left on F2, up, right on F3, then back down to exit.
+   * Train passes through locked rooms without stopping.
    */
-  fullTrackRoute: ['entrance', 'kitchen', 'bedroom', 'attic', 'tower', 'observatory'],
+  fullTrackRoute: ['entrance', 'kitchen', 'bedroom', 'bathroom', 'attic', 'tower'],
 
   /* ─── House SVG layout (px, viewBox-relative) ─── */
   house: {
@@ -89,11 +98,13 @@ const CONFIG = {
 
 const UNLOCK_TIERS = [
   { coins: 5,  key: 'owl',             icon: '🦉', label: 'Owl creature!' },
-  { coins: 10, key: 'attic',           icon: '🏚️', label: 'Attic unlocked!' },
+  { coins: 10, key: 'bathroom',        icon: '🚿', label: 'Bathroom unlocked!' },
   { coins: 18, key: 'snake',           icon: '🐍', label: 'Snake creature!' },
   { coins: 25, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
+  { coins: 30, key: 'attic',           icon: '🏚️', label: 'Attic unlocked!' },
   { coins: 35, key: 'rat',             icon: '🐀', label: 'Rat creature!' },
-  { coins: 40, key: 'endlessMode',     icon: '♾️',  label: 'Endless mode!' },
+  { coins: 40, key: 'tower',           icon: '🗼', label: 'Tower unlocked!' },
+  { coins: 50, key: 'endlessMode',     icon: '♾️',  label: 'Endless mode!' },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */

@@ -118,30 +118,33 @@ const House = (() => {
     `;
   }
 
-  function _observatoryDecor(x, y, w, h) {
+  function _bathroomDecor(x, y, w, h) {
     return `
-      <!-- dome ceiling arc -->
-      <path d="M${x} ${y + 10} Q${x + w / 2} ${y - 15} ${x + w} ${y + 10}"
-            fill="none" stroke="#2a2a4a" stroke-width="2" opacity="0.5"/>
-      <!-- crack in dome -->
-      <path d="M${x + w / 2 + 10} ${y + 2} l5 8 l-3 6" stroke="#3a3a5a" stroke-width="0.8" opacity="0.4"/>
-      <!-- telescope -->
-      <line x1="${x + 30}" y1="${y + h - 15}" x2="${x + 50}" y2="${y + 30}" stroke="#5a5a7a" stroke-width="2.5"/>
-      <circle cx="${x + 52}" cy="${y + 28}" r="4" fill="none" stroke="#5a5a7a" stroke-width="1.5"/>
-      <!-- star dots -->
-      <circle cx="${x + w - 20}" cy="${y + 15}" r="1" fill="#e0e8ff" opacity="0.5"/>
-      <circle cx="${x + w - 35}" cy="${y + 8}" r="0.8" fill="#e0e8ff" opacity="0.4"/>
-      <circle cx="${x + w - 50}" cy="${y + 12}" r="1.2" fill="#e0e8ff" opacity="0.3"/>
+      <!-- bathtub (claw-foot) -->
+      <path d="M${x + 10} ${y + h - 20} Q${x + 10} ${y + h - 40} ${x + 25} ${y + h - 42}
+               L${x + 55} ${y + h - 42} Q${x + 70} ${y + h - 40} ${x + 70} ${y + h - 20}"
+            fill="none" stroke="#6a8a8a" stroke-width="1.5" opacity="0.6"/>
+      <!-- claw feet -->
+      <circle cx="${x + 14}" cy="${y + h - 16}" r="2" fill="#6a8a8a" opacity="0.4"/>
+      <circle cx="${x + 66}" cy="${y + h - 16}" r="2" fill="#6a8a8a" opacity="0.4"/>
+      <!-- tap -->
+      <path d="M${x + 65} ${y + h - 48} Q${x + 68} ${y + h - 52} ${x + 63} ${y + h - 52}"
+            stroke="#8a9a9a" stroke-width="1.5" fill="none"/>
+      <!-- mirror -->
+      <ellipse cx="${x + w - 30}" cy="${y + 20}" rx="12" ry="16"
+               fill="none" stroke="#6a8a8a" stroke-width="1.2" opacity="0.5"/>
+      <!-- drip -->
+      <circle cx="${x + 63}" cy="${y + h - 44}" r="1" fill="#4a8a9a" opacity="0.5" class="house__drip"/>
     `;
   }
 
   const DECOR = {
     entrance: _entranceDecor,
     kitchen: _kitchenDecor,
+    bathroom: _bathroomDecor,
     bedroom: _bedroomDecor,
     attic: _atticDecor,
     tower: _towerDecor,
-    observatory: _observatoryDecor,
   };
 
   /* ─── SVG generation ─── */
@@ -301,7 +304,12 @@ const House = (() => {
     const label = el.querySelector('text');
     if (label) label.setAttribute('fill', '#ddd');
 
-    setTimeout(() => el.classList.remove('house__room--unlocking'), 600);
+    // Remove planks after fade-out animation
+    setTimeout(() => {
+      el.classList.remove('house__room--unlocking');
+      const planks = el.querySelector('.house__planks');
+      if (planks) planks.remove();
+    }, 600);
   }
 
   return { init, getRoomEl, getRoomCentre, getRoomRect, getSvg, unlockRoom };

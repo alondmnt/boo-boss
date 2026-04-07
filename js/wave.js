@@ -63,14 +63,15 @@ const Wave = (() => {
 
     Audio.play('waveStart');
 
-    // Animate train entry
-    const route = GameState.getTrackRoute();
+    // Only stop at unlocked rooms for visitor disembarkation
+    const stops = GameState.getTrackStops();
     let visitorIdx = 0;
 
     Train.animateEntry(
-      // onRoomReached: distribute visitors across rooms
+      // onRoomReached: only place visitors at unlocked stops
       (roomId, _stopIdx) => {
         if (_generation !== gen) return;
+        if (!stops.includes(roomId)) return; // locked room, pass through
         if (visitorIdx < _visitors.length) {
           const visitor = _visitors[visitorIdx];
           Visitor.placeInRoom(visitor, roomId);
@@ -78,19 +79,17 @@ const Wave = (() => {
           visitorIdx++;
         }
       },
-      // onComplete: all rooms passed, remaining visitors go to first room
+      // onComplete: all rooms passed, remaining visitors go to unlocked rooms
       () => {
         if (_generation !== gen) return;
-        // Place any remaining visitors in random rooms along route
         while (visitorIdx < _visitors.length) {
-          const roomId = route[visitorIdx % route.length];
+          const roomId = stops[visitorIdx % stops.length];
           const visitor = _visitors[visitorIdx];
           Visitor.placeInRoom(visitor, roomId);
           Visitor.setState(visitor, 'walking');
           visitorIdx++;
         }
         _state = 'visiting';
-        // Start wander loops for all visitors
         for (const visitor of _visitors) {
           _wanderLoop(visitor, gen);
         }
@@ -187,9 +186,8 @@ const Wave = (() => {
     if (_generation !== gen) return;
     Reactions.exitHappy(visitor);
 
-    // Move visitor to a room on the track route (nearest exit point)
-    const route = GameState.getTrackRoute();
-    const exitRoom = route[route.length - 1] || visitor.currentRoom;
+    // Move visitor to the entrance (ground floor exit point)
+    const exitRoom = 'entrance';
 
     Visitor.moveToRoom(visitor, exitRoom, () => {
       if (_generation !== gen) return;

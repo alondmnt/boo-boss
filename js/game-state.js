@@ -8,17 +8,21 @@ const GameState = (() => {
   const _booleans = {};
   const _objects = {};
 
+  /** Unlock a room by key. */
+  function _unlockRoom(roomId) {
+    if (!_objects.rooms) _objects.rooms = {};
+    _objects.rooms[roomId] = { locked: false };
+  }
+
   /** Maps UNLOCK_TIERS keys to state mutations. */
   const TIER_ACTIONS = {
     owl:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'owl']; },
     snake: () => { _arrays.creatures = [...(_arrays.creatures || []), 'snake']; },
     rat:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'rat']; },
 
-    attic: () => {
-      // Unlock attic room
-      if (!_objects.rooms) _objects.rooms = {};
-      _objects.rooms.attic = { locked: false };
-    },
+    bathroom: () => { _unlockRoom('bathroom'); },
+    attic:    () => { _unlockRoom('attic'); },
+    tower:    () => { _unlockRoom('tower'); },
 
     fasterCooldowns: () => {
       // 25% reduction to all cooldowns
@@ -59,10 +63,18 @@ const GameState = (() => {
   }
 
   /**
-   * Computed track route — filters full route to unlocked rooms only.
-   * Called by Train and Wave modules whenever they need the current route.
+   * Full track route — the train always traverses all rooms (including locked).
+   * Used by Train for the track path.
    */
   function getTrackRoute() {
+    return CONFIG.fullTrackRoute;
+  }
+
+  /**
+   * Track stops — only unlocked rooms where visitors can disembark.
+   * Used by Wave for visitor distribution.
+   */
+  function getTrackStops() {
     const rooms = get('rooms');
     return CONFIG.fullTrackRoute.filter(r => rooms[r] && !rooms[r].locked);
   }
@@ -90,5 +102,5 @@ const GameState = (() => {
     for (const k of Object.keys(_objects)) delete _objects[k];
   }
 
-  return { get, getTrackRoute, applyTier, reset };
+  return { get, getTrackRoute, getTrackStops, applyTier, reset };
 })();

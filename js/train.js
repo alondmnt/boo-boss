@@ -68,7 +68,14 @@ const Train = (() => {
       }
     }
 
-    d += ` L${exitX},${exitY}`;
+    // Return path: from last room (top-right), down the right wall to ground, exit right
+    const lastCentre = centres[centres.length - 1];
+    const groundY = centres[0].y; // entrance Y (ground floor)
+    const rightWallX = svgW - L.wallT - 20;
+    d += ` L${rightWallX},${lastCentre.y}`;
+    d += ` Q${rightWallX},${(lastCentre.y + groundY) / 2} ${rightWallX},${groundY}`;
+    d += ` L${svgW + 20},${groundY}`;
+
     return { d, route };
   }
 
