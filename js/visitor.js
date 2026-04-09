@@ -204,35 +204,90 @@ const Visitor = (() => {
   }
 
   /**
-   * Move visitor to a new room via edge transition.
-   * Walks to the exit edge of current room, then teleports to the entry edge
-   * of the new room and walks inward.
+   * Fade a visitor's opacity over a duration.
+   * @param {object} visitor
+   * @param {number} targetOpacity - 0 to 1
+   * @param {number} durationMs
+   * @param {function} onDone
+   */
+  function _fadeTo(visitor, targetOpacity, durationMs, onDone) {
+    visitor.el.style.transition = `opacity ${durationMs}ms ease-in-out`;
+    visitor.el.style.opacity = targetOpacity;
+    setTimeout(() => {
+      visitor.el.style.transition = '';
+      if (onDone) onDone();
+    }, durationMs + 20);
+  }
+
+  /**
+   * Move visitor to a new room.
+   * Same-floor: continuous walk through the wall (single CSS transition).
+   * Cross-floor: walk to stair edge, fade out, teleport, fade in, walk inward.
    */
   function moveToRoom(visitor, roomId, onArrive) {
-    const exitSide = _exitSide(visitor.currentRoom, roomId);
-    const entSide = _entrySide(exitSide);
-    const exitPos = _edgePosition(visitor.currentRoom, exitSide);
-    const entryPos = _edgePosition(roomId, entSide);
     const innerPos = _randomRoomPos(roomId);
-
-    if (!exitPos || !entryPos || !innerPos) {
+    if (!innerPos) {
       visitor.currentRoom = roomId;
       if (onArrive) onArrive();
       return;
     }
 
+    const fromRoom = CONFIG.rooms[visitor.currentRoom];
+    const toRoom = CONFIG.rooms[roomId];
+    const sameFloor = fromRoom && toRoom && fromRoom.floor === toRoom.floor;
+
     setState(visitor, 'walking');
 
-    // Step 1: walk to exit edge of current room
-    _walkTo(visitor, exitPos.x, exitPos.y, 400, () => {
-      // Step 2: teleport to entry edge of new room
-      visitor.el.style.transition = '';
-      visitor.el.setAttribute('transform', `translate(${entryPos.x}, ${entryPos.y})`);
+    if (sameFloor) {
+      // Continuous walk through the shared wall - single smooth transition
       visitor.currentRoom = roomId;
-
-      // Step 3: walk inward from the edge
-      _walkTo(visitor, innerPos.x, innerPos.y, 500, () => {
+      _walkTo(visitor, innerPos.x, innerPos.y, 800, () => {
         if (onArrive) onArrive();
+      });
+    } else {
+      // Cross-floor: walk to stair edge, fade, teleport, fade in, walk inward
+      const exitSide = _exitSide(visitor.currentRoom, roomId);
+      const entSide = _entrySide(exitSide);
+      const exitPos = _edgePosition(visitor.currentRoom, exitSide);
+      const entryPos = _edgePosition(roomId, entSide);
+
+      if (!exitPos || !entryPos) {
+        visitor.currentRoom = roomId;
+        _walkTo(visitor, innerPos.x, innerPos.y, 600, onArrive);
+        return;
+      }
+
+      // Walk to stair edge
+      _walkTo(visitor, exitPos.x, exitPos.y, 400, () => {
+        // Fade out (going through stairs)
+        _fadeTo(visitor, 0.3, 200, () => {
+          // Teleport to entry edge of new floor
+          visitor.el.style.transition = '';
+          visitor.el.setAttribute('transform', `translate(${entryPos.x}, ${entryPos.y})`);
+          visitor.currentRoom = roomId;
+          // Fade back in
+          _fadeTo(visitor, 1.0, 200, () => {
+            // Walk inward from stair edge
+            _walkTo(visitor, innerPos.x, innerPos.y, 400, () => {
+              if (onArrive) onArrive();
+            });
+          });
+        });
+      });
+    }
+  }
+
+  /**
+   * Walk visitor toward a track position and fade out (boarding the train).
+   * @param {object} visitor
+   * @param {{x: number, y: number}} trackPos - position to walk toward
+   * @param {function} onDone
+   */
+  function boardTrain(visitor, trackPos, onDone) {
+    setState(visitor, 'exiting');
+    _walkTo(visitor, trackPos.x, trackPos.y, 500, () => {
+      _fadeTo(visitor, 0, 300, () => {
+        if (onDone) onDone();
       });
     });
   }
@@ -271,5 +326,5 @@ const Visitor = (() => {
     }
   }
 
-  return { create, placeInRoom, wanderInRoom, moveToRoom, setState, pickNextRoom, remove, CREATURE_ICONS };
+  return { create, placeInRoom, wanderInRoom, moveToRoom, boardTrain, setState, pickNextRoom, remove, CREATURE_ICONS };
 })();
