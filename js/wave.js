@@ -206,36 +206,50 @@ const Wave = (() => {
     }, dwell);
   }
 
-  /** Send a visitor toward the exit. */
+  /** Mark visitor as waiting for the train (stop wandering). */
   function _sendToExit(visitor, gen) {
     if (_generation !== gen) return;
     Reactions.exitHappy(visitor);
+    visitor.state = 'waitingForTrain';
+    _exitedCount++;
 
-    // Move visitor to the entrance (ground floor exit point)
-    const exitRoom = 'entrance';
-
-    Visitor.moveToRoom(visitor, exitRoom, () => {
-      if (_generation !== gen) return;
-      visitor.state = 'exited';
-      Visitor.remove(visitor);
-      _exitedCount++;
-
-      // Check if all visitors have exited
-      if (_exitedCount >= _visitors.length) {
-        _beginExit(gen);
-      }
-    });
+    // When all visitors are waiting, start the collection train
+    if (_exitedCount >= _visitors.length) {
+      _beginCollection(gen);
+    }
   }
 
-  /** All visitors exited — run exit train and show summary. */
-  function _beginExit(gen) {
+  /** Run the collection train through all rooms, picking up visitors. */
+  function _beginCollection(gen) {
     if (_generation !== gen) return;
     _state = 'trainDeparting';
 
-    Train.animateExit(() => {
-      if (_generation !== gen) return;
-      _showSummary(gen);
-    });
+    Train.animateCollection(
+      // onRoomReached: board visitors in this room
+      (roomId) => {
+        if (_generation !== gen) return;
+        const trackPos = House.getRoomCentre(roomId);
+        if (!trackPos) return;
+
+        // Find visitors waiting in this room
+        const inRoom = _visitors.filter(v =>
+          v.currentRoom === roomId && v.state === 'waitingForTrain'
+        );
+        for (const visitor of inRoom) {
+          visitor.state = 'boarding';
+          Visitor.boardTrain(visitor, trackPos, () => {
+            Visitor.remove(visitor);
+          });
+        }
+      },
+      // onComplete: train has left, show summary
+      () => {
+        if (_generation !== gen) return;
+        // Remove any remaining visitors (edge cases)
+        for (const v of _visitors) Visitor.remove(v);
+        _showSummary(gen);
+      }
+    );
   }
 
   /** Display wave summary overlay. */

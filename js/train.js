@@ -249,38 +249,71 @@ const Train = (() => {
   }
 
   /**
-   * Animate the exit train collecting visitors and leaving.
-   * Calls onComplete() when train exits the screen.
+   * Animate the collection train: runs the full route, pausing at each room
+   * to collect visitors. Calls onRoomReached(roomId) at each stop so Wave
+   * can trigger boarding animations.
+   * Calls onComplete() when the train exits the screen.
    */
-  function animateExit(onComplete) {
+  function animateCollection(onRoomReached, onComplete) {
     if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
     if (!_pathEl) { if (onComplete) onComplete(); return; }
 
+    const { route } = _computeTrack();
+    const stops = _computeStopDistances(route);
     const totalLen = _pathEl.getTotalLength();
-    const speed = totalLen / (CONFIG.trainSpeedMs * 0.7); // exit is faster
+    const speed = totalLen / (CONFIG.trainSpeedMs * 1.2); // slightly slower for collection
+    let nextStopIdx = 0;
+    let paused = false;
     let startTime = null;
+    let pauseStart = null;
+    const stopDuration = 800; // pause at each room for boarding
 
     _cartEl.style.display = '';
-    // Start from first room
-    const firstPt = _pathEl.getPointAtLength(0);
-    _cartEl.setAttribute('transform', `translate(${firstPt.x},${firstPt.y})`);
 
     function step(timestamp) {
       if (!startTime) startTime = timestamp;
-      const dist = (timestamp - startTime) * speed;
 
-      if (dist >= totalLen) {
+      if (paused) {
+        if (timestamp - pauseStart >= stopDuration) {
+          paused = false;
+          startTime = timestamp - (currentDist / speed);
+        } else {
+          _animId = requestAnimationFrame(step);
+          return;
+        }
+      }
+
+      var currentDist = (timestamp - startTime) * speed;
+
+      if (currentDist >= totalLen) {
         _cartEl.style.display = 'none';
         if (onComplete) onComplete();
         return;
       }
 
-      const pt = _pathEl.getPointAtLength(dist);
+      const pt = _pathEl.getPointAtLength(currentDist);
       _cartEl.setAttribute('transform', `translate(${pt.x},${pt.y})`);
+
+      // Check for room stops
+      if (nextStopIdx < stops.length && currentDist >= stops[nextStopIdx].distance) {
+        const stop = stops[nextStopIdx];
+        nextStopIdx++;
+        paused = true;
+        pauseStart = timestamp;
+        if (onRoomReached) onRoomReached(stop.roomId);
+      }
+
       _animId = requestAnimationFrame(step);
     }
 
     _animId = requestAnimationFrame(step);
+  }
+
+  /**
+   * Simple exit animation (no stops). Used as fallback.
+   */
+  function animateExit(onComplete) {
+    animateCollection(null, onComplete);
   }
 
   /** Recompute and animate the track to include newly unlocked rooms. */
@@ -308,5 +341,5 @@ const Train = (() => {
     if (_cartEl) _cartEl.style.display = 'none';
   }
 
-  return { init, animateEntry, animateExit, extendTrack, stop };
+  return { init, animateEntry, animateCollection, animateExit, extendTrack, stop };
 })();
