@@ -150,7 +150,8 @@ const Wave = (() => {
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;
-            _moveToNextRoom(visitor, gen);
+            // Flee to an adjacent room (no dwell delay)
+            _fleeFromScare(visitor, gen);
           });
           return;
         } else if (result.result === 'loved') {
@@ -169,6 +170,18 @@ const Wave = (() => {
 
       // No encounter (or neutral): move to next room
       _moveToNextRoom(visitor, gen);
+    });
+  }
+
+  /** Scared visitor bolts to an adjacent room, then resumes wandering. */
+  function _fleeFromScare(visitor, gen) {
+    if (_generation !== gen) return;
+    const nextRoom = Visitor.pickNextRoom(visitor);
+    Visitor.moveToRoom(visitor, nextRoom, () => {
+      if (_generation !== gen) return;
+      visitor.roomsVisited++;
+      // Resume wandering immediately (no dwell - they're spooked)
+      _wanderLoop(visitor, gen);
     });
   }
 
