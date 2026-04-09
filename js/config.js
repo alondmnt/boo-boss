@@ -43,14 +43,19 @@ const CONFIG = {
     tower:    { floor: 3, col: 1, label: 'Tower',         colour: '#2F4F4F', locked: true },
   },
 
-  /** Room adjacency — rooms connected on foot (same floor + staircases). */
+  /**
+   * Room adjacency — same-floor (shared wall) + staircases (same column, one floor up/down).
+   *   F3:  Attic (left)    | Tower (right)
+   *   F2:  Bathroom (left) | Bedroom (right)
+   *   F1:  Entrance (left) | Kitchen (right)
+   */
   adjacency: {
-    entrance: ['kitchen', 'bedroom'],
-    kitchen:  ['entrance'],
-    bedroom:  ['bathroom', 'entrance', 'attic'],
-    bathroom: ['bedroom'],
-    attic:    ['tower', 'bathroom'],
-    tower:    ['attic'],
+    entrance: ['kitchen', 'bathroom'],      // right wall + stairs up (left col)
+    kitchen:  ['entrance', 'bedroom'],      // left wall + stairs up (right col)
+    bathroom: ['bedroom', 'entrance', 'attic'], // right wall + stairs down/up (left col)
+    bedroom:  ['bathroom', 'kitchen', 'tower'], // left wall + stairs down/up (right col)
+    attic:    ['tower', 'bathroom'],        // right wall + stairs down (left col)
+    tower:    ['attic', 'bedroom'],         // left wall + stairs down (right col)
   },
 
   /**
