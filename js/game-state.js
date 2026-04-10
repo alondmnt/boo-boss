@@ -8,6 +8,13 @@ const GameState = (() => {
   const _booleans = {};
   const _objects = {};
 
+  /** Add an item to an array store, skipping duplicates. */
+  function _addUnique(key, item) {
+    const arr = _arrays[key] || [];
+    if (!arr.includes(item) && !CONFIG[key].includes(item)) arr.push(item);
+    _arrays[key] = arr;
+  }
+
   /** Unlock a room by key. */
   function _unlockRoom(roomId) {
     if (!_objects.rooms) _objects.rooms = {};
@@ -16,9 +23,9 @@ const GameState = (() => {
 
   /** Maps UNLOCK_TIERS keys to state mutations. */
   const TIER_ACTIONS = {
-    owl:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'owl']; },
-    snake: () => { _arrays.creatures = [...(_arrays.creatures || []), 'snake']; },
-    rat:   () => { _arrays.creatures = [...(_arrays.creatures || []), 'rat']; },
+    owl:   () => { _addUnique('creatures', 'owl'); },
+    snake: () => { _addUnique('creatures', 'snake'); },
+    rat:   () => { _addUnique('creatures', 'rat'); },
 
     bathroom: () => { _unlockRoom('bathroom'); },
     attic:    () => { _unlockRoom('attic'); },
