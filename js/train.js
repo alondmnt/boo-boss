@@ -266,6 +266,7 @@ const Train = (() => {
     let paused = false;
     let startTime = null;
     let pauseStart = null;
+    let lastDist = 0;
     const stopDuration = 800; // pause at each room for boarding
 
     _cartEl.style.display = '';
@@ -276,14 +277,15 @@ const Train = (() => {
       if (paused) {
         if (timestamp - pauseStart >= stopDuration) {
           paused = false;
-          startTime = timestamp - (currentDist / speed);
+          startTime = timestamp - (lastDist / speed);
         } else {
           _animId = requestAnimationFrame(step);
           return;
         }
       }
 
-      var currentDist = (timestamp - startTime) * speed;
+      const currentDist = (timestamp - startTime) * speed;
+      lastDist = currentDist;
 
       if (currentDist >= totalLen) {
         _cartEl.style.display = 'none';

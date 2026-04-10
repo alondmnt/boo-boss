@@ -119,7 +119,8 @@ const Wave = (() => {
    */
   function _wanderLoop(visitor, gen) {
     if (_generation !== gen) return;
-    if (visitor.state === 'exiting' || visitor.state === 'exited') return;
+    if (visitor.state === 'exiting' || visitor.state === 'exited' ||
+        visitor.state === 'waitingForTrain' || visitor.state === 'boarding') return;
 
     // Exit threshold set once per visitor
     if (visitor._maxVisits == null) {
