@@ -34,14 +34,18 @@ const Wave = (() => {
     // Generate visitors
     const count = CONFIG.waveSizing.base + Math.floor(waveNum * CONFIG.waveSizing.perWave);
     const creaturePool = GameState.get('creatures');
+    if (!creaturePool || creaturePool.length === 0) return;
 
     // Check for showcase tier (force one visitor to fear a newly unlocked creature)
     const showcase = Progress.consumeShowcase();
 
     for (let i = 0; i < count; i++) {
       const fear = _randomFrom(creaturePool);
+      // Love must differ from fear (if pool allows)
       let love = _randomFrom(creaturePool);
-      while (love === fear) love = _randomFrom(creaturePool);
+      if (creaturePool.length > 1) {
+        while (love === fear) love = _randomFrom(creaturePool);
+      }
 
       const visitor = Visitor.create(fear, love);
       _visitors.push(visitor);
@@ -51,13 +55,11 @@ const Wave = (() => {
     if (showcase && _visitors.length > 0) {
       const showcaseType = showcase.key;
       if (creaturePool.includes(showcaseType)) {
-        _visitors[0].fear = showcaseType;
-        // Rebuild thought bubble (recreate the SVG)
-        // For simplicity, just update the fear — the SVG was built with the original fear
-        // but since we generate visitors before placing, we can recreate
         const v = _visitors[0];
         Visitor.remove(v);
-        _visitors[0] = Visitor.create(showcaseType, v.love === showcaseType ? _randomFrom(creaturePool.filter(c => c !== showcaseType)) : v.love);
+        const others = creaturePool.filter(c => c !== showcaseType);
+        const love = others.length > 0 ? _randomFrom(others) : showcaseType;
+        _visitors[0] = Visitor.create(showcaseType, love);
       }
     }
 

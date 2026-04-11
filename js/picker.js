@@ -7,7 +7,8 @@ const Picker = (() => {
   let _panel = null;
   let _selectedType = null;
   let _roomClickHandlers = [];
-  let _onDeploy = null; // callback: (creatureType, roomId) => void
+  let _onDeploy = null;
+  const _onCooldown = new Set(); // creature types currently on cooldown
 
   /** Creature type -> emoji icon for panel buttons. */
   const ICONS = {
@@ -35,6 +36,7 @@ const Picker = (() => {
    */
   function render() {
     if (!_panel) return;
+    _onCooldown.clear();
     _panel.innerHTML = '';
     const creatures = GameState.get('creatures');
 
@@ -55,9 +57,10 @@ const Picker = (() => {
 
   /** Stage 1: player taps a creature slot. */
   function _onSlotTap(type) {
-    // Ignore if on cooldown
+    // Ignore if on cooldown (JS set is the authoritative lock)
+    if (_onCooldown.has(type)) return;
     const slot = _getSlot(type);
-    if (!slot || slot.classList.contains('scare-panel__slot--cooldown')) return;
+    if (!slot) return;
 
     // If already selected, deselect
     if (_selectedType === type) {
@@ -93,6 +96,9 @@ const Picker = (() => {
 
   /** Stage 2: player taps a room to deploy. */
   function _onRoomTap(creatureType, roomId) {
+    // Guard: creature already on cooldown (prevents double-fire from click+touchend)
+    if (_onCooldown.has(creatureType)) return;
+
     if (ScareFactory.isOccupied(roomId)) {
       Audio.play('occupied');
       const el = House.getRoomEl(roomId);
@@ -100,25 +106,28 @@ const Picker = (() => {
         el.classList.add('house__room--flash-red');
         setTimeout(() => el.classList.remove('house__room--flash-red'), 300);
       }
+      cleanup();
       return;
     }
 
-    // Notify deploy handler (Wave wires this up with onExpire)
-    if (_onDeploy) _onDeploy(creatureType, roomId);
-
-    // Start cooldown on this creature slot
+    // Lock immediately BEFORE deploy (prevents any race condition)
     disableSlot(creatureType);
     cleanup();
+
+    // Deploy via Wave handler
+    if (_onDeploy) _onDeploy(creatureType, roomId);
   }
 
   /** Start cooldown animation on a creature slot. */
   function disableSlot(type) {
+    _onCooldown.add(type);
     const slot = _getSlot(type);
     if (!slot) return;
     slot.classList.add('scare-panel__slot--cooldown');
 
     const cdEl = slot.querySelector('.scare-panel__cooldown');
-    const cooldown = GameState.get('creatureCooldowns')[type] || CONFIG.creatureLifetimeMs;
+    // Timer matches creature lifetime (how long it stays in the room)
+    const cooldown = GameState.get('creatureLifetimeMs');
     const start = Date.now();
 
     function tick() {
@@ -136,6 +145,7 @@ const Picker = (() => {
 
   /** Re-enable a creature slot after cooldown. */
   function enableSlot(type) {
+    _onCooldown.delete(type);
     const slot = _getSlot(type);
     if (!slot) return;
     slot.classList.remove('scare-panel__slot--cooldown');

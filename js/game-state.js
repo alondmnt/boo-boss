@@ -32,13 +32,8 @@ const GameState = (() => {
     tower:    () => { _unlockRoom('tower'); },
 
     fasterCooldowns: () => {
-      // 25% reduction to all cooldowns
-      const reduced = {};
-      const base = CONFIG.creatureCooldowns;
-      for (const k of Object.keys(base)) {
-        reduced[k] = Math.round(base[k] * 0.75);
-      }
-      _objects.creatureCooldowns = reduced;
+      // 25% reduction to creature lifetime (deploy -> expire cycle)
+      _objects.creatureLifetimeMs = Math.round(CONFIG.creatureLifetimeMs * 0.75);
     },
 
     endlessMode: () => { _booleans.endlessMode = true; },
@@ -52,18 +47,21 @@ const GameState = (() => {
   function get(key) {
     if (key in _booleans) return _booleans[key];
     if (key in _objects) {
+      const override = _objects[key];
       const base = CONFIG[key];
+      // Scalar override (numbers, strings): return directly
+      if (typeof override !== 'object' || override === null) return override;
       if (base && typeof base === 'object' && !Array.isArray(base)) {
         // Deep merge one level — needed for rooms (each room is an object)
         const merged = {};
         for (const k of Object.keys(base)) {
-          merged[k] = _objects[key][k]
-            ? { ...base[k], ..._objects[key][k] }
+          merged[k] = override[k]
+            ? { ...base[k], ...override[k] }
             : base[k];
         }
         return merged;
       }
-      return { ...base, ..._objects[key] };
+      return { ...base, ...override };
     }
     if (key in _arrays) return [...CONFIG[key], ..._arrays[key]];
     return CONFIG[key];

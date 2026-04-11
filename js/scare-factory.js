@@ -18,6 +18,11 @@ const ScareFactory = (() => {
   function deploy(creatureType, roomId, onExpire) {
     if (_deployed[roomId]) return null;
 
+    // Only one instance of each creature type at a time
+    for (const c of Object.values(_deployed)) {
+      if (c.type === creatureType) return null;
+    }
+
     const creature = Creatures.create(creatureType, roomId);
     if (!creature) return null;
 
@@ -32,7 +37,7 @@ const ScareFactory = (() => {
     // Start lifetime timer
     creature.timer = setTimeout(() => {
       _expire(creature, onExpire);
-    }, CONFIG.creatureLifetimeMs);
+    }, GameState.get('creatureLifetimeMs'));
 
     Audio.play('deploy');
     return creature;
