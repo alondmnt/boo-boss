@@ -43,6 +43,7 @@ html, body {
 }
 #score-display, #wave-display { min-width: 70px; }
 #score-display { font-weight: 600; }
+.visitor-count { font-size: 0.75rem; opacity: 0.7; margin-left: 4px; }
 #wave-display { text-align: center; opacity: 0.8; }
 #sound-btn, #reset-btn {
   background: none; border: none; color: #e0d0ff;

@@ -92,6 +92,7 @@ const Wave = (() => {
           visitorIdx++;
         }
         _state = 'visiting';
+        _updateVisitorCount();
         for (const visitor of _visitors) {
           _wanderLoop(visitor, gen);
         }
@@ -209,12 +210,23 @@ const Wave = (() => {
     }, dwell);
   }
 
+  /** Update the visitor count display in the top bar. */
+  function _updateVisitorCount() {
+    const el = document.getElementById('visitor-count');
+    if (!el) return;
+    const wandering = _visitors.filter(v =>
+      v.state !== 'waitingForTrain' && v.state !== 'boarding' && v.state !== 'exited'
+    ).length;
+    el.textContent = wandering > 0 ? `(${wandering} exploring)` : '';
+  }
+
   /** Mark visitor as waiting for the train (stop wandering). */
   function _sendToExit(visitor, gen) {
     if (_generation !== gen) return;
     Reactions.exitHappy(visitor);
     visitor.state = 'waitingForTrain';
     _exitedCount++;
+    _updateVisitorCount();
 
     // When all visitors are waiting, start the collection train
     if (_exitedCount >= _visitors.length) {
@@ -259,6 +271,8 @@ const Wave = (() => {
   function _showSummary(gen) {
     if (_generation !== gen) return;
     _state = 'summary';
+    const countEl = document.getElementById('visitor-count');
+    if (countEl) countEl.textContent = '';
 
     const totalVisitors = _visitors.length;
     const scarePct = totalVisitors > 0 ? _scaredVisitorCount / totalVisitors : 0;
