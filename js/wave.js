@@ -65,6 +65,10 @@ const Wave = (() => {
 
     Audio.play('waveStart');
 
+    // Store score baseline so _updateScore can show live wave points
+    const scoreEl = document.getElementById('score-value');
+    if (scoreEl) scoreEl.dataset.waveBase = scoreEl.textContent;
+
     // Only stop at unlocked rooms for visitor disembarkation
     const stops = GameState.getTrackStops();
     let visitorIdx = 0;
@@ -318,11 +322,13 @@ const Wave = (() => {
     }
   }
 
-  /** Update the score display during the wave. */
+  /** Update the score display with wave-local points as they accumulate. */
   function _updateScore() {
     const el = document.getElementById('score-value');
-    if (el) el.textContent = parseInt(el.textContent || '0') + 0;
-    // Score is managed by Game — Wave just tracks wave-local score
+    if (!el) return;
+    // Game._totalScore is not accessible here, so update relative to wave start
+    const base = parseInt(el.dataset.waveBase || el.textContent || '0');
+    el.textContent = base + _waveScore;
   }
 
   /** Pick a random element from an array. */

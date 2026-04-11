@@ -131,12 +131,10 @@ const Progress = (() => {
     overlay.querySelector('.unlock-fanfare__label').textContent = tier.label;
 
     overlay.classList.remove('overlay--hidden');
-    overlay.classList.add('unlock-fanfare--active');
     Audio.play('fanfare');
 
     function dismiss() {
       overlay.classList.add('overlay--hidden');
-      overlay.classList.remove('unlock-fanfare--active');
       overlay.removeEventListener('click', dismiss);
       overlay.removeEventListener('touchend', dismiss);
     }

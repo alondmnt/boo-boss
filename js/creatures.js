@@ -1304,5 +1304,5 @@ const Creatures = (() => {
     return GameState.get('creatures');
   }
 
-  return { create, remove, setPose, getTypes };
+  return { create, remove, setPose };
 })();
