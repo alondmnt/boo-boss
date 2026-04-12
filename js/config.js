@@ -10,7 +10,7 @@ const CONFIG = {
     dinosaur: 17000, owl: 14000, snake: 16000, rat: 13000,
   },
 
-  /* ─── Monster types (MVP: auto-assigned, no player choice) ─── */
+  /* ─── Monster types (auto-assigned until monster lab unlocks) ─── */
   monsterTypes: ['zombie', 'witch', 'skeleton'],
   defaultMonsterType: {
     spider: 'skeleton', gorilla: 'zombie', bat: 'zombie', cat: 'witch',
@@ -111,6 +111,10 @@ const UNLOCK_TIERS = [
   { coins: 40, key: 'tower',           icon: '🗼', label: 'Tower unlocked!' },
   { coins: 45, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
   { coins: 50, key: 'endlessMode',     icon: '♾️',  label: 'Endless mode!' },
+  { coins: 55, key: 'monsterLab',      icon: '🧪', label: 'Monster Lab unlocked!' },
+  { coins: 65, key: 'vampire',         icon: '🧛', label: 'Vampire type!' },
+  { coins: 75, key: 'astronaut',       icon: '🧑‍🚀', label: 'Astronaut type!' },
+  { coins: 85, key: 'ghost',           icon: '👻', label: 'Ghost type!' },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */

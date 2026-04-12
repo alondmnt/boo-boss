@@ -38,6 +38,11 @@ const GameState = (() => {
     },
 
     endlessMode: () => { _booleans.endlessMode = true; },
+
+    monsterLab: () => { _booleans.monsterLab = true; },
+    vampire:    () => { _addUnique('monsterTypes', 'vampire'); },
+    astronaut:  () => { _addUnique('monsterTypes', 'astronaut'); },
+    ghost:      () => { _addUnique('monsterTypes', 'ghost'); },
   };
 
   /**
