@@ -91,6 +91,22 @@ const CONFIG = {
     combo3x: 2.0,
     waveBonusThreshold: 0.8,
     waveBonus: 50,
+    monsterComboBonus: 1.25,
+  },
+
+  /**
+   * Creature+monster type combos that grant a scare bonus.
+   * Key format: "creature:monsterType". Active only when monster lab is unlocked.
+   */
+  monsterCombos: {
+    'bat:skeleton':    true,
+    'cat:witch':       true,
+    'gorilla:zombie':  true,
+    'spider:skeleton': true,
+    'snake:zombie':    true,
+    'owl:witch':       true,
+    'dinosaur:zombie': true,
+    'rat:skeleton':    true,
   },
 
   /* ─── Coins ─── */

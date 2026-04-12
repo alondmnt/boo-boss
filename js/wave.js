@@ -155,6 +155,7 @@ const Wave = (() => {
           _waveScore += result.points;
           _scaredVisitorCount++;
           _updateScore();
+          if (result.combo) Particles.comboFlash(creature.el);
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;

@@ -323,6 +323,12 @@ html, body {
 .particle--spooky { animation: particle-fly 0.7s ease-out forwards; }
 .particle--heart { animation: particle-float 0.9s ease-out forwards; }
 .particle--confetti { animation: particle-fly 1s ease-out forwards; font-size: 1.3rem; }
+.particle--combo {
+  animation: particle-float 1.2s ease-out forwards;
+  font-size: 0.9rem; font-weight: bold; color: #ffcc00;
+  text-shadow: 0 0 6px rgba(255, 170, 0, 0.8), 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
 
 /* ===== Keyframes ===== */
 

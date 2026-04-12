@@ -83,5 +83,11 @@ const Particles = (() => {
     }
   }
 
-  return { spookyBurst, hearts, confetti };
+  /** Combo indicator — "COMBO" text floats up from creature on bonus hit. */
+  function comboFlash(targetEl) {
+    const { cx, cy } = _centre(targetEl);
+    _spawn('particle particle--combo', cx, cy, 0, -40, '⚡COMBO⚡', 1200);
+  }
+
+  return { spookyBurst, hearts, confetti, comboFlash };
 })();
