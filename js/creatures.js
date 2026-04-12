@@ -236,7 +236,7 @@ const Creatures = (() => {
     `;
 
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- longer thread (dropped lower) -->
         <line x1="0" y1="-50" x2="0" y2="-14" stroke="#888" stroke-width="0.6" opacity="0.7"/>
         ${scareLegsLeft}${scareLegsRight}
@@ -287,7 +287,7 @@ const Creatures = (() => {
     `;
 
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         ${thread}
         ${hugLegsLeft}${hugLegsRight}
         ${hugBody}
@@ -369,7 +369,7 @@ const Creatures = (() => {
 
     /* ── scare: stands upright, arms wide, roaring ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- body upright, puffed chest -->
         <ellipse cx="0" cy="2" rx="22" ry="26" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
         <!-- chest plate bulging -->
@@ -435,7 +435,7 @@ const Creatures = (() => {
 
     /* ── hug: sitting, arms open, gentle head tilt ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- body sitting (still massive) -->
         <ellipse cx="0" cy="10" rx="21" ry="22" fill="url(#gorilla-body-grad)" stroke="#0a0a0a" stroke-width="0.8"/>
         <ellipse cx="0" cy="12" rx="13" ry="13" fill="#4a4a4a" opacity="0.25"/>
@@ -545,7 +545,7 @@ const Creatures = (() => {
 
     /* ── scare: wings open wide, swoops down, red eyes ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- wings snapped open wide with vein patterns -->
         <path d="M-6,-2 Q-15,-14 -28,-10 Q-26,-4 -24,2 Q-20,6 -14,8 Q-10,6 -7,4"
               fill="url(#bat-wing-grad)" stroke="#1a0a2a" stroke-width="0.7"/>
@@ -579,7 +579,7 @@ const Creatures = (() => {
 
     /* ── hug: wings wrapped like a blanket, content face ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- wings wrapped around body -->
         <path d="M-7,-6 Q-16,-8 -18,-2 Q-17,4 -14,8 Q-10,12 -4,12 Q-2,10 -1,6"
               fill="url(#bat-wing-grad)" stroke="#1a0a2a" stroke-width="0.6"/>
@@ -660,7 +660,7 @@ const Creatures = (() => {
 
     /* ── scare: back arched, fur on end, hissing ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- puffed tail (twice as thick) -->
         <path d="M10,10 Q22,6 24,-2 Q26,-12 20,-18 Q18,-22 15,-20"
               fill="none" stroke="#1a0a2a" stroke-width="6" stroke-linecap="round"/>
@@ -715,7 +715,7 @@ const Creatures = (() => {
 
     /* ── hug: flopped on back, belly up, squinty happy eyes, purr lines ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- body flopped on back -->
         <ellipse cx="0" cy="5" rx="14" ry="12" fill="url(#cat-body-grad)" stroke="#0a0a1a" stroke-width="0.6"/>
         <!-- exposed belly (lighter) -->
@@ -861,7 +861,7 @@ const Creatures = (() => {
 
     /* ── scare: lunging forward, jaws gaping, roaring ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- tail raised, lashing -->
         <path d="M-10,4 Q-24,-4 -32,-2 Q-38,0 -36,6"
               fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.9"/>
@@ -916,7 +916,7 @@ const Creatures = (() => {
 
     /* ── hug: sitting, mouth closed in smile, arms open, content ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- tail relaxed, curled gently -->
         <path d="M-10,8 Q-18,10 -24,14 Q-28,18 -26,22 Q-24,24 -22,22"
               fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.6"/>
@@ -1027,7 +1027,7 @@ const Creatures = (() => {
 
     /* ── scare: head rotated, eyes wide with tiny pupils, wings spread, tufts up ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- plump body -->
         <ellipse cx="0" cy="6" rx="14" ry="16" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.7"/>
         <ellipse cx="-3" cy="2" rx="5" ry="8" fill="#aa8a4a" opacity="0.15"/>
@@ -1065,7 +1065,7 @@ const Creatures = (() => {
 
     /* ── hug: wings wrapped forward, half-closed content eyes, blush ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- plump body (slightly rounder) -->
         <ellipse cx="0" cy="6" rx="15" ry="17" fill="url(#owl-body-grad)" stroke="#3a2010" stroke-width="0.7"/>
         <ellipse cx="-3" cy="2" rx="6" ry="9" fill="#aa8a4a" opacity="0.12"/>
@@ -1158,7 +1158,7 @@ const Creatures = (() => {
 
     /* ── scare: hood flares wide, body coils up, tongue fully out, menacing ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- tight coiled base -->
         <path d="M-18,14 Q-12,8 -6,10 Q0,12 6,10 Q12,8 18,12 Q22,16 16,18 Q10,20 4,18 Q-2,16 -8,18 Q-14,20 -18,16"
               fill="none" stroke="url(#snake-body-grad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1199,7 +1199,7 @@ const Creatures = (() => {
 
     /* ── hug: gentle relaxed curve, hood down, soft eyes, blush ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- gentle relaxed curve (not coiled tight) -->
         <path d="M-28,10 Q-18,0 -8,4 Q0,8 8,4 Q18,0 24,6 Q28,10 26,14"
               fill="none" stroke="url(#snake-body-grad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1309,7 +1309,7 @@ const Creatures = (() => {
 
     /* ── scare: standing on hind legs, mouth open with front teeth, ears back ── */
     const scare = `
-      <g class="creature__pose creature__pose--scare" style="display:none">
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">
         <!-- tail (stiff and raised) -->
         <path d="M0,16 Q-8,20 -14,16 Q-20,10 -22,4" fill="none" stroke="#dda0a0" stroke-width="1.5" stroke-linecap="round"/>
         <!-- body upright, standing on hind legs -->
@@ -1356,7 +1356,7 @@ const Creatures = (() => {
 
     /* ── hug: rolled onto side, gentle face, tail curled, paws together ── */
     const hug = `
-      <g class="creature__pose creature__pose--hug" style="display:none">
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">
         <!-- tail curled around body -->
         ${tail(true)}
         <!-- body on side (slightly wider, relaxed) -->
@@ -1402,8 +1402,8 @@ const Creatures = (() => {
     return `
       <defs></defs>
       <g class="creature__pose creature__pose--idle">${base}</g>
-      <g class="creature__pose creature__pose--scare" style="display:none">${base}</g>
-      <g class="creature__pose creature__pose--hug" style="display:none">${base}</g>
+      <g class="creature__pose creature__pose--scare" style="opacity:0;pointer-events:none">${base}</g>
+      <g class="creature__pose creature__pose--hug" style="opacity:0;pointer-events:none">${base}</g>
     `;
   }
 
@@ -1499,11 +1499,12 @@ const Creatures = (() => {
   function setPose(creature, pose) {
     if (!creature || !creature.el) return;
     const poses = creature.el.querySelectorAll('.creature__pose');
-    poses.forEach(p => { p.style.display = 'none'; });
+    poses.forEach(p => { p.style.opacity = '0'; p.style.pointerEvents = 'none'; });
 
     const target = creature.el.querySelector(`.creature__pose--${pose}`);
     if (target) {
-      target.style.display = '';
+      target.style.opacity = '1';
+      target.style.pointerEvents = '';
       creature.pose = pose;
     }
   }
