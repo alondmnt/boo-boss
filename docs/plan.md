@@ -170,9 +170,9 @@ visitor fears and loves are keyed to **creature type** (people are scared of spi
 #### progressive unlock of axes
 
 ```
-MVP (0-40):       [creature] + [room]                            = 2 picks
-expansion 1 (50-80):  [creature] + [monster type] + [room]          = 3 picks
-expansion 2 (80-120): [creature] + [monster type] + [action] + [room] = 4 picks
+MVP (0-50):        [creature] + [room]                            = 2 picks
+expansion 1 (55-85):  [creature] + [monster type] + [room]          = 3 picks
+expansion 2 (90+):    [creature] + [monster type] + [action] + [room] = 4 picks
 ```
 
 in the MVP, creatures have a default monster type and default action baked in. the player just picks creature + room. when axis 2 unlocks, the existing creatures gain selectable monster types. when axis 3 unlocks, actions become selectable too.
@@ -254,25 +254,34 @@ maps directly to car-doctor's IIFE module pattern. each file is a `<script>` loa
 
 | coins | key | what unlocks | axis |
 |-------|-----|-------------|------|
-| 5 | `owl` | owl creature | creature |
-| 10 | `attic` | attic room opens (floor 2 complete) | room |
-| 18 | `snake` | snake creature | creature |
-| 25 | `fasterCooldowns` | all cooldowns reduced by 25% | upgrade |
+| 5 | `dinosaur` | dinosaur creature (T-rex, child request) | creature |
+| 10 | `bathroom` | bathroom room opens (floor 2 complete) | room |
+| 18 | `owl` | owl creature | creature |
+| 25 | `snake` | snake creature | creature |
+| 30 | `attic` | attic room opens | room |
 | 35 | `rat` | rat creature | creature |
-| 40 | `endlessMode` | play past wave 10, increasing difficulty | upgrade |
+| 40 | `tower` | tower room opens (floor 3) | room |
+| 45 | `fasterCooldowns` | all cooldowns reduced by 25% | upgrade |
+| 50 | `endlessMode` | play past wave 10, increasing difficulty | upgrade |
+| 55 | `monsterLab` | monster type selection (3-pick flow) | axis 2 |
+| 65 | `vampire` | vampire monster type | monster |
+| 75 | `astronaut` | astronaut monster type (child request) | monster |
+| 85 | `ghost` | ghost monster type | monster |
 
-interleaves creatures with rooms and upgrades so each unlock type feels fresh. each tier uses the same fanfare overlay + showcase pattern as car-doctor. monster types and actions are deferred to expansion 1 and 2.
+interleaves creatures with rooms and upgrades so each unlock type feels fresh. each tier uses the same fanfare overlay + showcase pattern as car-doctor.
 
 ## expansion roadmap (outline)
 
-### expansion 1: "the monster lab" (~coins 50-80)
+### expansion 1: "the monster lab" (~coins 55-85) [IMPLEMENTED]
 **unlocks axis 2: monster types.** deployment becomes 3-pick: creature -> monster type -> room.
-- zombie, witch, skeleton available from the start of the expansion
-- vampire, werewolf, ghost, mummy, clown unlock progressively within this tier
-- each monster type modifies the creature SVG with costume elements and colour shifts
-- scare effectiveness multipliers for certain creature+monster combos
-- **tower room unlocks** (~coins 60) - floor 3 begins to open
-- new creatures interleaved: crow (~coins 55)
+- at 55 coins, monster lab unlocks: picker gains a sub-panel for monster type selection
+- zombie, witch, skeleton available from the start (base types)
+- vampire (65 coins): high collar cape, fangs, dark tint
+- astronaut (75 coins): helmet visor, suit collar, oxygen tube (child request)
+- ghost (85 coins): translucent, trailing wisps, floating hover animation
+- each monster type modifies the creature SVG with costume elements + CSS filters
+- creature+monster combo bonuses: matching pairs (e.g., bat:skeleton, cat:witch) grant 1.25x scare points, shown via floating "COMBO" indicator
+- tower room already unlocks at 40 coins (MVP tier)
 
 ### expansion 2: "the director's chair" (~coins 80-120)
 **unlocks axis 3: actions.** deployment becomes 4-pick: creature -> monster type -> action -> room.
@@ -298,10 +307,10 @@ strategic layer: do you theme rooms to match the creatures you deploy most, or s
 ### progressive complexity path
 
 ```
-MVP (0-40):            [creature] + [room]                                  = 2 picks
-expansion 1 (50-80):   [creature] + [monster type] + [room]                = 3 picks
-expansion 2 (80-120):  [creature] + [monster type] + [action] + [room]     = 4 picks
-expansion 3 (120+):    4 picks + [room themes & traps] (persistent layer)
+MVP (0-50):            [creature] + [room]                                  = 2 picks
+expansion 1 (55-85):   [creature] + [monster type] + [room]                = 3 picks [DONE]
+expansion 2 (90+):     [creature] + [monster type] + [action] + [room]     = 4 picks
+expansion 3:           4 picks + [room themes & traps] (persistent layer)
 ```
 
 ## verification
