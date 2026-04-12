@@ -17,7 +17,10 @@ const MonsterTypes = (() => {
     if (!creatureEl || !monsterType) return;
     creatureEl.classList.add(`creature--${monsterType}`);
 
-    const applicators = { zombie: _zombie, witch: _witch, skeleton: _skeleton };
+    const applicators = {
+      zombie: _zombie, witch: _witch, skeleton: _skeleton,
+      vampire: _vampire, astronaut: _astronaut, ghost: _ghost,
+    };
     const fn = applicators[monsterType];
     if (fn) fn(creatureEl);
   }
@@ -78,5 +81,74 @@ const MonsterTypes = (() => {
     });
   }
 
+  /** Vampire: high collar cape, fangs, red eyes, pale tint (via CSS class). */
+  function _vampire(el) {
+    const poses = el.querySelectorAll('.creature__pose');
+    poses.forEach(pose => {
+      const g = document.createElementNS(NS, 'g');
+      g.classList.add('monster-overlay', 'monster-overlay--vampire');
+      g.innerHTML = `
+        <!-- high collar cape (red lining) -->
+        <path d="M-10,-14 Q-14,-8 -14,8 Q-14,16 -10,20" fill="#1a0a0a" stroke="#3a0a0a" stroke-width="0.6" opacity="0.6"/>
+        <path d="M-12,-10 Q-12,4 -11,16" fill="none" stroke="#8a1a1a" stroke-width="0.8" opacity="0.4"/>
+        <path d="M10,-14 Q14,-8 14,8 Q14,16 10,20" fill="#1a0a0a" stroke="#3a0a0a" stroke-width="0.6" opacity="0.6"/>
+        <path d="M12,-10 Q12,4 11,16" fill="none" stroke="#8a1a1a" stroke-width="0.8" opacity="0.4"/>
+        <!-- collar points -->
+        <path d="M-8,-14 L-10,-20 L-6,-16" fill="#1a0a0a" stroke="#3a0a0a" stroke-width="0.5"/>
+        <path d="M8,-14 L10,-20 L6,-16" fill="#1a0a0a" stroke="#3a0a0a" stroke-width="0.5"/>
+        <!-- fangs -->
+        <path d="M-2,-8 L-2.5,-4" stroke="#e8e0d0" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M2,-8 L2.5,-4" stroke="#e8e0d0" stroke-width="0.8" stroke-linecap="round"/>
+      `;
+      pose.appendChild(g);
+    });
+  }
+
+  /** Astronaut: helmet visor dome, suit collar, oxygen tube. */
+  function _astronaut(el) {
+    const poses = el.querySelectorAll('.creature__pose');
+    poses.forEach(pose => {
+      const g = document.createElementNS(NS, 'g');
+      g.classList.add('monster-overlay', 'monster-overlay--astronaut');
+      g.innerHTML = `
+        <!-- helmet dome (visor with reflection) -->
+        <ellipse cx="0" cy="-18" rx="14" ry="12" fill="none" stroke="#c8d0d8" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="0" cy="-18" rx="12" ry="10" fill="#1a3a5a" opacity="0.25"/>
+        <!-- visor reflection glint -->
+        <path d="M-6,-24 Q-2,-26 2,-24" fill="none" stroke="#aaccee" stroke-width="0.8" opacity="0.6"/>
+        <!-- suit collar ring -->
+        <ellipse cx="0" cy="-8" rx="10" ry="3" fill="#c8c8c8" stroke="#888" stroke-width="0.6" opacity="0.5"/>
+        <!-- oxygen tube -->
+        <path d="M10,-12 Q16,-10 16,-4 Q16,2 12,4" fill="none" stroke="#aaa" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="12" cy="4" r="2" fill="#888" stroke="#666" stroke-width="0.4" opacity="0.5"/>
+        <!-- chest patch -->
+        <rect x="-3" y="-2" width="6" height="4" rx="1" fill="#c8c8c8" stroke="#888" stroke-width="0.3" opacity="0.4"/>
+        <line x1="-1" y1="-1" x2="3" y2="-1" stroke="#4a8aca" stroke-width="0.4" opacity="0.5"/>
+        <line x1="-1" y1="0.5" x2="2" y2="0.5" stroke="#4a8aca" stroke-width="0.4" opacity="0.5"/>
+      `;
+      pose.appendChild(g);
+    });
+  }
+
+  /** Ghost: trailing wisps, blue-white glow aura (main effect via CSS opacity + filter). */
+  function _ghost(el) {
+    const poses = el.querySelectorAll('.creature__pose');
+    poses.forEach(pose => {
+      const g = document.createElementNS(NS, 'g');
+      g.classList.add('monster-overlay', 'monster-overlay--ghost');
+      g.innerHTML = `
+        <!-- trailing wisps below body -->
+        <path d="M-6,18 Q-8,24 -4,28 Q0,32 -2,36" fill="none" stroke="#aaccee" stroke-width="0.8" opacity="0.3"/>
+        <path d="M2,18 Q4,26 0,30 Q-2,34 2,38" fill="none" stroke="#aaccee" stroke-width="0.6" opacity="0.25"/>
+        <path d="M6,16 Q10,22 6,28" fill="none" stroke="#aaccee" stroke-width="0.7" opacity="0.2"/>
+        <!-- aura glow halo -->
+        <ellipse cx="0" cy="-4" rx="20" ry="22" fill="#aaccee" opacity="0.06"/>
+        <ellipse cx="0" cy="-4" rx="16" ry="18" fill="#ccddff" opacity="0.05"/>
+      `;
+      pose.appendChild(g);
+    });
+  }
+
   return { apply };
 })();
+

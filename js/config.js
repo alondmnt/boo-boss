@@ -99,14 +99,18 @@ const CONFIG = {
    * Key format: "creature:monsterType". Active only when monster lab is unlocked.
    */
   monsterCombos: {
-    'bat:skeleton':    true,
-    'cat:witch':       true,
-    'gorilla:zombie':  true,
-    'spider:skeleton': true,
-    'snake:zombie':    true,
-    'owl:witch':       true,
-    'dinosaur:zombie': true,
-    'rat:skeleton':    true,
+    'bat:skeleton':     true,
+    'cat:witch':        true,
+    'gorilla:zombie':   true,
+    'spider:skeleton':  true,
+    'snake:zombie':     true,
+    'owl:witch':        true,
+    'dinosaur:zombie':  true,
+    'rat:skeleton':     true,
+    'bat:vampire':      true,
+    'cat:ghost':        true,
+    'spider:astronaut': true,
+    'dinosaur:astronaut': true,
   },
 
   /* ─── Coins ─── */
