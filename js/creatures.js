@@ -1243,16 +1243,22 @@ const Creatures = (() => {
     }
 
     // Build the outer <g> wrapper with positioning
+    // Inner <g> wrapper receives action animation classes so they don't
+    // clobber the translate-based positioning on the outer <g>.
     const NS = 'http://www.w3.org/2000/svg';
     const g = document.createElementNS(NS, 'g');
     g.classList.add('creature', `creature--${creatureType}`);
     g.setAttribute('transform', `translate(${centre.x}, ${centre.y})`);
-    g.innerHTML = factory();
+    const inner = document.createElementNS(NS, 'g');
+    inner.classList.add('creature__inner');
+    inner.innerHTML = factory();
+    g.appendChild(inner);
     layer.appendChild(g);
 
     return {
       type: creatureType,
       el: g,
+      innerEl: inner,
       roomId,
       pose: 'idle',
       timer: null,

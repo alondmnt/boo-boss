@@ -29,6 +29,11 @@ const Visitor = (() => {
     g.classList.add('visitor');
     g.setAttribute('data-visitor', id);
 
+    // Inner wrapper receives visual animation classes (scared/hugging)
+    // so they don't clobber the translate positioning on the outer <g>.
+    const inner = document.createElementNS(NS, 'g');
+    inner.classList.add('visitor__inner');
+
     // Build the stick figure (~40px tall, centred at 0,0 feet level)
     let svg = '';
 
@@ -80,11 +85,13 @@ const Visitor = (() => {
     svg += `  <text x="18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[love] || '?'}</text>`;
     svg += `</g>`;
 
-    g.innerHTML = svg;
+    inner.innerHTML = svg;
+    g.appendChild(inner);
 
     const visitor = {
       id,
       el: g,
+      innerEl: inner,
       fear,
       love,
       currentRoom: null,
@@ -292,15 +299,16 @@ const Visitor = (() => {
     });
   }
 
-  /** Swap the visitor's CSS state class. */
+  /** Swap the visitor's CSS state class on the inner wrapper. */
   function setState(visitor, state) {
-    const el = visitor.el;
-    el.classList.remove('visitor--walking', 'visitor--scared', 'visitor--hugging', 'visitor--exiting', 'visitor--riding');
-    el.classList.add(`visitor--${state}`);
+    // Animation classes go on innerEl to avoid clobbering position transforms
+    const target = visitor.innerEl || visitor.el;
+    target.classList.remove('visitor--walking', 'visitor--scared', 'visitor--hugging', 'visitor--exiting', 'visitor--riding');
+    target.classList.add(`visitor--${state}`);
     visitor.state = state;
 
     // Show/hide smile for exiting state
-    const smile = el.querySelector('.visitor__smile');
+    const smile = target.querySelector('.visitor__smile');
     if (smile) smile.style.display = state === 'exiting' ? '' : 'none';
   }
 

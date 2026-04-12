@@ -23,10 +23,10 @@ const Reactions = (() => {
    * @param {function} [onDone] - called when animation sequence completes
    */
   function scared(visitor, creature, onDone) {
-    // Creature: trigger action animation + scare pose
+    // Creature: trigger action animation on inner wrapper (not outer positioned <g>)
     const actionCls = Actions.getKeyframes(creature.action);
     const actionDur = Actions.getDuration(creature.action);
-    _flash(creature.el, actionCls, actionDur);
+    _flash(creature.innerEl || creature.el, actionCls, actionDur);
     Creatures.setPose(creature, 'scare');
     setTimeout(() => Creatures.setPose(creature, 'idle'), 1000);
 

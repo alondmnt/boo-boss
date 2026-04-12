@@ -92,7 +92,7 @@ html, body {
 }
 .visitor--walking .visitor__leg-l { animation: visitor-walk-l 0.4s steps(2) infinite; }
 .visitor--walking .visitor__leg-r { animation: visitor-walk-r 0.4s steps(2) infinite; }
-.visitor--scared { animation: visitor-scare 0.5s ease-out; }
+.visitor--scared { animation: visitor-scare 0.5s ease-out; }  /* on inner wrapper, won't clobber position */
 .visitor--hugging { animation: visitor-hug 1.2s ease-in-out; }
 .visitor--exiting .visitor__leg-l { animation: visitor-walk-l 0.3s steps(2) infinite; }
 .visitor--exiting .visitor__leg-r { animation: visitor-walk-r 0.3s steps(2) infinite; }
