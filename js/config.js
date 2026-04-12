@@ -7,21 +7,21 @@ const CONFIG = {
   creatures: ['spider', 'gorilla', 'bat', 'cat'],
   creatureCooldowns: {
     spider: 15000, gorilla: 18000, bat: 12000, cat: 14000,
-    owl: 14000, snake: 16000, rat: 13000,
+    dinosaur: 17000, owl: 14000, snake: 16000, rat: 13000,
   },
 
   /* ─── Monster types (MVP: auto-assigned, no player choice) ─── */
   monsterTypes: ['zombie', 'witch', 'skeleton'],
   defaultMonsterType: {
     spider: 'skeleton', gorilla: 'zombie', bat: 'zombie', cat: 'witch',
-    owl: 'witch', snake: 'zombie', rat: 'skeleton',
+    dinosaur: 'zombie', owl: 'witch', snake: 'zombie', rat: 'skeleton',
   },
 
   /* ─── Actions (MVP: auto-assigned, no player choice) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
   defaultAction: {
     spider: 'dropFromCeiling', gorilla: 'jumpOut', bat: 'dropFromCeiling',
-    cat: 'jumpOut', owl: 'dropFromCeiling', snake: 'jumpOut', rat: 'jumpOut',
+    cat: 'jumpOut', dinosaur: 'jumpOut', owl: 'dropFromCeiling', snake: 'jumpOut', rat: 'jumpOut',
   },
 
   /* ─── Rooms ─── */
@@ -102,13 +102,14 @@ const CONFIG = {
 };
 
 const UNLOCK_TIERS = [
-  { coins: 5,  key: 'owl',             icon: '🦉', label: 'Owl creature!' },
+  { coins: 5,  key: 'dinosaur',        icon: '🦕', label: 'Dinosaur creature!' },
   { coins: 10, key: 'bathroom',        icon: '🚿', label: 'Bathroom unlocked!' },
-  { coins: 18, key: 'snake',           icon: '🐍', label: 'Snake creature!' },
-  { coins: 25, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
+  { coins: 18, key: 'owl',             icon: '🦉', label: 'Owl creature!' },
+  { coins: 25, key: 'snake',           icon: '🐍', label: 'Snake creature!' },
   { coins: 30, key: 'attic',           icon: '🏚️', label: 'Attic unlocked!' },
   { coins: 35, key: 'rat',             icon: '🐀', label: 'Rat creature!' },
   { coins: 40, key: 'tower',           icon: '🗼', label: 'Tower unlocked!' },
+  { coins: 45, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
   { coins: 50, key: 'endlessMode',     icon: '♾️',  label: 'Endless mode!' },
 ];
 

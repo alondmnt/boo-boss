@@ -23,9 +23,10 @@ const GameState = (() => {
 
   /** Maps UNLOCK_TIERS keys to state mutations. */
   const TIER_ACTIONS = {
-    owl:   () => { _addUnique('creatures', 'owl'); },
-    snake: () => { _addUnique('creatures', 'snake'); },
-    rat:   () => { _addUnique('creatures', 'rat'); },
+    dinosaur: () => { _addUnique('creatures', 'dinosaur'); },
+    owl:      () => { _addUnique('creatures', 'owl'); },
+    snake:    () => { _addUnique('creatures', 'snake'); },
+    rat:      () => { _addUnique('creatures', 'rat'); },
 
     bathroom: () => { _unlockRoom('bathroom'); },
     attic:    () => { _unlockRoom('attic'); },

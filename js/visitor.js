@@ -9,7 +9,7 @@ const Visitor = (() => {
   /** Creature type -> emoji for thought bubbles. */
   const CREATURE_ICONS = {
     spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
-    owl: '🦉', snake: '🐍', rat: '🐀',
+    dinosaur: '🦕', owl: '🦉', snake: '🐍', rat: '🐀',
   };
 
   /** Small palette for visitor skin tones. */

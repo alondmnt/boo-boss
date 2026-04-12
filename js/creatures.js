@@ -86,6 +86,22 @@ const Creatures = (() => {
               <stop offset="100%" stop-color="#ffaa00"/>
             </radialGradient>
           </defs>`;
+      case 'dinosaur':
+        return `
+          <defs>
+            <radialGradient id="dino-body-grad" cx="45%" cy="35%" r="55%">
+              <stop offset="0%" stop-color="#3a6a2a"/>
+              <stop offset="100%" stop-color="#1a3a0a"/>
+            </radialGradient>
+            <radialGradient id="dino-belly-grad" cx="50%" cy="60%" r="50%">
+              <stop offset="0%" stop-color="#8a9a5a"/>
+              <stop offset="100%" stop-color="#6a7a3a"/>
+            </radialGradient>
+            <radialGradient id="dino-eye-grad" cx="35%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#eebb00"/>
+              <stop offset="100%" stop-color="#aa6600"/>
+            </radialGradient>
+          </defs>`;
       case 'snake':
         return `
           <defs>
@@ -748,6 +764,197 @@ const Creatures = (() => {
     return `${_defs('cat')}${idle}${scare}${hug}`;
   }
 
+  /* ─── Dinosaur factory (~60x55 centred at origin, T-rex silhouette) ─── */
+
+  function _dinosaur() {
+    /**
+     * T-rex: oversized head with heavy jaw and exposed teeth, thick muscular
+     * neck, barrel torso, powerful legs, heavy tail. Tiny vestigial arms.
+     * Dark swamp-green palette. Intimidating in idle and scare, soft in hug.
+     */
+
+    /* Hide texture: rough ridged scales along the body */
+    const hideRidges = (cx, cy, count, spread) => {
+      const marks = [];
+      for (let i = 0; i < count; i++) {
+        const x = cx + (i - count / 2) * spread;
+        const y = cy + (i % 2 === 0 ? -1 : 1.5);
+        marks.push(
+          `<path d="M${x - 1.5},${y + 1} L${x},${y - 2} L${x + 1.5},${y + 1}" fill="none" stroke="#0a2a06" stroke-width="0.6" opacity="0.5"/>`
+        );
+      }
+      return marks.join('\n');
+    };
+
+    /* Tiny vestigial arm */
+    const tinyArm = (side, extend = 0) => {
+      const sx = side === 'left' ? -1 : 1;
+      return `
+        <path d="M${sx * 8},-2 Q${sx * (12 + extend)},-5 ${sx * (13 + extend)},-2"
+              fill="none" stroke="#1a3a0a" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M${sx * (13 + extend)},-2 L${sx * (14 + extend)},-3.5 M${sx * (13 + extend)},-2 L${sx * (14.5 + extend)},-1"
+              stroke="#0a2a06" stroke-width="0.7" stroke-linecap="round"/>
+      `;
+    };
+
+    /* Upper teeth row (jagged, exposed even when mouth is closed) */
+    const upperTeeth = (y) => `
+      <path d="M14,${y} L15.5,${y + 2.5} L17,${y} L18.5,${y + 2.2} L20,${y - 0.3} L21.5,${y + 2} L23,${y - 0.5}"
+            fill="#e8e0c8" stroke="#aaa" stroke-width="0.3"/>
+    `;
+
+    /* ── idle: standing, head high, jaw clenched with teeth showing, tense predator ── */
+    const idle = `
+      <g class="creature__pose creature__pose--idle">
+        <!-- tail (heavy, sweeping back) -->
+        <path d="M-10,6 Q-22,2 -30,6 Q-36,10 -34,16"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.8"/>
+        <path d="M-10,8 Q-20,5 -28,9" fill="url(#dino-belly-grad)" opacity="0.3" stroke="none"/>
+        <!-- tail ridges -->
+        <path d="M-16,3 L-15,0 L-14,3" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.3"/>
+        <path d="M-22,4 L-21,1 L-20,4" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.3"/>
+        <path d="M-28,7 L-27,4.5 L-26,7" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.3"/>
+        <!-- tail tip -->
+        <path d="M-34,16 Q-36,19 -35,22" fill="none" stroke="#0a2a06" stroke-width="2" stroke-linecap="round"/>
+        <!-- body (barrel torso, powerful) -->
+        <ellipse cx="0" cy="4" rx="18" ry="16" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.8"/>
+        <!-- belly patch -->
+        <ellipse cx="2" cy="10" rx="10" ry="9" fill="url(#dino-belly-grad)" opacity="0.3"/>
+        ${hideRidges(-4, 0, 5, 4)}
+        ${hideRidges(0, 10, 4, 4)}
+        <!-- legs (massive, muscular) -->
+        <path d="M-7,16 L-9,26 Q-10,30 -14,30" fill="none" stroke="url(#dino-body-grad)" stroke-width="6" stroke-linecap="round"/>
+        <!-- left thigh bulk -->
+        <ellipse cx="-7" cy="18" rx="4" ry="3" fill="url(#dino-body-grad)" stroke="none" opacity="0.5"/>
+        <path d="M-14,30 L-17,30.5 M-14,30 L-13,31.5 M-14,30 L-16,31.5" stroke="#0a2a06" stroke-width="1" stroke-linecap="round"/>
+        <path d="M7,16 L8,26 Q9,30 6,30" fill="none" stroke="url(#dino-body-grad)" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="7" cy="18" rx="4" ry="3" fill="url(#dino-body-grad)" stroke="none" opacity="0.5"/>
+        <path d="M6,30 L3,30.5 M6,30 L7,31.5 M6,30 L4.5,31.5" stroke="#0a2a06" stroke-width="1" stroke-linecap="round"/>
+        <!-- tiny arms (vestigial) -->
+        ${tinyArm('left')}
+        ${tinyArm('right')}
+        <!-- thick neck -->
+        <ellipse cx="10" cy="-8" rx="8" ry="10" fill="url(#dino-body-grad)" stroke="none"/>
+        <path d="M6,-14 Q12,-18 16,-20" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.6"/>
+        <!-- head (massive, boxy T-rex skull) -->
+        <path d="M8,-26 Q10,-30 16,-32 Q24,-32 28,-28 Q30,-24 28,-20 L22,-18 Q16,-16 10,-18 Z"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.7"/>
+        <!-- head sheen -->
+        <ellipse cx="16" cy="-28" rx="4" ry="2.5" fill="#4a7a3a" opacity="0.15"/>
+        <!-- brow ridge (heavy, overhanging) -->
+        <path d="M10,-28 Q16,-32 26,-29" fill="none" stroke="#0a2a06" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- eye (narrow, predatory slit) -->
+        <ellipse cx="18" cy="-26" rx="3" ry="1.8" fill="url(#dino-eye-grad)" stroke="#0a2a06" stroke-width="0.5"/>
+        <ellipse cx="18" cy="-26" rx="1.2" ry="1.6" fill="#1a0a00"/>
+        <circle cx="17" cy="-26.8" r="0.4" fill="#fff" opacity="0.7"/>
+        <!-- nostril -->
+        <ellipse cx="26" cy="-26" rx="1" ry="0.7" fill="#0a2a06"/>
+        <!-- jaw line with exposed teeth (mouth shut but teeth visible) -->
+        <path d="M10,-18 Q18,-16 28,-20" fill="none" stroke="#0a2a06" stroke-width="0.7"/>
+        ${upperTeeth(-19)}
+        <!-- lower jaw hint -->
+        <path d="M10,-18 Q18,-15 26,-18" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.5"/>
+        <!-- spine ridges along back -->
+        <path d="M4,-12 L5,-15 L6,-12" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.3"/>
+        <path d="M8,-16 L9,-19 L10,-16" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.3"/>
+      </g>`;
+
+    /* ── scare: lunging forward, jaws gaping, roaring ── */
+    const scare = `
+      <g class="creature__pose creature__pose--scare" style="display:none">
+        <!-- tail raised, lashing -->
+        <path d="M-10,4 Q-24,-4 -32,-2 Q-38,0 -36,6"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.9"/>
+        <!-- tail ridges (agitated) -->
+        <path d="M-18,0 L-17,-4 L-16,0" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.4"/>
+        <path d="M-26,-2 L-25,-5.5 L-24,-2" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.4"/>
+        <path d="M-32,-1 L-31,-4 L-30,-1" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.4"/>
+        <path d="M-36,6 Q-38,10 -37,14" fill="none" stroke="#0a2a06" stroke-width="2" stroke-linecap="round"/>
+        <!-- body (leaning forward aggressively) -->
+        <ellipse cx="0" cy="4" rx="18" ry="16" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.8"/>
+        <ellipse cx="2" cy="10" rx="10" ry="9" fill="url(#dino-belly-grad)" opacity="0.3"/>
+        ${hideRidges(-4, 0, 5, 4)}
+        <!-- legs planted wide, braced -->
+        <path d="M-8,16 L-11,26 Q-12,30 -16,30" fill="none" stroke="url(#dino-body-grad)" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="-8" cy="18" rx="4.5" ry="3.5" fill="url(#dino-body-grad)" stroke="none" opacity="0.5"/>
+        <path d="M-16,30 L-19,30.5 M-16,30 L-15,32 M-16,30 L-18,32" stroke="#0a2a06" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M8,16 L10,26 Q11,30 7,30" fill="none" stroke="url(#dino-body-grad)" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="8" cy="18" rx="4.5" ry="3.5" fill="url(#dino-body-grad)" stroke="none" opacity="0.5"/>
+        <path d="M7,30 L4,30.5 M7,30 L8,32 M7,30 L5.5,32" stroke="#0a2a06" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- tiny arms clawing -->
+        ${tinyArm('left', 4)}
+        ${tinyArm('right', 4)}
+        <!-- thick neck thrust forward -->
+        <ellipse cx="12" cy="-6" rx="9" ry="11" fill="url(#dino-body-grad)" stroke="none"/>
+        <path d="M8,-14 Q16,-20 20,-24" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.6"/>
+        <!-- spine ridges (raised in aggression) -->
+        <path d="M2,-10 L3,-14 L4,-10" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.4"/>
+        <path d="M8,-16 L9.5,-20 L11,-16" fill="#1a3a0a" stroke="#0a2a06" stroke-width="0.4"/>
+        <!-- upper jaw (massive, thrust forward) -->
+        <path d="M12,-30 Q16,-36 24,-36 Q32,-34 34,-28 Q34,-24 30,-22 L20,-20 Q14,-18 12,-22 Z"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.8"/>
+        <!-- fierce brow ridge (angled down over eye) -->
+        <path d="M14,-32 Q22,-38 32,-32" fill="none" stroke="#0a2a06" stroke-width="2" stroke-linecap="round"/>
+        <!-- upper teeth (jagged, large) -->
+        <path d="M16,-22 L18,-18 L20,-22 L22.5,-17.5 L25,-22 L27,-18 L29,-23"
+              fill="#e8e0c8" stroke="#aaa" stroke-width="0.4"/>
+        <!-- lower jaw (dropped wide open) -->
+        <path d="M12,-20 Q18,-12 28,-16 Q32,-18 32,-22"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.7"/>
+        <!-- lower teeth -->
+        <path d="M16,-18.5 L17.5,-21 L19,-17.5 L21,-21 L23,-17 L25,-20.5"
+              fill="#e8e0c8" stroke="#aaa" stroke-width="0.3"/>
+        <!-- mouth interior (dark red) -->
+        <path d="M14,-21 Q22,-16 31,-20" fill="#3a0808" opacity="0.7"/>
+        <!-- eye (fierce, narrowed, glowing) -->
+        <ellipse cx="22" cy="-30" rx="3.5" ry="1.5" fill="#eebb00" stroke="#0a2a06" stroke-width="0.6"/>
+        <ellipse cx="22" cy="-30" rx="1" ry="1.3" fill="#1a0a00"/>
+        <circle cx="21" cy="-30.5" r="0.4" fill="#fff" opacity="0.9"/>
+        <!-- nostril flared -->
+        <ellipse cx="31" cy="-28" rx="1.2" ry="0.9" fill="#0a2a06"/>
+      </g>`;
+
+    /* ── hug: sitting, mouth closed in smile, arms open, content ── */
+    const hug = `
+      <g class="creature__pose creature__pose--hug" style="display:none">
+        <!-- tail relaxed, curled gently -->
+        <path d="M-10,8 Q-18,10 -24,14 Q-28,18 -26,22 Q-24,24 -22,22"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.6"/>
+        <!-- body (sitting, rounder) -->
+        <ellipse cx="0" cy="6" rx="18" ry="16" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.7"/>
+        <ellipse cx="2" cy="12" rx="11" ry="10" fill="url(#dino-belly-grad)" opacity="0.3"/>
+        ${hideRidges(-2, 4, 4, 4)}
+        <!-- legs tucked (sitting) -->
+        <path d="M-7,18 Q-10,24 -12,26" fill="none" stroke="url(#dino-body-grad)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M-12,26 L-14,26.5 M-12,26 L-11,27.5" stroke="#0a2a06" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M7,18 Q10,24 12,26" fill="none" stroke="url(#dino-body-grad)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M12,26 L14,26.5 M12,26 L11,27.5" stroke="#0a2a06" stroke-width="0.8" stroke-linecap="round"/>
+        <!-- tiny arms open for hug -->
+        <path d="M-9,0 Q-16,-6 -18,-3" fill="none" stroke="#1a3a0a" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="-18" cy="-3" r="1" fill="#0a2a06"/>
+        <path d="M9,0 Q16,-6 18,-3" fill="none" stroke="#1a3a0a" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="18" cy="-3" r="1" fill="#0a2a06"/>
+        <!-- neck (relaxed) -->
+        <ellipse cx="8" cy="-6" rx="7" ry="8" fill="url(#dino-body-grad)" stroke="none"/>
+        <path d="M6,-10 Q10,-16 14,-18" fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.5"/>
+        <!-- head (mouth closed, content) -->
+        <path d="M6,-24 Q10,-28 16,-28 Q22,-28 24,-24 Q26,-20 22,-18 Q16,-16 10,-18 Z"
+              fill="url(#dino-body-grad)" stroke="#0a2a06" stroke-width="0.6"/>
+        <!-- happy half-closed eyes -->
+        <ellipse cx="16" cy="-24" rx="2.5" ry="1" fill="url(#dino-eye-grad)" stroke="#0a2a06" stroke-width="0.3"/>
+        <circle cx="16" cy="-24" r="0.6" fill="#1a0a00"/>
+        <!-- content smile -->
+        <path d="M12,-19 Q16,-16 22,-19" fill="none" stroke="#0a2a06" stroke-width="0.7" stroke-linecap="round"/>
+        <!-- blush marks -->
+        <ellipse cx="10" cy="-20" rx="2.5" ry="1.2" fill="#ff6688" opacity="0.3"/>
+        <ellipse cx="23" cy="-20" rx="2.5" ry="1.2" fill="#ff6688" opacity="0.3"/>
+        <!-- nostril -->
+        <circle cx="22" cy="-24" r="0.7" fill="#0a2a06"/>
+      </g>`;
+
+    return `${_defs('dinosaur')}${idle}${scare}${hug}`;
+  }
+
   /* ─── Owl factory (~45x50 centred at origin) ─── */
 
   function _owl() {
@@ -1203,13 +1410,14 @@ const Creatures = (() => {
   /* ─── Factory registry ─── */
 
   const FACTORIES = {
-    spider:  _spider,
-    gorilla: _gorilla,
-    bat:     _bat,
-    cat:     _cat,
-    owl:     _owl,
-    snake:   _snake,
-    rat:     _rat,
+    spider:   _spider,
+    gorilla:  _gorilla,
+    bat:      _bat,
+    cat:      _cat,
+    dinosaur: _dinosaur,
+    owl:      _owl,
+    snake:    _snake,
+    rat:      _rat,
   };
 
   /* ─── Public API ─── */

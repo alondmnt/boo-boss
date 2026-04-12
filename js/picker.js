@@ -13,7 +13,7 @@ const Picker = (() => {
   /** Creature type -> emoji icon for panel buttons. */
   const ICONS = {
     spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
-    owl: '🦉', snake: '🐍', rat: '🐀',
+    dinosaur: '🦕', owl: '🦉', snake: '🐍', rat: '🐀',
   };
 
   /** Bind to the scare panel container. */
