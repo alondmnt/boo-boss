@@ -29,7 +29,7 @@ const ScareFactory = (() => {
 
     // Apply monster type overlay (player-chosen or default)
     const monsterType = chosenMonsterType || CONFIG.defaultMonsterType[creatureType];
-    MonsterTypes.apply(creature.el, monsterType);
+    MonsterTypes.apply(creature.el, monsterType, creatureType);
     creature.monsterType = monsterType;
     creature.action = CONFIG.defaultAction[creatureType];
 

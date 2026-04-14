@@ -114,9 +114,9 @@ html, body {
 .creature--bat .creature__pose--idle { animation: none; }
 
 /* ===== Monster type colour overrides ===== */
-.creature--zombie { filter: hue-rotate(90deg) saturate(0.5) brightness(0.8); }
+.creature--zombie { filter: sepia(0.6) hue-rotate(70deg) saturate(1.5) brightness(0.8); }
 .creature--witch .monster-overlay--witch { opacity: 1; }
-.creature--skeleton { filter: saturate(0.2) brightness(1.3); }
+.creature--skeleton { filter: saturate(0.05) brightness(1.5) contrast(1.1); }
 .creature--vampire { filter: brightness(0.85) saturate(0.6) hue-rotate(320deg); }
 .creature--astronaut { filter: brightness(1.1) saturate(0.7); }
 .creature--ghost { filter: brightness(1.4) saturate(0.3); opacity: 0.65; }
