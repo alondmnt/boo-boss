@@ -40,7 +40,7 @@ const MonsterTypes = (() => {
       vampire: _vampire, astronaut: _astronaut, ghost: _ghost,
     };
     const fn = applicators[monsterType];
-    if (fn) fn(creatureEl, anchors);
+    if (fn) fn(creatureEl, anchors, creatureType);
   }
 
   /**
@@ -112,11 +112,11 @@ const MonsterTypes = (() => {
   }
 
   /**
-   * Skeleton: bone-white CSS wash (near-zero saturation, high brightness).
-   * SVG overlay adds: spine line, full rib cage, limb bone marks, joint circles,
-   * and hollow eye sockets at each creature's actual eye positions.
+   * Skeleton: bone-white CSS wash + bone structure overlay.
+   * Snake and dinosaur get custom bone layouts; other creatures use the
+   * standard upright spine + rib cage.
    */
-  function _skeleton(el, a) {
+  function _skeleton(el, a, creatureType) {
     const poses = el.querySelectorAll('.creature__pose');
     const bxf = _bodyXf(a);
     const s = a.scale;
@@ -126,48 +126,196 @@ const MonsterTypes = (() => {
         <circle cx="${e.x}" cy="${e.y}" r="${r}" fill="#0a0a0a" opacity="0.6"/>
         <circle cx="${e.x}" cy="${e.y}" r="${r * 0.35}" fill="#d8d0c8" opacity="0.8"/>`;
     }).join('');
+
+    let boneSvg;
+    if (creatureType === 'spider') {
+      boneSvg = _skeletonSpider();
+    } else if (creatureType === 'bat') {
+      boneSvg = _skeletonBat();
+    } else if (creatureType === 'snake') {
+      boneSvg = _skeletonSnake();
+    } else if (creatureType === 'dinosaur') {
+      boneSvg = _skeletonDinosaur();
+    } else {
+      boneSvg = _skeletonUpright(bxf);
+    }
+
     poses.forEach(pose => {
       const g = document.createElementNS(NS, 'g');
       g.classList.add('monster-overlay', 'monster-overlay--skeleton');
-      g.innerHTML = `
-        ${eyeSvg}
-        <g transform="${bxf}">
-          <!-- spine (central vertical line) -->
-          <line x1="0" y1="-10" x2="0" y2="16" stroke="#d8d0c8" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-          <!-- vertebrae bumps along spine -->
-          <circle cx="0" cy="-8" r="1" fill="#d8d0c8" opacity="0.4"/>
-          <circle cx="0" cy="-4" r="1.2" fill="#d8d0c8" opacity="0.4"/>
-          <circle cx="0" cy="0" r="1.2" fill="#d8d0c8" opacity="0.4"/>
-          <circle cx="0" cy="4" r="1.2" fill="#d8d0c8" opacity="0.4"/>
-          <circle cx="0" cy="8" r="1" fill="#d8d0c8" opacity="0.35"/>
-          <circle cx="0" cy="12" r="1" fill="#d8d0c8" opacity="0.3"/>
-          <!-- rib cage (6 ribs, curving from spine outward) -->
-          <path d="M0,-6 Q-5,-7 -8,-5" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
-          <path d="M0,-6 Q5,-7 8,-5" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
-          <path d="M0,-3 Q-6,-4 -9,-1" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
-          <path d="M0,-3 Q6,-4 9,-1" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
-          <path d="M0,0 Q-6,-1 -9,2" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
-          <path d="M0,0 Q6,-1 9,2" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
-          <path d="M0,3 Q-5,2 -8,4" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
-          <path d="M0,3 Q5,2 8,4" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
-          <path d="M0,6 Q-4,5 -7,7" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
-          <path d="M0,6 Q4,5 7,7" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
-          <path d="M0,9 Q-3,8 -6,9" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
-          <path d="M0,9 Q3,8 6,9" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
-          <!-- limb bone marks (upper limbs) -->
-          <line x1="-10" y1="-4" x2="-14" y2="4" stroke="#d8d0c8" stroke-width="0.8" opacity="0.35" stroke-linecap="round"/>
-          <line x1="10" y1="-4" x2="14" y2="4" stroke="#d8d0c8" stroke-width="0.8" opacity="0.35" stroke-linecap="round"/>
-          <!-- joint circles (shoulders, hips) -->
-          <circle cx="-10" cy="-4" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4"/>
-          <circle cx="10" cy="-4" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4"/>
-          <circle cx="-6" cy="14" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>
-          <circle cx="6" cy="14" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>
-          <!-- pelvis line -->
-          <path d="M-6,14 Q0,16 6,14" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.3" stroke-linecap="round"/>
-        </g>
-      `;
+      g.innerHTML = `${eyeSvg}${boneSvg}`;
       pose.appendChild(g);
     });
+  }
+
+  /** Standard upright skeleton (spider, gorilla, cat, bat, owl, rat). */
+  function _skeletonUpright(bxf) {
+    return `
+      <g transform="${bxf}">
+        <!-- spine -->
+        <line x1="0" y1="-10" x2="0" y2="16" stroke="#d8d0c8" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+        <!-- vertebrae -->
+        <circle cx="0" cy="-8" r="1" fill="#d8d0c8" opacity="0.4"/>
+        <circle cx="0" cy="-4" r="1.2" fill="#d8d0c8" opacity="0.4"/>
+        <circle cx="0" cy="0" r="1.2" fill="#d8d0c8" opacity="0.4"/>
+        <circle cx="0" cy="4" r="1.2" fill="#d8d0c8" opacity="0.4"/>
+        <circle cx="0" cy="8" r="1" fill="#d8d0c8" opacity="0.35"/>
+        <circle cx="0" cy="12" r="1" fill="#d8d0c8" opacity="0.3"/>
+        <!-- rib cage (6 pairs) -->
+        <path d="M0,-6 Q-5,-7 -8,-5" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <path d="M0,-6 Q5,-7 8,-5" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <path d="M0,-3 Q-6,-4 -9,-1" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <path d="M0,-3 Q6,-4 9,-1" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <path d="M0,0 Q-6,-1 -9,2" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
+        <path d="M0,0 Q6,-1 9,2" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
+        <path d="M0,3 Q-5,2 -8,4" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+        <path d="M0,3 Q5,2 8,4" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+        <path d="M0,6 Q-4,5 -7,7" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+        <path d="M0,6 Q4,5 7,7" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+        <path d="M0,9 Q-3,8 -6,9" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
+        <path d="M0,9 Q3,8 6,9" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
+        <!-- limb bones -->
+        <line x1="-10" y1="-4" x2="-14" y2="4" stroke="#d8d0c8" stroke-width="0.8" opacity="0.35" stroke-linecap="round"/>
+        <line x1="10" y1="-4" x2="14" y2="4" stroke="#d8d0c8" stroke-width="0.8" opacity="0.35" stroke-linecap="round"/>
+        <!-- joints (shoulders, hips) -->
+        <circle cx="-10" cy="-4" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4"/>
+        <circle cx="10" cy="-4" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4"/>
+        <circle cx="-6" cy="14" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>
+        <circle cx="6" cy="14" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>
+        <!-- pelvis -->
+        <path d="M-6,14 Q0,16 6,14" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.3" stroke-linecap="round"/>
+      </g>`;
+  }
+
+  /** Spider skeleton: cephalothorax + abdomen segments, 8 skeletal leg bones, chelicera. */
+  function _skeletonSpider() {
+    return `
+      <!-- cephalothorax outline (head section) -->
+      <circle cx="0" cy="-8" r="6" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.45"/>
+      <!-- abdomen outline -->
+      <ellipse cx="0" cy="3" rx="10" ry="8" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.4"/>
+      <!-- pedicel connecting them -->
+      <line x1="0" y1="-2" x2="0" y2="0" stroke="#d8d0c8" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+      <!-- 8 skeletal leg bones (simplified, radiating from cephalothorax) -->
+      <!-- left legs (4) -->
+      <polyline points="-6,-6 -14,-10 -22,-4 -26,4" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="-6,-4 -14,-4 -22,2 -26,10" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="-6,-2 -13,2 -19,7 -24,14" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="-5,0 -11,6 -16,12 -20,20" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- right legs (4) -->
+      <polyline points="6,-6 14,-10 22,-4 26,4" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="6,-4 14,-4 22,2 26,10" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="6,-2 13,2 19,7 24,14" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="5,0 11,6 16,12 20,20" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- leg joint dots -->
+      <circle cx="-14" cy="-10" r="0.7" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="-14" cy="-4" r="0.7" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="14" cy="-10" r="0.7" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="14" cy="-4" r="0.7" fill="#d8d0c8" opacity="0.35"/>
+      <!-- chelicera (fang bases) -->
+      <line x1="-2" y1="-4" x2="-3" y2="-1" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
+      <line x1="2" y1="-4" x2="3" y2="-1" stroke="#d8d0c8" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>`;
+  }
+
+  /** Bat skeleton: wing bone framework with finger bones, small ribcage. */
+  function _skeletonBat() {
+    return `
+      <!-- small ribcage on body -->
+      <ellipse cx="0" cy="0" rx="5" ry="7" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4"/>
+      <line x1="0" y1="-6" x2="0" y2="8" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+      <!-- ribs (small, 3 pairs) -->
+      <path d="M0,-3 Q-3,-4 -5,-2" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <path d="M0,-3 Q3,-4 5,-2" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <path d="M0,0 Q-3,-1 -5,1" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.35" stroke-linecap="round"/>
+      <path d="M0,0 Q3,-1 5,1" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.35" stroke-linecap="round"/>
+      <path d="M0,3 Q-3,2 -4,4" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <path d="M0,3 Q3,2 4,4" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <!-- left wing bones: arm → forearm → 4 finger bones fanning out -->
+      <line x1="-6" y1="-2" x2="-12" y2="-6" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+      <circle cx="-12" cy="-6" r="0.8" fill="#d8d0c8" opacity="0.35"/>
+      <line x1="-12" y1="-6" x2="-24" y2="-10" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+      <line x1="-12" y1="-6" x2="-22" y2="-2" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+      <line x1="-12" y1="-6" x2="-20" y2="4" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <line x1="-12" y1="-6" x2="-16" y2="8" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <!-- right wing bones -->
+      <line x1="6" y1="-2" x2="12" y2="-6" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+      <circle cx="12" cy="-6" r="0.8" fill="#d8d0c8" opacity="0.35"/>
+      <line x1="12" y1="-6" x2="24" y2="-10" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+      <line x1="12" y1="-6" x2="22" y2="-2" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+      <line x1="12" y1="-6" x2="20" y2="4" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <line x1="12" y1="-6" x2="16" y2="8" stroke="#d8d0c8" stroke-width="0.4" opacity="0.3" stroke-linecap="round"/>
+      <!-- shoulder joints -->
+      <circle cx="-6" cy="-2" r="1" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>
+      <circle cx="6" cy="-2" r="1" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.35"/>`;
+  }
+
+  /** Snake skeleton: vertebrae along the neck and coil, tiny rib pairs. */
+  function _skeletonSnake() {
+    return `
+      <!-- spine along neck (vertical rise from coil to head) -->
+      <line x1="0" y1="2" x2="0" y2="-12" stroke="#d8d0c8" stroke-width="0.8" opacity="0.5" stroke-linecap="round"/>
+      <!-- neck vertebrae -->
+      <circle cx="0" cy="-11" r="0.8" fill="#d8d0c8" opacity="0.45"/>
+      <circle cx="0" cy="-8" r="0.9" fill="#d8d0c8" opacity="0.45"/>
+      <circle cx="0" cy="-5" r="0.9" fill="#d8d0c8" opacity="0.45"/>
+      <circle cx="0" cy="-2" r="0.9" fill="#d8d0c8" opacity="0.4"/>
+      <circle cx="0" cy="1" r="0.9" fill="#d8d0c8" opacity="0.4"/>
+      <!-- tiny rib pairs along neck -->
+      <line x1="-1" y1="-8" x2="-3.5" y2="-7" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <line x1="1" y1="-8" x2="3.5" y2="-7" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <line x1="-1" y1="-5" x2="-3.5" y2="-4" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <line x1="1" y1="-5" x2="3.5" y2="-4" stroke="#d8d0c8" stroke-width="0.4" opacity="0.4" stroke-linecap="round"/>
+      <line x1="-1" y1="-2" x2="-3" y2="-1" stroke="#d8d0c8" stroke-width="0.4" opacity="0.35" stroke-linecap="round"/>
+      <line x1="1" y1="-2" x2="3" y2="-1" stroke="#d8d0c8" stroke-width="0.4" opacity="0.35" stroke-linecap="round"/>
+      <!-- vertebrae along coil body (approximate S-curve positions) -->
+      <circle cx="4" cy="5" r="0.8" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="8" cy="9" r="0.8" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="14" cy="12" r="0.8" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="20" cy="14" r="0.8" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="26" cy="12" r="0.7" fill="#d8d0c8" opacity="0.25"/>
+      <circle cx="-8" cy="4" r="0.8" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="-16" cy="8" r="0.7" fill="#d8d0c8" opacity="0.25"/>
+      <circle cx="-22" cy="12" r="0.7" fill="#d8d0c8" opacity="0.25"/>
+      <!-- jawbone hint -->
+      <path d="M-3,-13 Q0,-11 3,-13" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.4" stroke-linecap="round"/>`;
+  }
+
+  /** Dinosaur skeleton: horizontal spine from tail through body to head, ribs hanging down. */
+  function _skeletonDinosaur() {
+    return `
+      <!-- spine: tail → body → neck → skull -->
+      <path d="M-30,8 Q-20,4 -10,4 Q0,2 6,-4 Q10,-10 14,-18 Q16,-22 18,-26"
+            fill="none" stroke="#d8d0c8" stroke-width="1.2" opacity="0.5" stroke-linecap="round"/>
+      <!-- vertebrae along spine -->
+      <circle cx="-26" cy="7" r="1" fill="#d8d0c8" opacity="0.25"/>
+      <circle cx="-20" cy="5" r="1.1" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="-14" cy="4" r="1.2" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="-8" cy="4" r="1.3" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="-2" cy="3" r="1.3" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="3" cy="0" r="1.3" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="7" cy="-5" r="1.2" fill="#d8d0c8" opacity="0.35"/>
+      <circle cx="10" cy="-10" r="1.1" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="13" cy="-16" r="1" fill="#d8d0c8" opacity="0.3"/>
+      <circle cx="16" cy="-22" r="1" fill="#d8d0c8" opacity="0.3"/>
+      <!-- ribs hanging down from torso section -->
+      <path d="M-8,4 Q-10,10 -12,16" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.4" stroke-linecap="round"/>
+      <path d="M-4,4 Q-5,10 -6,16" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.4" stroke-linecap="round"/>
+      <path d="M0,3 Q-1,9 -1,15" fill="none" stroke="#d8d0c8" stroke-width="0.7" opacity="0.4" stroke-linecap="round"/>
+      <path d="M3,1 Q3,7 3,13" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.35" stroke-linecap="round"/>
+      <path d="M6,-3 Q6,3 5,9" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.35" stroke-linecap="round"/>
+      <!-- leg bones -->
+      <line x1="-6" y1="16" x2="-8" y2="28" stroke="#d8d0c8" stroke-width="0.8" opacity="0.3" stroke-linecap="round"/>
+      <line x1="4" y1="14" x2="6" y2="28" stroke="#d8d0c8" stroke-width="0.8" opacity="0.3" stroke-linecap="round"/>
+      <!-- hip + knee joints -->
+      <circle cx="-6" cy="16" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3"/>
+      <circle cx="4" cy="14" r="1.5" fill="none" stroke="#d8d0c8" stroke-width="0.5" opacity="0.3"/>
+      <circle cx="-8" cy="28" r="1.2" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.25"/>
+      <circle cx="6" cy="28" r="1.2" fill="none" stroke="#d8d0c8" stroke-width="0.4" opacity="0.25"/>
+      <!-- jawbone -->
+      <path d="M14,-20 Q18,-17 24,-20" fill="none" stroke="#d8d0c8" stroke-width="0.6" opacity="0.4" stroke-linecap="round"/>
+      <!-- tail vertebrae thin out -->
+      <circle cx="-30" cy="8" r="0.7" fill="#d8d0c8" opacity="0.2"/>
+      <circle cx="-34" cy="12" r="0.6" fill="#d8d0c8" opacity="0.15"/>`;
   }
 
   /** Vampire: high collar cape, fangs, pale tint (via CSS class). */
