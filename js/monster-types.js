@@ -23,6 +23,15 @@ const MonsterTypes = (() => {
   }
 
   /**
+   * Wrap SVG content in the bat idle rotation so overlays follow the
+   * inverted body. Returns content unchanged for non-idle poses.
+   */
+  function _batIdleWrap(content, pose, creatureType) {
+    if (creatureType !== 'bat' || !pose.classList.contains('creature__pose--idle')) return content;
+    return `<g transform="rotate(180, 0, -10)">${content}</g>`;
+  }
+
+  /**
    * Apply a monster type overlay to a creature SVG element.
    * Mutates the element in-place: adds CSS class and costume elements.
    *
@@ -49,7 +58,7 @@ const MonsterTypes = (() => {
    * creature anchor data. Colours are yellow pre-filter (→ green after CSS
    * hue-rotate 70deg).
    */
-  function _zombie(el, a) {
+  function _zombie(el, a, creatureType) {
     const poses = el.querySelectorAll('.creature__pose');
     const bxf = _bodyXf(a);
     const s = a.scale;
@@ -62,25 +71,24 @@ const MonsterTypes = (() => {
         <circle cx="${e.x}" cy="${e.y + dy}" r="${r}" fill="#ffdd00" opacity="0.25"/>
         <circle cx="${e.x}" cy="${e.y + dy}" r="${r * 0.5}" fill="#ffffff" opacity="0.7"/>`;
     }).join('');
+    const bodySvg = `
+      <g transform="${bxf}">
+        <!-- ragged decay strokes -->
+        <line x1="-8" y1="6" x2="-10" y2="10" stroke="#4a6a4a" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
+        <line x1="7" y1="8" x2="10" y2="11" stroke="#4a6a4a" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
+        <line x1="-5" y1="-4" x2="-7" y2="-2" stroke="#4a6a4a" stroke-width="0.6" opacity="0.5" stroke-linecap="round"/>
+        <line x1="6" y1="-6" x2="9" y2="-4" stroke="#4a6a4a" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
+        <!-- stitch marks across body -->
+        <line x1="-4" y1="-7" x2="4" y2="-7" stroke="#3a5a3a" stroke-width="0.6" opacity="0.4" stroke-linecap="round" stroke-dasharray="1.5,1.5"/>
+        <line x1="-6" y1="12" x2="2" y2="12" stroke="#3a5a3a" stroke-width="0.5" opacity="0.35" stroke-linecap="round" stroke-dasharray="1.5,1.5"/>
+        <!-- drip marks -->
+        <path d="M5,-2 Q5.5,2 5,5" fill="none" stroke="#4a6a4a" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+        <path d="M-7,3 Q-7.5,7 -7,10" fill="none" stroke="#4a6a4a" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
+      </g>`;
     poses.forEach(pose => {
       const g = document.createElementNS(NS, 'g');
       g.classList.add('monster-overlay', 'monster-overlay--zombie');
-      g.innerHTML = `
-        ${eyeSvg}
-        <g transform="${bxf}">
-          <!-- ragged decay strokes -->
-          <line x1="-8" y1="6" x2="-10" y2="10" stroke="#4a6a4a" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
-          <line x1="7" y1="8" x2="10" y2="11" stroke="#4a6a4a" stroke-width="0.8" opacity="0.6" stroke-linecap="round"/>
-          <line x1="-5" y1="-4" x2="-7" y2="-2" stroke="#4a6a4a" stroke-width="0.6" opacity="0.5" stroke-linecap="round"/>
-          <line x1="6" y1="-6" x2="9" y2="-4" stroke="#4a6a4a" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>
-          <!-- stitch marks across body -->
-          <line x1="-4" y1="-7" x2="4" y2="-7" stroke="#3a5a3a" stroke-width="0.6" opacity="0.4" stroke-linecap="round" stroke-dasharray="1.5,1.5"/>
-          <line x1="-6" y1="12" x2="2" y2="12" stroke="#3a5a3a" stroke-width="0.5" opacity="0.35" stroke-linecap="round" stroke-dasharray="1.5,1.5"/>
-          <!-- drip marks -->
-          <path d="M5,-2 Q5.5,2 5,5" fill="none" stroke="#4a6a4a" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
-          <path d="M-7,3 Q-7.5,7 -7,10" fill="none" stroke="#4a6a4a" stroke-width="0.5" opacity="0.3" stroke-linecap="round"/>
-        </g>
-      `;
+      g.innerHTML = _batIdleWrap(`${eyeSvg}${bodySvg}`, pose, creatureType);
       pose.appendChild(g);
     });
   }
@@ -143,7 +151,7 @@ const MonsterTypes = (() => {
     poses.forEach(pose => {
       const g = document.createElementNS(NS, 'g');
       g.classList.add('monster-overlay', 'monster-overlay--skeleton');
-      g.innerHTML = `${eyeSvg}${boneSvg}`;
+      g.innerHTML = _batIdleWrap(`${eyeSvg}${boneSvg}`, pose, creatureType);
       pose.appendChild(g);
     });
   }
