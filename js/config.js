@@ -5,6 +5,10 @@
 const CONFIG = {
   /* ─── Creatures ─── */
   creatures: ['spider', 'gorilla', 'bat', 'cat'],
+  creatureIcons: {
+    spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
+    dinosaur: '🦕', owl: '🦉', snake: '🐍', rat: '🐀',
+  },
   creatureCooldowns: {
     spider: 15000, gorilla: 18000, bat: 12000, cat: 14000,
     dinosaur: 17000, owl: 14000, snake: 16000, rat: 13000,
@@ -12,6 +16,10 @@ const CONFIG = {
 
   /* ─── Monster types (auto-assigned until monster lab unlocks) ─── */
   monsterTypes: ['zombie', 'witch', 'skeleton'],
+  monsterIcons: {
+    zombie: '🧟', witch: '🧙', skeleton: '💀',
+    vampire: '🧛', astronaut: '🧑‍🚀', ghost: '👻',
+  },
   defaultMonsterType: {
     spider: 'skeleton', gorilla: 'zombie', bat: 'zombie', cat: 'witch',
     dinosaur: 'zombie', owl: 'witch', snake: 'zombie', rat: 'skeleton',

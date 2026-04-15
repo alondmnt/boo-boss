@@ -12,17 +12,9 @@ const Picker = (() => {
   let _onDeploy = null;
   const _onCooldown = new Set();
 
-  /** Creature type -> emoji icon for panel buttons. */
-  const CREATURE_ICONS = {
-    spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
-    dinosaur: '🦕', owl: '🦉', snake: '🐍', rat: '🐀',
-  };
-
-  /** Monster type -> emoji icon for sub-panel buttons. */
-  const MONSTER_ICONS = {
-    zombie: '🧟', witch: '🧙', skeleton: '💀',
-    vampire: '🧛', astronaut: '🧑‍🚀', ghost: '👻',
-  };
+  /** Emoji icons from CONFIG for panel buttons. */
+  const CREATURE_ICONS = CONFIG.creatureIcons;
+  const MONSTER_ICONS = CONFIG.monsterIcons;
 
   /** Bind to the scare panel container. */
   function init(container) {
