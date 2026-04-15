@@ -1,5 +1,5 @@
 /**
- * Audio — Web Audio synthesis, sound catalogue.
+ * Audio — Web Audio synthesis, sound catalogue, background music.
  * All sounds are synthesised (no audio files). Lazy AudioContext initialisation
  * on first user gesture. Same pattern as car-doctor.
  */
@@ -156,11 +156,102 @@ const Audio = (() => {
     if (effects[name]) effects[name]();
   }
 
+  /* ─── Background music (synthesised spooky loop) ─── */
+
+  const _BPM = 140;
+  const _BEAT = 60 / _BPM;
+
+  /* Note frequencies */
+  const _A3 = 220, _B3 = 246.94, _C4 = 261.63, _D4 = 293.66;
+  const _E4 = 329.63, _F4 = 349.23, _G4 = 392, _A4 = 440;
+  const _A2 = 110, _C3 = 130.81, _D3 = 146.83, _E3 = 164.81, _F3 = 174.61;
+
+  /**
+   * Melody and bass: [freq, startBeat, durationBeats].
+   * 16 measures (64 beats): verse (m1-8) + chorus (m9-16).
+   */
+  const _MELODY = [
+    /* verse, m1-2: "Spooky scary skeletons" */
+    [_E4, 0, 1], [_E4, 1, 1], [_E4, 2, 1], [_E4, 3, 1],
+    [_E4, 4, 0.5], [_D4, 4.5, 0.5], [_C4, 5, 1],
+    /* m3-4: "send shivers down your spine" */
+    [_D4, 8, 0.5], [_E4, 8.5, 0.5], [_D4, 9, 0.5], [_C4, 9.5, 0.5], [_B3, 10, 2],
+    /* m5-6: "Shrieking skulls will shock your soul" */
+    [_E4, 16, 1], [_E4, 17, 1], [_E4, 18, 1], [_E4, 19, 1],
+    [_E4, 20, 0.5], [_D4, 20.5, 0.5], [_C4, 21, 1],
+    /* m7-8: "seal your doom tonight" */
+    [_D4, 24, 0.5], [_E4, 24.5, 0.5], [_D4, 25, 0.5], [_C4, 25.5, 0.5], [_A3, 26, 2],
+    /* chorus, m9-10 */
+    [_A4, 32, 1], [_A4, 33, 1], [_A4, 34, 1], [_A4, 35, 1],
+    [_A4, 36, 0.5], [_G4, 36.5, 0.5], [_F4, 37, 1],
+    /* m11-12 */
+    [_G4, 40, 0.5], [_A4, 40.5, 0.5], [_G4, 41, 0.5], [_F4, 41.5, 0.5], [_E4, 42, 2],
+    /* m13-14 */
+    [_A4, 48, 1], [_A4, 49, 1], [_A4, 50, 1], [_A4, 51, 1],
+    [_A4, 52, 0.5], [_G4, 52.5, 0.5], [_F4, 53, 1],
+    /* m15-16 */
+    [_G4, 56, 0.5], [_A4, 56.5, 0.5], [_G4, 57, 0.5], [_F4, 57.5, 0.5], [_E4, 58, 2],
+  ];
+
+  const _BASS = [
+    [_A2, 0, 4], [_A2, 4, 4],       /* m1-2: Am */
+    [_E3, 8, 4], [_A2, 12, 4],      /* m3-4: Em, Am */
+    [_A2, 16, 4], [_A2, 20, 4],     /* m5-6: Am */
+    [_F3, 24, 4], [_A2, 28, 4],     /* m7-8: F, Am */
+    [_F3, 32, 4], [_F3, 36, 4],     /* m9-10: F */
+    [_C3, 40, 4], [_A2, 44, 4],     /* m11-12: C, Am */
+    [_D3, 48, 4], [_F3, 52, 4],     /* m13-14: Dm, F */
+    [_E3, 56, 4], [_A2, 60, 4],     /* m15-16: E, Am */
+  ];
+
+  const _LOOP_BEATS = 64;
+  const _LOOP_DUR = _LOOP_BEATS * _BEAT;
+
+  let _musicTimer = null;
+  let _musicPlaying = false;
+  let _musicWanted = false;
+
+  /** Schedule one full pass of the melody + bass, then queue the next. */
+  function _scheduleLoop() {
+    if (!ctx || !_musicPlaying) return;
+    for (const [freq, beat, dur] of _MELODY) {
+      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'triangle', 0.05);
+    }
+    for (const [freq, beat, dur] of _BASS) {
+      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'sine', 0.04);
+    }
+    _musicTimer = setTimeout(_scheduleLoop, _LOOP_DUR * 1000);
+  }
+
+  /** Start the background music loop. */
+  function startMusic() {
+    _musicWanted = true;
+    if (!unlocked || muted || _musicPlaying) return;
+    _musicPlaying = true;
+    _scheduleLoop();
+  }
+
+  /** Stop the background music loop. */
+  function stopMusic() {
+    _musicWanted = false;
+    _musicPlaying = false;
+    if (_musicTimer) { clearTimeout(_musicTimer); _musicTimer = null; }
+  }
+
   /** Return whether audio is muted. */
   function isMuted() { return muted; }
 
-  /** Set mute state. */
-  function setMuted(v) { muted = v; }
+  /** Set mute state. Pauses/resumes music accordingly. */
+  function setMuted(v) {
+    muted = v;
+    if (muted) {
+      _musicPlaying = false;
+      if (_musicTimer) { clearTimeout(_musicTimer); _musicTimer = null; }
+    } else if (_musicWanted && !_musicPlaying) {
+      _musicPlaying = true;
+      _scheduleLoop();
+    }
+  }
 
-  return { unlock, play, isMuted, setMuted };
+  return { unlock, play, startMusic, stopMusic, isMuted, setMuted };
 })();

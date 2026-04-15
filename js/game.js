@@ -73,6 +73,7 @@ const Game = (() => {
   /** Start the game from splash screen. */
   function _start() {
     Audio.unlock();
+    Audio.startMusic();
     const splash = document.getElementById('splash');
     splash.classList.add('splash--hidden');
 
