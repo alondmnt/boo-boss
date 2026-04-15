@@ -74,8 +74,8 @@ const Audio = (() => {
 
     /** Scare success — descending tritone (the devil's interval). */
     scare() {
-      _note(440, 0, 0.08, 'square', 0.10);
-      _note(311, 0.06, 0.15, 'square', 0.10);
+      _note(440, 0, 0.08, 'triangle', 0.07);
+      _note(311, 0.06, 0.15, 'triangle', 0.07);
     },
 
     /** Hug — warm ascending major third. */
