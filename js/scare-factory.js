@@ -63,19 +63,15 @@ const ScareFactory = (() => {
   function evaluate(visitor, creature) {
     if (visitor.fear === creature.type) {
       visitor.scareCount++;
-      let mult = visitor.scareCount === 1 ? 1
+      const mult = visitor.scareCount === 1 ? 1
         : visitor.scareCount === 2 ? CONFIG.scoring.combo2x
         : CONFIG.scoring.combo3x;
-      // Monster combo bonus (only matters when monster lab is unlocked)
-      const comboKey = `${creature.type}:${creature.monsterType}`;
-      const isCombo = GameState.get('monsterLab') && CONFIG.monsterCombos[comboKey];
-      if (isCombo) mult *= CONFIG.scoring.monsterComboBonus;
-      return { result: 'scared', points: Math.round(CONFIG.scoring.scareBase * mult), combo: !!isCombo };
+      return { result: 'scared', points: Math.round(CONFIG.scoring.scareBase * mult) };
     }
     if (visitor.love === creature.type) {
-      return { result: 'loved', points: 0, combo: false };
+      return { result: 'loved', points: 0 };
     }
-    return { result: 'neutral', points: 0, combo: false };
+    return { result: 'neutral', points: 0 };
   }
 
   /** Check if a room has a deployed creature. */
