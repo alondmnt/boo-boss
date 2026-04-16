@@ -31,6 +31,22 @@ html, body {
   margin-top: 0.3em;
   text-shadow: 0 0 20px rgba(160, 100, 255, 0.4);
 }
+.splash__intro {
+  margin-top: 1.2em;
+  display: flex; flex-direction: column; gap: 0.4em;
+}
+.splash__rule {
+  font-size: 1rem;
+  color: #bba8d8;
+  text-align: left;
+  padding-left: 1em;
+}
+.splash__tap {
+  margin-top: 1.4em;
+  font-size: 0.9rem;
+  color: #8a78b0;
+  animation: float 2.5s ease-in-out infinite;
+}
 
 /* ===== Top bar ===== */
 #top-bar {
@@ -419,6 +435,8 @@ html, body {
 @media (max-width: 480px) {
   .splash__icon { font-size: 3.5rem; }
   .splash__title { font-size: 2rem; }
+  .splash__rule { font-size: 0.85rem; }
+  .splash__tap { font-size: 0.8rem; }
   #house-container { top: 32px; bottom: 110px; }
   .scare-panel__slot { width: 48px; height: 58px; }
   .scare-panel__icon { font-size: 1.4rem; }
