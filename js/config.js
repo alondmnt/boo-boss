@@ -99,6 +99,7 @@ const CONFIG = {
     combo3x: 2.0,
     waveBonusThreshold: 0.8,
     waveBonus: 50,
+    varietyPerType: 10,
   },
 
   /* ─── Coins ─── */

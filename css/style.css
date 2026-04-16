@@ -301,12 +301,35 @@ html, body {
 }
 
 /* ===== Wave summary ===== */
-.wave-summary__content { text-align: center; }
+.wave-summary__content { text-align: center; max-width: 320px; }
 .wave-summary__title {
   font-family: Georgia, serif;
   font-size: 1.8rem;
   color: #e0d0ff;
   margin-bottom: 0.6em;
+}
+.wave-summary__row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.4em; margin: 0.5em 0; flex-wrap: wrap;
+}
+.wave-summary__face { font-size: 1.4rem; position: relative; margin: 0 0.1em; }
+.wave-summary__mult {
+  font-size: 0.55rem; font-weight: 700; color: #ffd700;
+  position: absolute; bottom: -0.2em; right: -0.5em;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.6);
+}
+.wave-summary__faces { font-size: 1.4rem; letter-spacing: 0.15em; }
+.wave-summary__label { font-size: 0.9rem; color: #bba8d8; margin-left: 0.4em; }
+.wave-summary__pair {
+  font-size: 1.3rem; letter-spacing: -0.1em;
+  background: rgba(255,255,255,0.06); border-radius: 6px;
+  padding: 0.1em 0.3em;
+}
+.wave-summary__type-icon { font-size: 1.4rem; }
+.wave-summary__variety {
+  font-size: 0.9rem; font-weight: 600; color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: fanfare-bounce 0.5s ease-out;
 }
 .wave-summary__stat {
   font-size: 1rem;
@@ -331,12 +354,6 @@ html, body {
 .particle--spooky { animation: particle-fly 0.7s ease-out forwards; }
 .particle--heart { animation: particle-float 0.9s ease-out forwards; }
 .particle--confetti { animation: particle-fly 1s ease-out forwards; font-size: 1.3rem; }
-.particle--combo {
-  animation: particle-float 1.2s ease-out forwards;
-  font-size: 0.9rem; font-weight: bold; color: #ffcc00;
-  text-shadow: 0 0 6px rgba(255, 170, 0, 0.8), 0 1px 2px rgba(0,0,0,0.6);
-  white-space: nowrap;
-}
 
 /* ===== Keyframes ===== */
 

@@ -12,6 +12,8 @@ const Wave = (() => {
   let _waveScore = 0;
   let _scaredVisitorCount = 0;
   let _onComplete = null;
+  let _typesUsed = new Set();
+  let _deployments = [];
 
   /**
    * Start a new wave.
@@ -25,6 +27,8 @@ const Wave = (() => {
     _exitedCount = 0;
     _waveScore = 0;
     _scaredVisitorCount = 0;
+    _typesUsed = new Set();
+    _deployments = [];
 
     // Wire up Picker deploy handler for this wave
     Picker.setDeployHandler((creatureType, roomId, monsterType) => {
@@ -114,7 +118,10 @@ const Wave = (() => {
       Picker.enableSlot(expired.type);
     }, monsterType);
 
-    if (!creature) {
+    if (creature) {
+      _typesUsed.add(creature.monsterType);
+      _deployments.push({ creature: creatureType, monsterType: creature.monsterType });
+    } else {
       Audio.play('occupied');
     }
   }
@@ -271,7 +278,7 @@ const Wave = (() => {
     );
   }
 
-  /** Display wave summary overlay. */
+  /** Display wave summary overlay with visual breakdown. */
   function _showSummary(gen) {
     if (_generation !== gen) return;
     _state = 'summary';
@@ -279,28 +286,85 @@ const Wave = (() => {
     if (countEl) countEl.textContent = '';
 
     const totalVisitors = _visitors.length;
-    const scarePct = totalVisitors > 0 ? _scaredVisitorCount / totalVisitors : 0;
+    /* Count unique visitors scared (not scare events) for display + wave bonus */
+    const scaredVisitors = _visitors.filter(v => v.scareCount > 0).length;
+    const scarePct = totalVisitors > 0 ? scaredVisitors / totalVisitors : 0;
     const hitBonus = scarePct >= CONFIG.scoring.waveBonusThreshold;
     const bonusPoints = hitBonus ? CONFIG.scoring.waveBonus : 0;
-    const totalPoints = _waveScore + bonusPoints;
-    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0);
 
-    // Populate summary overlay
+    /* Variety bonus (only when monster lab is unlocked) */
+    const hasLab = GameState.get('monsterLab');
+    const typesUnlocked = hasLab ? GameState.get('monsterTypes').length : 0;
+    const typesUsedCount = _typesUsed.size;
+    const varietyPoints = hasLab ? typesUsedCount * CONFIG.scoring.varietyPerType : 0;
+    const allTypesUsed = typesUnlocked > 0 && typesUsedCount >= typesUnlocked;
+    const varietyCoin = allTypesUsed ? 1 : 0;
+
+    const totalPoints = _waveScore + bonusPoints + varietyPoints;
+    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
+
+    /* Build visual summary HTML */
+    const ci = CONFIG.creatureIcons;
+    const mi = CONFIG.monsterIcons;
+
+    /* scared row: one 😱 per visitor, with ×N for repeat scares */
+    const faces = _visitors.map(v => {
+      if (v.scareCount <= 0) return '';
+      const mult = v.scareCount > 1 ? `<span class="wave-summary__mult">×${v.scareCount}</span>` : '';
+      return `<span class="wave-summary__face">😱${mult}</span>`;
+    }).filter(Boolean).join('');
+    const scaredRow = `<div class="wave-summary__row">
+      ${faces || '<span class="wave-summary__faces">—</span>'}
+      <span class="wave-summary__label">${scaredVisitors}/${totalVisitors} scared</span>
+    </div>`;
+
+    /* deployed row: creature+type emoji pairs */
+    let deployedRow = '';
+    if (_deployments.length) {
+      const pairs = _deployments.map(d =>
+        `<span class="wave-summary__pair">${ci[d.creature] || '?'}${mi[d.monsterType] || ''}</span>`
+      ).join('');
+      deployedRow = `<div class="wave-summary__row">${pairs}</div>`;
+    }
+
+    /* variety row (only with monster lab) */
+    let varietyRow = '';
+    if (hasLab) {
+      const typeEmojis = [..._typesUsed].map(t =>
+        `<span class="wave-summary__type-icon">${mi[t] || t}</span>`
+      ).join('');
+      const tag = allTypesUsed
+        ? '<span class="wave-summary__variety">VARIETY!</span>'
+        : '';
+      varietyRow = `<div class="wave-summary__row">${typeEmojis} ${tag}</div>`;
+    }
+
+    /* score breakdown */
+    const lines = [`Score: +${_waveScore}`];
+    if (varietyPoints) lines.push(`Variety: +${varietyPoints}`);
+    if (bonusPoints) lines.push(`Wave bonus: +${bonusPoints}`);
+    lines.push(`Coins: +${coinsEarned}`);
+    const scoreRows = lines.map(l =>
+      `<div class="wave-summary__stat">${l}</div>`
+    ).join('');
+
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
     if (content) {
       content.innerHTML = `
         <div class="wave-summary__title">Wave ${_waveNum} Complete</div>
-        <div class="wave-summary__stat">Scared: ${_scaredVisitorCount}/${totalVisitors} visitors</div>
-        <div class="wave-summary__stat">Score: +${_waveScore}${bonusPoints ? ` + ${bonusPoints} bonus` : ''}</div>
-        <div class="wave-summary__stat">Coins: +${coinsEarned}</div>
+        ${scaredRow}
+        ${deployedRow}
+        ${varietyRow}
+        ${scoreRows}
         ${hitBonus ? '<div class="wave-summary__bonus">Wave bonus!</div>' : ''}
+        ${allTypesUsed ? '<div class="wave-summary__bonus">All types used!</div>' : ''}
       `;
     }
     if (overlay) overlay.classList.remove('overlay--hidden');
 
     Audio.play('waveEnd');
-    if (hitBonus) Audio.play('coin');
+    if (hitBonus || allTypesUsed) Audio.play('coin');
 
     // Award coins (triggers unlock check)
     Progress.addCoins(coinsEarned);
