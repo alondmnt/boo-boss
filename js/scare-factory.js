@@ -27,9 +27,11 @@ const ScareFactory = (() => {
     const creature = Creatures.create(creatureType, roomId);
     if (!creature) return null;
 
-    // Apply monster type overlay (player-chosen or default)
+    // Apply monster type overlay only after Monster Lab is unlocked
     const monsterType = chosenMonsterType || CONFIG.defaultMonsterType[creatureType];
-    MonsterTypes.apply(creature.el, monsterType, creatureType);
+    if (GameState.get('monsterLab')) {
+      MonsterTypes.apply(creature.el, monsterType, creatureType);
+    }
     creature.monsterType = monsterType;
     creature.action = CONFIG.defaultAction[creatureType];
 
