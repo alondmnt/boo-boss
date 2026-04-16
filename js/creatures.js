@@ -529,12 +529,18 @@ const Creatures = (() => {
         <path d="M-2,-25 L-2,-20 M2,-25 L2,-20" stroke="#3a2a4a" stroke-width="0.8"/>
         <!-- body is inverted (hanging upside-down) -->
         <g transform="rotate(180, 0, -10)">
-          <!-- folded wings close to body -->
-          <path d="M-6,-2 Q-14,-6 -16,0 Q-15,6 -7,6" fill="url(#bat-wing-grad)" stroke="#1a0a2a" stroke-width="0.6" opacity="0.8"/>
-          <!-- wing vein -->
-          <line x1="-7,-1" y1="-7" x2="-14" y2="-3" stroke="#2a1a3a" stroke-width="0.3" opacity="0.5"/>
-          <path d="M6,-2 Q14,-6 16,0 Q15,6 7,6" fill="url(#bat-wing-grad)" stroke="#1a0a2a" stroke-width="0.6" opacity="0.8"/>
-          <line x1="7" y1="-1" x2="14" y2="-3" stroke="#2a1a3a" stroke-width="0.3" opacity="0.5"/>
+          <!-- wings wrapped around body (sleeping bat posture) -->
+          <path d="M-7,-6 Q-16,-4 -15,4 Q-14,12 -6,14 Q-2,14 -1,8"
+                fill="url(#bat-wing-grad)" stroke="#6a5a8a" stroke-width="0.7"/>
+          <path d="M7,-6 Q16,-4 15,4 Q14,12 6,14 Q2,14 1,8"
+                fill="url(#bat-wing-grad)" stroke="#6a5a8a" stroke-width="0.7"/>
+          <!-- wing membrane veins (visible through wrap) -->
+          <line x1="-7" y1="-3" x2="-13" y2="2" stroke="#5a4a6a" stroke-width="0.4" opacity="0.5"/>
+          <line x1="-6" y1="0" x2="-12" y2="6" stroke="#5a4a6a" stroke-width="0.3" opacity="0.4"/>
+          <line x1="-5" y1="4" x2="-10" y2="10" stroke="#5a4a6a" stroke-width="0.3" opacity="0.4"/>
+          <line x1="7" y1="-3" x2="13" y2="2" stroke="#5a4a6a" stroke-width="0.4" opacity="0.5"/>
+          <line x1="6" y1="0" x2="12" y2="6" stroke="#5a4a6a" stroke-width="0.3" opacity="0.4"/>
+          <line x1="5" y1="4" x2="10" y2="10" stroke="#5a4a6a" stroke-width="0.3" opacity="0.4"/>
           ${bodyCore}
           ${ears}
           ${idleEyes}
