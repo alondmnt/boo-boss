@@ -16,6 +16,12 @@ const MonsterTypes = (() => {
     return `translate(${a.headTop.x}, ${a.headTop.y - REF_HEAD_Y * s}) scale(${s})`;
   }
 
+  /** SVG transform: maps head-centred elements (helmet) to creature face centre. */
+  function _headCenterXf(a) {
+    const s = a.scale;
+    return `translate(${a.headCenter.x}, ${a.headCenter.y - REF_HEAD_Y * s}) scale(${s})`;
+  }
+
   /** SVG transform: maps body-relative elements (cape, ribs, wisps) to creature torso. */
   function _bodyXf(a) {
     const s = a.scale;
@@ -358,10 +364,10 @@ const MonsterTypes = (() => {
   /** Astronaut: helmet visor dome, suit collar, oxygen tube. */
   function _astronaut(el, a, creatureType) {
     const poses = el.querySelectorAll('.creature__pose');
-    const hxf = _headXf(a);
+    const hcxf = _headCenterXf(a);
     const bxf = _bodyXf(a);
     const content = `
-      <g transform="${hxf}">
+      <g transform="${hcxf}">
         <!-- helmet dome (visor with reflection) -->
         <ellipse cx="0" cy="-18" rx="14" ry="12" fill="none" stroke="#c8d0d8" stroke-width="1.5" opacity="0.7"/>
         <ellipse cx="0" cy="-18" rx="12" ry="10" fill="#1a3a5a" opacity="0.25"/>
