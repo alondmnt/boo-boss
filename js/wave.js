@@ -363,7 +363,7 @@ const Wave = (() => {
         `<span class="wave-summary__type-icon">${mi[t] || t}</span>`
       ).join('');
       const tag = allTypesUsed
-        ? ' <span class="wave-summary__variety">VARIETY!</span>'
+        ? ' <span class="wave-summary__variety">FULL CAST!</span>'
         : '';
       varietyRow = `<div class="wave-summary__row">
         ${typeEmojis}
