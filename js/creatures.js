@@ -1437,12 +1437,12 @@ const Creatures = (() => {
   const ANCHORS = {
     spider:   { headTop: { x: 0, y: -14 }, headCenter: { x: 0, y: -9 },  bodyCenter: { x: 0, y: 2 },  scale: 0.65, eyes: [{ x: -3, y: -9 }, { x: 3, y: -9 }] },
     gorilla:  { headTop: { x: 0, y: -29 }, headCenter: { x: 0, y: -18 }, bodyCenter: { x: 0, y: 5 },  scale: 1.4,  eyes: [{ x: -4, y: -19 }, { x: 4, y: -19 }] },
-    bat:      { headTop: { x: 0, y: -20 }, headCenter: { x: 0, y: -4 },  bodyCenter: { x: 0, y: 0 },  scale: 0.5,  eyes: [{ x: -2.5, y: -4 }, { x: 2.5, y: -4 }] },
+    bat:      { headTop: { x: 0, y: -12 }, headCenter: { x: 0, y: -4 },  bodyCenter: { x: 0, y: 0 },  scale: 0.5,  eyes: [{ x: -2.5, y: -4 }, { x: 2.5, y: -4 }] },
     cat:      { headTop: { x: 0, y: -19 }, headCenter: { x: 0, y: -10 }, bodyCenter: { x: 0, y: 8 },  scale: 1.0,  eyes: [{ x: -4, y: -11 }, { x: 4, y: -11 }] },
     dinosaur: { headTop: { x: 18, y: -32 }, headCenter: { x: 18, y: -26 }, bodyCenter: { x: 0, y: 4 }, scale: 1.2,  eyes: [{ x: 18, y: -26 }] },
     owl:      { headTop: { x: 0, y: -22 }, headCenter: { x: 0, y: -12 }, bodyCenter: { x: 0, y: 6 },  scale: 1.0,  eyes: [{ x: -4.5, y: -13 }, { x: 4.5, y: -13 }] },
     snake:    { headTop: { x: 0, y: -20 }, headCenter: { x: 0, y: -14 }, bodyCenter: { x: 0, y: 8 },  scale: 0.55, eyes: [{ x: -2.5, y: -16 }, { x: 2.5, y: -16 }] },
-    rat:      { headTop: { x: 0, y: -25 }, headCenter: { x: 0, y: -9 },  bodyCenter: { x: 0, y: 4 },  scale: 0.85, eyes: [{ x: -3.5, y: -10 }, { x: 3.5, y: -10 }] },
+    rat:      { headTop: { x: 0, y: -16 }, headCenter: { x: 0, y: -9 },  bodyCenter: { x: 0, y: 4 },  scale: 0.85, eyes: [{ x: -3.5, y: -10 }, { x: 3.5, y: -10 }] },
   };
 
   const DEFAULT_ANCHORS = { headTop: { x: 0, y: -18 }, headCenter: { x: 0, y: -12 }, bodyCenter: { x: 0, y: 0 }, scale: 1.0, eyes: [{ x: -4, y: -12 }, { x: 4, y: -12 }] };
