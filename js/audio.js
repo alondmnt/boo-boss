@@ -38,7 +38,7 @@ const Audio = (() => {
    * @param {number} vol - peak volume (0-1)
    */
   function _note(freq, start, dur, type, vol) {
-    if (!ctx) return;
+    if (!ctx || ctx.state !== 'running') return;
     const t = ctx.currentTime + start;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -56,7 +56,7 @@ const Audio = (() => {
 
   /** Generate a short burst of filtered noise. */
   function _noise(start, dur, freq, vol) {
-    if (!ctx) return;
+    if (!ctx || ctx.state !== 'running') return;
     const t = ctx.currentTime + start;
     const bufSize = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
@@ -227,7 +227,7 @@ const Audio = (() => {
 
   /** Schedule one full pass of the melody + bass, then queue the next. */
   function _scheduleLoop() {
-    if (!ctx || !_musicPlaying) return;
+    if (!ctx || !_musicPlaying || ctx.state !== 'running') return;
     for (const [freq, beat, dur] of _MELODY) {
       _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'triangle', 0.05);
     }
