@@ -12,6 +12,7 @@ const Wave = (() => {
   let _waveScore = 0;
   let _scaredVisitorCount = 0;
   let _onComplete = null;
+  let _hugCount = 0;
   let _typesUsed = new Set();
   let _deployments = [];
 
@@ -27,6 +28,7 @@ const Wave = (() => {
     _exitedCount = 0;
     _waveScore = 0;
     _scaredVisitorCount = 0;
+    _hugCount = 0;
     _typesUsed = new Set();
     _deployments = [];
 
@@ -187,6 +189,7 @@ const Wave = (() => {
           return;
         } else if (result.result === 'loved') {
           visitor._scared = true;
+          _hugCount++;
           Reactions.hugged(visitor, creature, () => {
             ScareFactory.clearRoom(creature.roomId);
             Creatures.remove(creature);
@@ -308,6 +311,10 @@ const Wave = (() => {
     const hitBonus = scarePct >= CONFIG.scoring.waveBonusThreshold;
     const bonusPoints = hitBonus ? CONFIG.scoring.waveBonus : 0;
 
+    /* No-hug bonus (must have deployed at least once to qualify) */
+    const noHugs = _hugCount === 0 && _deployments.length > 0;
+    const noHugPoints = noHugs ? CONFIG.scoring.noHugBonus : 0;
+
     /* Variety bonus (only when monster lab is unlocked) */
     const hasLab = GameState.get('monsterLab');
     const typesUnlocked = hasLab ? GameState.get('monsterTypes').length : 0;
@@ -316,14 +323,13 @@ const Wave = (() => {
     const allTypesUsed = typesUnlocked > 0 && typesUsedCount >= typesUnlocked;
     const varietyCoin = allTypesUsed ? 1 : 0;
 
-    const totalPoints = _waveScore + bonusPoints + varietyPoints;
+    const totalPoints = _waveScore + bonusPoints + noHugPoints + varietyPoints;
     const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
 
     /* Build visual summary HTML */
-    const ci = CONFIG.creatureIcons;
     const mi = CONFIG.monsterIcons;
 
-    /* scared row: one 😱 per visitor, with ×N for repeat scares */
+    /* scared row: faces + inline score */
     const faces = _visitors.map(v => {
       if (v.scareCount <= 0) return '';
       const mult = v.scareCount > 1 ? `<span class="wave-summary__mult">×${v.scareCount}</span>` : '';
@@ -332,37 +338,52 @@ const Wave = (() => {
     const scaredRow = `<div class="wave-summary__row">
       ${faces || '<span class="wave-summary__faces">—</span>'}
       <span class="wave-summary__label">${scaredVisitors}/${totalVisitors} scared</span>
+      <span class="wave-summary__points">+${_waveScore}</span>
     </div>`;
 
-    /* deployed row: creature+type emoji pairs */
-    let deployedRow = '';
-    if (_deployments.length) {
-      const pairs = _deployments.map(d =>
-        `<span class="wave-summary__pair">${ci[d.creature] || '?'}${mi[d.monsterType] || ''}</span>`
-      ).join('');
-      deployedRow = `<div class="wave-summary__row">${pairs}</div>`;
+    /* hug row: show hug count, or no-hug bonus */
+    let hugRow = '';
+    if (noHugs) {
+      hugRow = `<div class="wave-summary__row">
+        <span class="wave-summary__bonus">No hugs!</span>
+        <span class="wave-summary__points">+${noHugPoints}</span>
+      </div>`;
+    } else if (_hugCount > 0) {
+      const hearts = Array(_hugCount).fill('<span class="wave-summary__face">🫂</span>').join('');
+      hugRow = `<div class="wave-summary__row">
+        ${hearts}
+        <span class="wave-summary__label">${_hugCount} hugged</span>
+      </div>`;
     }
 
-    /* variety row (only with monster lab) */
+    /* variety row (only with monster lab), with inline score */
     let varietyRow = '';
     if (hasLab) {
       const typeEmojis = [..._typesUsed].map(t =>
         `<span class="wave-summary__type-icon">${mi[t] || t}</span>`
       ).join('');
       const tag = allTypesUsed
-        ? '<span class="wave-summary__variety">VARIETY!</span>'
+        ? ' <span class="wave-summary__variety">VARIETY!</span>'
         : '';
-      varietyRow = `<div class="wave-summary__row">${typeEmojis} ${tag}</div>`;
+      varietyRow = `<div class="wave-summary__row">
+        ${typeEmojis}
+        <span class="wave-summary__label">${typesUsedCount}/${typesUnlocked} types</span>${tag}
+        <span class="wave-summary__points">+${varietyPoints}</span>
+      </div>`;
     }
 
-    /* score breakdown */
-    const lines = [`Score: +${_waveScore}`];
-    if (varietyPoints) lines.push(`Variety: +${varietyPoints}`);
-    if (bonusPoints) lines.push(`Wave bonus: +${bonusPoints}`);
-    lines.push(`Coins: +${coinsEarned}`);
-    const scoreRows = lines.map(l =>
-      `<div class="wave-summary__stat">${l}</div>`
-    ).join('');
+    /* wave bonus row */
+    const bonusRow = hitBonus
+      ? `<div class="wave-summary__row">
+          <span class="wave-summary__bonus">Wave bonus!</span>
+          <span class="wave-summary__points">+${bonusPoints}</span>
+        </div>`
+      : '';
+
+    /* coins row */
+    const coinsRow = `<div class="wave-summary__row wave-summary__coins">
+      Coins: +${coinsEarned}
+    </div>`;
 
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
@@ -370,17 +391,17 @@ const Wave = (() => {
       content.innerHTML = `
         <div class="wave-summary__title">Wave ${_waveNum} Complete</div>
         ${scaredRow}
-        ${deployedRow}
+        ${hugRow}
         ${varietyRow}
-        ${scoreRows}
-        ${hitBonus ? '<div class="wave-summary__bonus">Wave bonus!</div>' : ''}
-        ${allTypesUsed ? '<div class="wave-summary__bonus">All types used!</div>' : ''}
+        ${bonusRow}
+        <hr class="wave-summary__divider">
+        ${coinsRow}
       `;
     }
     if (overlay) overlay.classList.remove('overlay--hidden');
 
     Audio.play('waveEnd');
-    if (hitBonus || allTypesUsed) Audio.play('coin');
+    if (hitBonus || noHugs || allTypesUsed) Audio.play('coin');
 
     // Award coins (triggers unlock check)
     Progress.addCoins(coinsEarned);

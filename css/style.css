@@ -320,10 +320,8 @@ html, body {
 }
 .wave-summary__faces { font-size: 1.4rem; letter-spacing: 0.15em; }
 .wave-summary__label { font-size: 0.9rem; color: #bba8d8; margin-left: 0.4em; }
-.wave-summary__pair {
-  font-size: 1.3rem; letter-spacing: -0.1em;
-  background: rgba(255,255,255,0.06); border-radius: 6px;
-  padding: 0.1em 0.3em;
+.wave-summary__points {
+  font-size: 0.9rem; color: #bba8d8; margin-left: auto;
 }
 .wave-summary__type-icon { font-size: 1.4rem; }
 .wave-summary__variety {
@@ -331,17 +329,17 @@ html, body {
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   animation: fanfare-bounce 0.5s ease-out;
 }
-.wave-summary__stat {
-  font-size: 1rem;
-  color: #bba8d8;
-  margin: 0.3em 0;
-}
 .wave-summary__bonus {
-  font-size: 1.2rem;
-  color: #ffd700;
-  font-weight: 600;
-  margin-top: 0.5em;
+  font-size: 1rem; color: #ffd700; font-weight: 600;
   animation: fanfare-bounce 0.5s ease-out;
+}
+.wave-summary__divider {
+  border: none; border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 0.6em 0;
+}
+.wave-summary__coins {
+  font-size: 1.1rem; color: #bba8d8;
+  justify-content: center;
 }
 
 /* ===== Particles ===== */
