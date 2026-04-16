@@ -84,6 +84,14 @@ const CONFIG = {
     // derived: svgH = 3 * roomH + 4 * wallT + roofH + trainY = 434
   },
 
+  /* ─── Difficulty ─── */
+  difficulty: {
+    biasStartWave: 8,   // wave at which like/dislike correlation begins
+    biasBaseP: 0.3,     // initial probability of biased love assignment
+    biasPerWave: 0.1,   // probability increase per wave beyond biasStartWave
+    biasMaxP: 0.9,      // ceiling so it's never fully deterministic
+  },
+
   /* ─── Waves ─── */
   totalWaves: 10,
   waveSizing: { base: 3, perWave: 0.5 },

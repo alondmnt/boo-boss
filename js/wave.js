@@ -43,16 +43,32 @@ const Wave = (() => {
     // Check for showcase tier (force one visitor to fear a newly unlocked creature)
     const showcase = Progress.consumeShowcase();
 
+    // Biased sampling: at higher waves, visitors tend to love what others fear,
+    // creating deploy dilemmas (scare some visitors but risk hugs from others).
+    const diff = CONFIG.difficulty;
+    const biasP = waveNum >= diff.biasStartWave
+      ? Math.min(diff.biasBaseP + (waveNum - diff.biasStartWave) * diff.biasPerWave, diff.biasMaxP)
+      : 0;
+
+    // Pass 1: assign fears randomly
+    const fears = [];
+    for (let i = 0; i < count; i++) fears.push(_randomFrom(creaturePool));
+
+    // Pass 2: assign loves, optionally biased toward other visitors' fears
     for (let i = 0; i < count; i++) {
-      const fear = _randomFrom(creaturePool);
-      // Love must differ from fear (if pool allows)
-      let love = _randomFrom(creaturePool);
-      if (creaturePool.length > 1) {
-        while (love === fear) love = _randomFrom(creaturePool);
+      let love;
+      const otherFears = fears.filter((f, j) => j !== i && f !== fears[i]);
+
+      if (biasP > 0 && otherFears.length > 0 && Math.random() < biasP) {
+        love = _randomFrom(otherFears);
+      } else {
+        love = _randomFrom(creaturePool);
+        if (creaturePool.length > 1) {
+          while (love === fears[i]) love = _randomFrom(creaturePool);
+        }
       }
 
-      const visitor = Visitor.create(fear, love);
-      _visitors.push(visitor);
+      _visitors.push(Visitor.create(fears[i], love));
     }
 
     // Apply showcase: first visitor fears the showcase creature
