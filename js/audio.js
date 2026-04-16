@@ -16,6 +16,20 @@ const Audio = (() => {
   }
 
   /**
+   * Resume a suspended AudioContext (e.g. after device sleep) and
+   * restart the music loop if it was playing. Call on any user gesture.
+   */
+  function resume() {
+    if (!ctx || ctx.state !== 'suspended') return;
+    ctx.resume().then(() => {
+      if (_musicWanted && !muted && !_musicPlaying) {
+        _musicPlaying = true;
+        _scheduleLoop();
+      }
+    });
+  }
+
+  /**
    * Schedule a note with click-free envelope.
    * @param {number} freq - frequency in Hz
    * @param {number} start - delay from now in seconds
@@ -253,5 +267,5 @@ const Audio = (() => {
     }
   }
 
-  return { unlock, play, startMusic, stopMusic, isMuted, setMuted };
+  return { unlock, resume, play, startMusic, stopMusic, isMuted, setMuted };
 })();

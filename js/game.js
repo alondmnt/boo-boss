@@ -18,6 +18,10 @@ const Game = (() => {
     Train.extendTrack();
     Picker.render();
 
+    // Resume AudioContext on any interaction (recovers from device sleep)
+    document.addEventListener('click', () => Audio.resume(), true);
+    document.addEventListener('touchend', () => Audio.resume(), true);
+
     // Splash screen: tap to start (unlocks AudioContext)
     const splash = document.getElementById('splash');
     function startHandler(e) {
