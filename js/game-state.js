@@ -37,8 +37,6 @@ const GameState = (() => {
       _objects.creatureLifetimeMs = Math.round(CONFIG.creatureLifetimeMs * 0.75);
     },
 
-    endlessMode: () => { _booleans.endlessMode = true; },
-
     monsterLab: () => { _booleans.monsterLab = true; },
     vampire:    () => { _addUnique('monsterTypes', 'vampire'); },
     astronaut:  () => { _addUnique('monsterTypes', 'astronaut'); },

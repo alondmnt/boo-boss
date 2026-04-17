@@ -93,7 +93,6 @@ const CONFIG = {
   },
 
   /* ─── Waves ─── */
-  totalWaves: 10,
   waveSizing: { base: 3, perWave: 0.5 },
   visitorDwellMs: { min: 2000, max: 3000 },
   visitorRoomVisits: { min: 4, max: 6 },
@@ -128,8 +127,7 @@ const UNLOCK_TIERS = [
   { coins: 35, key: 'rat',             icon: '🐀', label: 'Rat creature!' },
   { coins: 40, key: 'tower',           icon: '🗼', label: 'Tower unlocked!' },
   { coins: 45, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
-  { coins: 50, key: 'endlessMode',     icon: '♾️',  label: 'Endless mode!' },
-  { coins: 55, key: 'monsterLab',      icon: '🧪', label: 'Monster Lab unlocked!' },
+  { coins: 50, key: 'monsterLab',      icon: '🧪', label: 'Monster Lab unlocked!' },
   { coins: 65, key: 'vampire',         icon: '🧛', label: 'Vampire type!' },
   { coins: 75, key: 'astronaut',       icon: '🧑‍🚀', label: 'Astronaut type!' },
   { coins: 85, key: 'ghost',           icon: '👻', label: 'Ghost type!' },

@@ -61,13 +61,13 @@ html, body {
 #score-display { font-weight: 600; }
 .visitor-count { font-size: 0.75rem; opacity: 0.7; margin-left: 4px; }
 #wave-display { text-align: center; opacity: 0.8; }
-#sound-btn, #reset-btn {
+#leaderboard-btn, #sound-btn, #reset-btn {
   background: none; border: none; color: #e0d0ff;
   font-size: 1.2rem; cursor: pointer; padding: 4px 8px;
   border-radius: 6px;
   transition: background 0.2s;
 }
-#sound-btn:hover, #reset-btn:hover { background: rgba(255,255,255,0.1); }
+#leaderboard-btn:hover, #sound-btn:hover, #reset-btn:hover { background: rgba(255,255,255,0.1); }
 
 /* ===== House container ===== */
 #house-container {
@@ -358,6 +358,24 @@ html, body {
 .wave-summary__coins {
   font-size: 1.1rem; color: #bba8d8;
   justify-content: center;
+}
+.wave-summary__tap {
+  margin-top: 0.8em; color: #8a78b0; font-size: 0.9rem;
+}
+
+/* ===== Leaderboard ===== */
+.leaderboard { margin: 0.8em 0; }
+.leaderboard__row {
+  display: flex; gap: 0.6em; align-items: center;
+  padding: 0.2em 0.4em; font-size: 0.95rem; color: #bba8d8;
+}
+.leaderboard__row--current { color: #ffd700; font-weight: 600; }
+.leaderboard__rank { width: 1.4em; text-align: right; }
+.leaderboard__score { flex: 1; text-align: left; }
+.leaderboard__date { font-size: 0.8rem; opacity: 0.6; }
+.leaderboard__best {
+  font-size: 0.8rem; color: #ffd700;
+  animation: fanfare-bounce 0.5s ease-out;
 }
 
 /* ===== Particles ===== */

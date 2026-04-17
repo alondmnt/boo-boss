@@ -4,6 +4,8 @@
  */
 const Progress = (() => {
   const STORAGE_KEY = 'hauntedHouse_progress';
+  const LEADERBOARD_KEY = 'hauntedHouse_leaderboard';
+  const MAX_LEADERBOARD = 5;
   let coins = 0;
   let unlocked = [];       // threshold values already unlocked, e.g. [5, 10]
   let _showcaseTier = null; // tier to force-spawn on next wave (one-shot)
@@ -150,5 +152,46 @@ const Progress = (() => {
     return tier;
   }
 
-  return { load, addCoins, getCoins, resetAll, renderPreview, consumeShowcase };
+  /* ─── Leaderboard ─── */
+
+  let _runId = null; // timestamp of current run start
+
+  /** Start a new run (call on game start / full reset). */
+  function newRun() {
+    _runId = new Date().toISOString().slice(0, 10) + '_' + Date.now();
+  }
+
+  /** Load leaderboard from localStorage. Returns sorted array of { score, date, runId }. */
+  function getLeaderboard() {
+    try {
+      const raw = localStorage.getItem(LEADERBOARD_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  /**
+   * Submit a score for the current run. Updates existing entry if the run
+   * is already on the board, otherwise adds a new one. Returns the rank
+   * (0-based) if the run is on the board, or -1.
+   */
+  function submitScore(score) {
+    if (!_runId) newRun();
+    const board = getLeaderboard();
+    const existing = board.findIndex(e => e.runId === _runId);
+    if (existing >= 0) {
+      board[existing].score = score;
+    } else {
+      board.push({ score, date: _runId.slice(0, 10), runId: _runId });
+    }
+    board.sort((a, b) => b.score - a.score);
+    board.splice(MAX_LEADERBOARD);
+    const rank = board.findIndex(e => e.runId === _runId);
+    try {
+      localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
+    } catch { /* storage full */ }
+    return rank;
+  }
+
+  return { load, addCoins, getCoins, resetAll, renderPreview, consumeShowcase,
+           newRun, getLeaderboard, submitScore };
 })();

@@ -15,12 +15,15 @@ const Wave = (() => {
   let _hugCount = 0;
   let _typesUsed = new Set();
   let _deployments = [];
+  let _runningTotal = 0;
 
   /**
    * Start a new wave.
    * @param {number} waveNum - wave number (1-based)
+   * @param {number} runningTotal - total score before this wave
    */
-  function start(waveNum) {
+  function start(waveNum, runningTotal) {
+    _runningTotal = runningTotal || 0;
     const gen = ++_generation;
     _waveNum = waveNum;
     _state = 'trainArriving';
@@ -401,6 +404,16 @@ const Wave = (() => {
       Coins: +${s.coinsEarned}
     </div>`;
 
+    /* leaderboard check */
+    const projectedTotal = _runningTotal + s.totalPoints;
+    const rank = Progress.submitScore(projectedTotal);
+    const board = Progress.getLeaderboard();
+    let leaderboardRow = '';
+    if (rank >= 0) {
+      leaderboardRow = `<hr class="wave-summary__divider">
+        ${Game.renderBoard(board, rank)}`;
+    }
+
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
     if (content) {
@@ -412,6 +425,7 @@ const Wave = (() => {
         ${bonusRow}
         <hr class="wave-summary__divider">
         ${coinsRow}
+        ${leaderboardRow}
       `;
     }
     if (overlay) overlay.classList.remove('overlay--hidden');

@@ -1,6 +1,6 @@
 /**
  * Game — top-level state machine, coordinates all modules.
- * States: splash -> playing -> gameOver.
+ * States: splash -> playing (endless).
  * Entry point: Game.init() on DOMContentLoaded.
  */
 const Game = (() => {
@@ -61,6 +61,10 @@ const Game = (() => {
       Audio.setMuted(!Audio.isMuted());
       soundBtn.textContent = Audio.isMuted() ? '🔇' : '🔊';
     });
+
+    // Leaderboard button
+    const lbBtn = document.getElementById('leaderboard-btn');
+    if (lbBtn) lbBtn.addEventListener('click', _showLeaderboard);
   }
 
   /** Sync room visuals with GameState (unlock rooms that are unlocked in state). */
@@ -81,6 +85,7 @@ const Game = (() => {
     const splash = document.getElementById('splash');
     splash.classList.add('splash--hidden');
 
+    Progress.newRun();
     _currentWave = 0;
     _totalScore = 0;
     _updateScoreDisplay();
@@ -91,12 +96,9 @@ const Game = (() => {
   function _startWave(n) {
     _currentWave = n;
     const waveEl = document.getElementById('wave-value');
-    const endlessMode = GameState.get('endlessMode');
-    if (waveEl) {
-      waveEl.textContent = endlessMode ? n : `${n}/${CONFIG.totalWaves}`;
-    }
+    if (waveEl) waveEl.textContent = n;
 
-    Wave.start(n);
+    Wave.start(n, _totalScore);
     Wave.onComplete((results) => {
       _totalScore += results.totalPoints;
       _updateScoreDisplay();
@@ -104,12 +106,7 @@ const Game = (() => {
       Train.extendTrack();
       Picker.render();
 
-      const maxWaves = GameState.get('endlessMode') ? Infinity : CONFIG.totalWaves;
-      if (n >= maxWaves) {
-        _showGameOver();
-      } else {
-        setTimeout(() => _startWave(n + 1), 1000);
-      }
+      setTimeout(() => _startWave(n + 1), 1000);
     });
   }
 
@@ -123,6 +120,7 @@ const Game = (() => {
   function _fullReset() {
     Wave.reset();
     Progress.resetAll();
+    Progress.newRun();
     Picker.render();
     _totalScore = 0;
     _updateScoreDisplay();
@@ -134,35 +132,44 @@ const Game = (() => {
     _startWave(1);
   }
 
-  /** Show game over overlay. */
-  function _showGameOver() {
+  /** Show leaderboard overlay. */
+  function _showLeaderboard() {
+    const board = Progress.getLeaderboard();
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
-    if (content) {
-      content.innerHTML = `
-        <div class="wave-summary__title">Game Over</div>
-        <div class="wave-summary__stat">Final Score: ${_totalScore}</div>
-        <div class="wave-summary__stat">Coins Earned: ${Progress.getCoins()}</div>
-        <div class="wave-summary__stat">Tap to play again</div>
-      `;
-    }
-    if (overlay) overlay.classList.remove('overlay--hidden');
+    if (!content || !overlay.classList.contains('overlay--hidden')) return;
 
-    Audio.play('waveEnd');
+    const boardRows = _renderBoard(board, -1);
+    content.innerHTML = `
+      <div class="wave-summary__title">Leaderboard</div>
+      ${boardRows || '<div class="wave-summary__stat">no scores yet</div>'}
+      <div class="wave-summary__stat wave-summary__tap">tap to close</div>
+    `;
+    overlay.classList.remove('overlay--hidden');
 
-    function restart(e) {
+    function dismiss(e) {
       e.preventDefault();
       overlay.classList.add('overlay--hidden');
-      overlay.removeEventListener('click', restart);
-      overlay.removeEventListener('touchend', restart);
-      _totalScore = 0;
-      _updateScoreDisplay();
-      _startWave(1);
+      overlay.removeEventListener('click', dismiss);
+      overlay.removeEventListener('touchend', dismiss);
     }
-    if (overlay) {
-      overlay.addEventListener('click', restart);
-      overlay.addEventListener('touchend', restart);
-    }
+    overlay.addEventListener('click', dismiss);
+    overlay.addEventListener('touchend', dismiss);
+  }
+
+  /** Render leaderboard rows HTML. Highlights the row at currentRank. */
+  function _renderBoard(board, currentRank) {
+    if (!board.length) return '';
+    return '<div class="leaderboard">' + board.map((entry, i) => {
+      const isCurrent = i === currentRank;
+      const cls = isCurrent ? ' leaderboard__row--current' : '';
+      const marker = isCurrent && i === 0 ? ' <span class="leaderboard__best">new best!</span>' : '';
+      return `<div class="leaderboard__row${cls}">
+        <span class="leaderboard__rank">${i + 1}.</span>
+        <span class="leaderboard__score">${entry.score}</span>
+        <span class="leaderboard__date">${entry.date}</span>${marker}
+      </div>`;
+    }).join('') + '</div>';
   }
 
   /** Update the score display. */
@@ -171,7 +178,10 @@ const Game = (() => {
     if (el) el.textContent = _totalScore;
   }
 
-  return { init };
+  /** Get the render board function for wave summary use. */
+  function renderBoard(board, rank) { return _renderBoard(board, rank); }
+
+  return { init, renderBoard };
 })();
 
 document.addEventListener('DOMContentLoaded', Game.init);
