@@ -224,10 +224,21 @@ const Audio = (() => {
   let _musicTimer = null;
   let _musicPlaying = false;
   let _musicWanted = false;
+  let _lastScheduleTime = -Infinity;
 
   /** Schedule one full pass of the melody + bass, then queue the next. */
   function _scheduleLoop() {
     if (!ctx || !_musicPlaying || ctx.state !== 'running') return;
+
+    // Guard against overlapping loops after device sleep: if the previous
+    // batch of notes hasn't finished yet, reschedule for when it ends.
+    if (ctx.currentTime < _lastScheduleTime + _LOOP_DUR) {
+      const remaining = (_lastScheduleTime + _LOOP_DUR - ctx.currentTime) * 1000;
+      _musicTimer = setTimeout(_scheduleLoop, remaining);
+      return;
+    }
+
+    _lastScheduleTime = ctx.currentTime;
     for (const [freq, beat, dur] of _MELODY) {
       _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'triangle', 0.05);
     }
@@ -242,7 +253,12 @@ const Audio = (() => {
     _musicWanted = true;
     if (!unlocked || muted || _musicPlaying) return;
     _musicPlaying = true;
-    _scheduleLoop();
+    // AudioContext may still be suspended after creation; wait for it to run
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => _scheduleLoop());
+    } else {
+      _scheduleLoop();
+    }
   }
 
   /** Stop the background music loop. */
