@@ -183,7 +183,9 @@ const Wave = (() => {
       const currentRoom = visitor.currentRoom;
       const creature = ScareFactory.getDeployed(currentRoom);
       if (creature && !visitor._scared) {
-        const result = ScareFactory.evaluate(visitor, creature);
+        // Ghost-blocked visitors don't re-attempt hugs on the same creature
+        const alreadyBlocked = visitor._blockedBy && visitor._blockedBy.has(creature.roomId);
+        const result = ScareFactory.evaluate(visitor, creature, alreadyBlocked);
 
         if (result.result === 'scared') {
           visitor._scared = true;
@@ -202,7 +204,9 @@ const Wave = (() => {
           });
           return;
         } else if (result.result === 'hugBlock') {
-          // Ghost: hug blocked silently, creature survives, visitor moves on
+          // Ghost: hug blocked, visitor stops trying to hug this creature
+          if (!visitor._blockedBy) visitor._blockedBy = new Set();
+          visitor._blockedBy.add(creature.roomId);
           Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
           // Fall through to normal movement below
         } else if (result.result === 'hugResist') {

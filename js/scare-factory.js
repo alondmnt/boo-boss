@@ -100,7 +100,7 @@ const ScareFactory = (() => {
    * @param {object} creature - creature object with type
    * @returns {{ result: string, points: number }}
    */
-  function evaluate(visitor, creature) {
+  function evaluate(visitor, creature, skipLove) {
     const effect = _getEffect(creature.monsterType);
 
     if (visitor.fear === creature.type) {
@@ -118,7 +118,7 @@ const ScareFactory = (() => {
       }
       return { result: 'scared', points: Math.round(points) };
     }
-    if (visitor.love === creature.type) {
+    if (visitor.love === creature.type && !skipLove) {
       // Vampire: resist hug + scare the visitor
       if (effect && effect.type === 'hugResist' && Math.random() < effect.value) {
         return { result: 'hugResist', points: 0 };
