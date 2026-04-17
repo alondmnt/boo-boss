@@ -297,6 +297,38 @@ const Wave = (() => {
     );
   }
 
+  /**
+   * Calculate wave scoring: points, bonuses, coins.
+   * Pure function - no DOM or side effects.
+   */
+  function _calcScore(visitors, waveScore, hugCount, deployments, typesUsed) {
+    const totalVisitors = visitors.length;
+    const scaredVisitors = visitors.filter(v => v.scareCount > 0).length;
+    const scarePct = totalVisitors > 0 ? scaredVisitors / totalVisitors : 0;
+    const hitBonus = scarePct >= CONFIG.scoring.waveBonusThreshold;
+    const bonusPoints = hitBonus ? CONFIG.scoring.waveBonus : 0;
+
+    const noHugs = hugCount === 0 && deployments.length > 0;
+    const noHugPoints = noHugs ? CONFIG.scoring.noHugBonus : 0;
+
+    const hasLab = GameState.get('monsterLab');
+    const typesUnlocked = hasLab ? GameState.get('monsterTypes').length : 0;
+    const typesUsedCount = typesUsed.size;
+    const varietyPoints = hasLab ? typesUsedCount * CONFIG.scoring.varietyPerType : 0;
+    const allTypesUsed = typesUnlocked > 0 && typesUsedCount >= typesUnlocked;
+    const varietyCoin = allTypesUsed ? 1 : 0;
+
+    const totalPoints = waveScore + bonusPoints + noHugPoints + varietyPoints;
+    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
+
+    return {
+      totalVisitors, scaredVisitors, hitBonus, bonusPoints,
+      noHugs, noHugPoints,
+      hasLab, typesUnlocked, typesUsedCount, varietyPoints, allTypesUsed,
+      totalPoints, coinsEarned,
+    };
+  }
+
   /** Display wave summary overlay with visual breakdown. */
   function _showSummary(gen) {
     if (_generation !== gen) return;
@@ -304,29 +336,7 @@ const Wave = (() => {
     const countEl = document.getElementById('visitor-count');
     if (countEl) countEl.textContent = '';
 
-    const totalVisitors = _visitors.length;
-    /* Count unique visitors scared (not scare events) for display + wave bonus */
-    const scaredVisitors = _visitors.filter(v => v.scareCount > 0).length;
-    const scarePct = totalVisitors > 0 ? scaredVisitors / totalVisitors : 0;
-    const hitBonus = scarePct >= CONFIG.scoring.waveBonusThreshold;
-    const bonusPoints = hitBonus ? CONFIG.scoring.waveBonus : 0;
-
-    /* No-hug bonus (must have deployed at least once to qualify) */
-    const noHugs = _hugCount === 0 && _deployments.length > 0;
-    const noHugPoints = noHugs ? CONFIG.scoring.noHugBonus : 0;
-
-    /* Variety bonus (only when monster lab is unlocked) */
-    const hasLab = GameState.get('monsterLab');
-    const typesUnlocked = hasLab ? GameState.get('monsterTypes').length : 0;
-    const typesUsedCount = _typesUsed.size;
-    const varietyPoints = hasLab ? typesUsedCount * CONFIG.scoring.varietyPerType : 0;
-    const allTypesUsed = typesUnlocked > 0 && typesUsedCount >= typesUnlocked;
-    const varietyCoin = allTypesUsed ? 1 : 0;
-
-    const totalPoints = _waveScore + bonusPoints + noHugPoints + varietyPoints;
-    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
-
-    /* Build visual summary HTML */
+    const s = _calcScore(_visitors, _waveScore, _hugCount, _deployments, _typesUsed);
     const mi = CONFIG.monsterIcons;
 
     /* scared row: faces + inline score */
@@ -337,16 +347,16 @@ const Wave = (() => {
     }).filter(Boolean).join('');
     const scaredRow = `<div class="wave-summary__row">
       ${faces || '<span class="wave-summary__faces">—</span>'}
-      <span class="wave-summary__label">${scaredVisitors}/${totalVisitors} scared</span>
+      <span class="wave-summary__label">${s.scaredVisitors}/${s.totalVisitors} scared</span>
       <span class="wave-summary__points">+${_waveScore}</span>
     </div>`;
 
     /* hug row: show hug count, or no-hug bonus */
     let hugRow = '';
-    if (noHugs) {
+    if (s.noHugs) {
       hugRow = `<div class="wave-summary__row">
         <span class="wave-summary__bonus">No hugs!</span>
-        <span class="wave-summary__points">+${noHugPoints}</span>
+        <span class="wave-summary__points">+${s.noHugPoints}</span>
       </div>`;
     } else if (_hugCount > 0) {
       const hearts = Array(_hugCount).fill('<span class="wave-summary__face">🫂</span>').join('');
@@ -358,31 +368,31 @@ const Wave = (() => {
 
     /* variety row (only with monster lab), with inline score */
     let varietyRow = '';
-    if (hasLab) {
+    if (s.hasLab) {
       const typeEmojis = [..._typesUsed].map(t =>
         `<span class="wave-summary__type-icon">${mi[t] || t}</span>`
       ).join('');
-      const tag = allTypesUsed
+      const tag = s.allTypesUsed
         ? ' <span class="wave-summary__variety">FULL CAST!</span>'
         : '';
       varietyRow = `<div class="wave-summary__row">
         ${typeEmojis}
-        <span class="wave-summary__label">${typesUsedCount}/${typesUnlocked} types</span>${tag}
-        <span class="wave-summary__points">+${varietyPoints}</span>
+        <span class="wave-summary__label">${s.typesUsedCount}/${s.typesUnlocked} types</span>${tag}
+        <span class="wave-summary__points">+${s.varietyPoints}</span>
       </div>`;
     }
 
     /* wave bonus row */
-    const bonusRow = hitBonus
+    const bonusRow = s.hitBonus
       ? `<div class="wave-summary__row">
           <span class="wave-summary__bonus">Wave bonus!</span>
-          <span class="wave-summary__points">+${bonusPoints}</span>
+          <span class="wave-summary__points">+${s.bonusPoints}</span>
         </div>`
       : '';
 
     /* coins row */
     const coinsRow = `<div class="wave-summary__row wave-summary__coins">
-      Coins: +${coinsEarned}
+      Coins: +${s.coinsEarned}
     </div>`;
 
     const overlay = document.getElementById('wave-summary');
@@ -401,10 +411,10 @@ const Wave = (() => {
     if (overlay) overlay.classList.remove('overlay--hidden');
 
     Audio.play('waveEnd');
-    if (hitBonus || noHugs || allTypesUsed) Audio.play('coin');
+    if (s.hitBonus || s.noHugs || s.allTypesUsed) Audio.play('coin');
 
     // Award coins (triggers unlock check)
-    Progress.addCoins(coinsEarned);
+    Progress.addCoins(s.coinsEarned);
 
     // Dismiss on tap
     function dismiss(e) {
@@ -415,7 +425,7 @@ const Wave = (() => {
       _state = 'idle';
       ScareFactory.clearAll();
       Picker.cleanup();
-      if (_onComplete) _onComplete({ totalPoints, coinsEarned, hitBonus });
+      if (_onComplete) _onComplete({ totalPoints: s.totalPoints, coinsEarned: s.coinsEarned, hitBonus: s.hitBonus });
     }
     if (overlay) {
       overlay.addEventListener('click', dismiss);
