@@ -159,9 +159,15 @@ const Wave = (() => {
       visitor._maxVisits = CONFIG.visitorRoomVisits.min +
         Math.floor(Math.random() * (CONFIG.visitorRoomVisits.max - CONFIG.visitorRoomVisits.min + 1));
     }
-    if (visitor.roomsVisited >= visitor._maxVisits) {
-      _sendToExit(visitor, gen);
-      return;
+    // Mark visitor as ready to leave once they've visited enough rooms,
+    // but keep them wandering in place (still scareable until train arrives).
+    if (visitor.roomsVisited >= visitor._maxVisits && !visitor._readyToLeave) {
+      visitor._readyToLeave = true;
+      _exitedCount++;
+      _updateVisitorCount();
+      if (_exitedCount >= _visitors.length) {
+        _beginCollection(gen);
+      }
     }
 
     // Step 1: wander within the current room (2-3 steps)
@@ -183,8 +189,11 @@ const Wave = (() => {
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;
-            // Flee to an adjacent room (no dwell delay)
-            _fleeFromScare(visitor, gen);
+            if (visitor._readyToLeave) {
+              _dwellThenWander(visitor, gen);
+            } else {
+              _fleeFromScare(visitor, gen);
+            }
           });
           return;
         } else if (result.result === 'loved') {
@@ -196,14 +205,22 @@ const Wave = (() => {
             Picker.enableSlot(creature.type);
             visitor._scared = false;
             if (_generation !== gen) return;
-            _moveToNextRoom(visitor, gen);
+            if (visitor._readyToLeave) {
+              _dwellThenWander(visitor, gen);
+            } else {
+              _moveToNextRoom(visitor, gen);
+            }
           });
           return;
         }
       }
 
-      // No encounter (or neutral): move to next room
-      _moveToNextRoom(visitor, gen);
+      // No encounter (or neutral): move to next room or stay in place
+      if (visitor._readyToLeave) {
+        _dwellThenWander(visitor, gen);
+      } else {
+        _moveToNextRoom(visitor, gen);
+      }
     });
   }
 
@@ -245,23 +262,10 @@ const Wave = (() => {
     const el = document.getElementById('visitor-count');
     if (!el) return;
     const wandering = _visitors.filter(v =>
-      v.state !== 'waitingForTrain' && v.state !== 'boarding' && v.state !== 'exited'
+      v.state !== 'waitingForTrain' && v.state !== 'boarding' && v.state !== 'exited' &&
+      !v._readyToLeave
     ).length;
     el.textContent = wandering > 0 ? `(${wandering} exploring)` : '';
-  }
-
-  /** Mark visitor as waiting for the train (stop wandering). */
-  function _sendToExit(visitor, gen) {
-    if (_generation !== gen) return;
-    Reactions.exitHappy(visitor);
-    visitor.state = 'waitingForTrain';
-    _exitedCount++;
-    _updateVisitorCount();
-
-    // When all visitors are waiting, start the collection train
-    if (_exitedCount >= _visitors.length) {
-      _beginCollection(gen);
-    }
   }
 
   /** Run the collection train through all rooms, picking up visitors. */
@@ -276,11 +280,13 @@ const Wave = (() => {
         const trackPos = House.getRoomCentre(roomId);
         if (!trackPos) return;
 
-        // Find visitors waiting in this room
+        // Stop wandering and board all visitors in this room
         const inRoom = _visitors.filter(v =>
-          v.currentRoom === roomId && v.state === 'waitingForTrain'
+          v.currentRoom === roomId &&
+          v.state !== 'boarding' && v.state !== 'exited'
         );
         for (const visitor of inRoom) {
+          Reactions.exitHappy(visitor);
           visitor.state = 'boarding';
           Visitor.boardTrain(visitor, trackPos, () => {
             Visitor.remove(visitor);

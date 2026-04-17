@@ -261,7 +261,7 @@ const Train = (() => {
     const { route } = _computeTrack();
     const stops = _computeStopDistances(route);
     const totalLen = _pathEl.getTotalLength();
-    const speed = totalLen / (CONFIG.trainSpeedMs * 1.2); // slightly slower for collection
+    const speed = totalLen / (CONFIG.trainSpeedMs * 0.7); // faster collection run
     let nextStopIdx = 0;
     let paused = false;
     let startTime = null;
