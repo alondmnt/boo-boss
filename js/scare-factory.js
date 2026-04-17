@@ -40,13 +40,40 @@ const ScareFactory = (() => {
     // Start lifetime timer (per-creature cooldown, reduced if fasterCooldowns unlocked)
     let lifetime = CONFIG.creatureCooldowns[creatureType] || CONFIG.creatureLifetimeMs;
     if (GameState.get('fasterCooldowns')) lifetime = Math.round(lifetime * 0.75);
+
+    // Monster type effects on deployment
+    const hasLab = GameState.get('monsterLab');
+    const effect = hasLab ? CONFIG.monsterEffects[monsterType] : null;
+    if (effect && effect.type === 'lifetimeBonus') {
+      lifetime = Math.round(lifetime * (1 + effect.value));
+    }
     creature.lifetime = lifetime;
     creature.timer = setTimeout(() => {
       _expire(creature, onExpire);
     }, lifetime);
 
+    // Show effect label above creature (only with Monster Lab)
+    if (effect) {
+      _addEffectLabel(creature.el, effect.label);
+    }
+
     Audio.play('deploy');
     return creature;
+  }
+
+  /** Add a floating effect label above a creature SVG. */
+  function _addEffectLabel(creatureEl, text) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const label = document.createElementNS(NS, 'text');
+    label.setAttribute('x', '0');
+    label.setAttribute('y', '-30');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('font-size', '6');
+    label.setAttribute('fill', '#ffd700');
+    label.setAttribute('opacity', '0.85');
+    label.classList.add('creature__effect-label');
+    label.textContent = text;
+    creatureEl.appendChild(label);
   }
 
   /** Internal: expire a creature (lifetime ended). */
@@ -66,14 +93,30 @@ const ScareFactory = (() => {
    * @returns {{ result: string, points: number }}
    */
   function evaluate(visitor, creature) {
+    const hasLab = GameState.get('monsterLab');
+    const effect = hasLab ? CONFIG.monsterEffects[creature.monsterType] : null;
+
     if (visitor.fear === creature.type) {
       visitor.scareCount++;
-      const mult = visitor.scareCount === 1 ? 1
+      let mult = visitor.scareCount === 1 ? 1
         : visitor.scareCount === 2 ? CONFIG.scoring.combo2x
         : CONFIG.scoring.combo3x;
-      return { result: 'scared', points: Math.round(CONFIG.scoring.scareBase * mult) };
+      // Astronaut: double combo multiplier on 2nd+ scares
+      if (effect && effect.type === 'comboBonus' && visitor.scareCount >= 2) {
+        mult *= effect.value;
+      }
+      let points = CONFIG.scoring.scareBase * mult;
+      // Zombie: flat scare bonus
+      if (effect && effect.type === 'scareBonus') {
+        points *= (1 + effect.value);
+      }
+      return { result: 'scared', points: Math.round(points) };
     }
     if (visitor.love === creature.type) {
+      // Ghost: hug immune (treated as neutral)
+      if (effect && effect.type === 'hugImmune') {
+        return { result: 'neutral', points: 0 };
+      }
       return { result: 'loved', points: 0 };
     }
     return { result: 'neutral', points: 0 };

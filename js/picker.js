@@ -163,15 +163,15 @@ const Picker = (() => {
     }
 
     // Lock immediately BEFORE deploy
-    disableSlot(creatureType);
     const monsterType = _selectedMonster;
+    disableSlot(creatureType, monsterType);
     cleanup();
 
     if (_onDeploy) _onDeploy(creatureType, roomId, monsterType);
   }
 
   /** Start cooldown animation on a creature slot. */
-  function disableSlot(type) {
+  function disableSlot(type, monsterType) {
     _onCooldown.add(type);
     const slot = _getSlot(type);
     if (!slot) return;
@@ -180,6 +180,11 @@ const Picker = (() => {
     const cdEl = slot.querySelector('.scare-panel__cooldown');
     let cooldown = CONFIG.creatureCooldowns[type] || CONFIG.creatureLifetimeMs;
     if (GameState.get('fasterCooldowns')) cooldown = Math.round(cooldown * 0.75);
+    // Skeleton: shorter cooldown
+    const effect = GameState.get('monsterLab') ? CONFIG.monsterEffects[monsterType] : null;
+    if (effect && effect.type === 'cooldownBonus') {
+      cooldown = Math.round(cooldown * (1 - effect.value));
+    }
     const start = Date.now();
 
     function tick() {

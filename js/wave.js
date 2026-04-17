@@ -201,6 +201,23 @@ const Wave = (() => {
           });
           return;
         } else if (result.result === 'loved') {
+          // Vampire: chance to resist hug (creature survives)
+          const effect = GameState.get('monsterLab')
+            ? CONFIG.monsterEffects[creature.monsterType] : null;
+          if (effect && effect.type === 'hugResist' && Math.random() < effect.value) {
+            Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
+            visitor._scared = true;
+            setTimeout(() => {
+              visitor._scared = false;
+              if (_generation !== gen) return;
+              if (visitor._readyToLeave) {
+                _dwellThenWander(visitor, gen);
+              } else {
+                _moveToNextRoom(visitor, gen);
+              }
+            }, 600);
+            return;
+          }
           visitor._scared = true;
           _hugCount++;
           Particles.scoreFloat(creature.el, '🫂', 'particle--hug-float');

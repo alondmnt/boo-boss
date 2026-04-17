@@ -24,6 +24,15 @@ const CONFIG = {
     spider: 'skeleton', gorilla: 'zombie', bat: 'zombie', cat: 'witch',
     dinosaur: 'zombie', owl: 'witch', snake: 'zombie', rat: 'skeleton',
   },
+  /** Monster type passive effects (active only when Monster Lab is unlocked). */
+  monsterEffects: {
+    zombie:    { type: 'scareBonus',    value: 0.2,  label: '+20% 😱' },
+    witch:     { type: 'lifetimeBonus', value: 0.25, label: '+4s ⏳' },
+    skeleton:  { type: 'cooldownBonus', value: 0.2,  label: '-3s ⚡' },
+    vampire:   { type: 'hugResist',     value: 0.3,  label: '30% 🛡️' },
+    astronaut: { type: 'comboBonus',    value: 2,    label: 'combo ×2' },
+    ghost:     { type: 'hugImmune',     value: 1,    label: '100% 🛡️' },
+  },
 
   /* ─── Actions (MVP: auto-assigned, no player choice) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
