@@ -140,6 +140,7 @@ const Wave = (() => {
     }, monsterType);
 
     if (creature) {
+      Picker.disableSlot(creatureType, creature.lifetime);
       _typesUsed.add(creature.monsterType);
       _deployments.push({ creature: creatureType, monsterType: creature.monsterType });
     } else {
@@ -200,24 +201,24 @@ const Wave = (() => {
             }
           });
           return;
+        } else if (result.result === 'hugResist') {
+          // Vampire/Ghost: hug resisted, creature survives, visitor gets scared
+          visitor._scared = true;
+          _waveScore += CONFIG.scoring.scareBase;
+          _scaredVisitorCount++;
+          _updateScore();
+          Particles.scoreFloat(creature.el, '🛡️+' + CONFIG.scoring.scareBase, 'particle--score');
+          Reactions.scared(visitor, creature, () => {
+            visitor._scared = false;
+            if (_generation !== gen) return;
+            if (visitor._readyToLeave) {
+              _dwellThenWander(visitor, gen);
+            } else {
+              _fleeFromScare(visitor, gen);
+            }
+          });
+          return;
         } else if (result.result === 'loved') {
-          // Vampire: chance to resist hug (creature survives)
-          const effect = GameState.get('monsterLab')
-            ? CONFIG.monsterEffects[creature.monsterType] : null;
-          if (effect && effect.type === 'hugResist' && Math.random() < effect.value) {
-            Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
-            visitor._scared = true;
-            setTimeout(() => {
-              visitor._scared = false;
-              if (_generation !== gen) return;
-              if (visitor._readyToLeave) {
-                _dwellThenWander(visitor, gen);
-              } else {
-                _moveToNextRoom(visitor, gen);
-              }
-            }, 600);
-            return;
-          }
           visitor._scared = true;
           _hugCount++;
           Particles.scoreFloat(creature.el, '🫂', 'particle--hug-float');
@@ -234,9 +235,6 @@ const Wave = (() => {
             }
           });
           return;
-        } else if (result.result === 'ghostBlock') {
-          // Ghost blocked the hug - show shield, once per encounter
-          Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
         } else if (result.result === 'neutral' && !visitor._neutralSeen) {
           // Show meh only on first neutral encounter per visitor
           visitor._neutralSeen = true;

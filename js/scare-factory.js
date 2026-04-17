@@ -46,11 +46,12 @@ const ScareFactory = (() => {
     let lifetime = CONFIG.creatureCooldowns[creatureType] || CONFIG.creatureLifetimeMs;
     if (GameState.get('fasterCooldowns')) lifetime = Math.round(lifetime * 0.75);
 
-    // Monster type effects on deployment
+    // Monster type effects on deployment (witch extends, skeleton shortens)
     const effect = _getEffect(monsterType);
     if (effect && effect.type === 'lifetimeBonus') {
       lifetime = Math.round(lifetime * (1 + effect.value));
     }
+    creature.lifetime = lifetime;
     creature.timer = setTimeout(() => {
       _expire(creature, onExpire);
     }, lifetime);
@@ -100,13 +101,12 @@ const ScareFactory = (() => {
 
     if (visitor.fear === creature.type) {
       visitor.scareCount++;
-      let mult = visitor.scareCount === 1 ? 1
-        : visitor.scareCount === 2 ? CONFIG.scoring.combo2x
+      // Astronaut: combo +1 (each scare counts one level higher)
+      const comboLevel = visitor.scareCount +
+        (effect && effect.type === 'comboPlus' ? effect.value : 0);
+      let mult = comboLevel <= 1 ? 1
+        : comboLevel === 2 ? CONFIG.scoring.combo2x
         : CONFIG.scoring.combo3x;
-      // Astronaut: double combo multiplier on 2nd+ scares
-      if (effect && effect.type === 'comboBonus' && visitor.scareCount >= 2) {
-        mult *= effect.value;
-      }
       let points = CONFIG.scoring.scareBase * mult;
       // Zombie: flat scare bonus
       if (effect && effect.type === 'scareBonus') {
@@ -115,9 +115,9 @@ const ScareFactory = (() => {
       return { result: 'scared', points: Math.round(points) };
     }
     if (visitor.love === creature.type) {
-      // Ghost: hug immune
-      if (effect && effect.type === 'hugImmune') {
-        return { result: 'ghostBlock', points: 0 };
+      // Vampire/Ghost: chance to resist hug
+      if (effect && effect.type === 'hugResist' && Math.random() < effect.value) {
+        return { result: 'hugResist', points: 0 };
       }
       return { result: 'loved', points: 0 };
     }

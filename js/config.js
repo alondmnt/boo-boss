@@ -28,10 +28,10 @@ const CONFIG = {
   monsterEffects: {
     zombie:    { type: 'scareBonus',    value: 0.2,  label: '+20% 😱' },
     witch:     { type: 'lifetimeBonus', value: 0.25, label: '+4s ⏳' },
-    skeleton:  { type: 'cooldownBonus', value: 0.2,  label: '-3s ⚡' },
-    vampire:   { type: 'hugResist',     value: 0.3,  label: '30% 🛡️' },
-    astronaut: { type: 'comboBonus',    value: 2,    label: 'combo ×2' },
-    ghost:     { type: 'hugImmune',     value: 1,    label: '100% 🛡️' },
+    skeleton:  { type: 'lifetimeBonus', value: -0.2, label: '-3s ⚡' },
+    vampire:   { type: 'hugResist',     value: 0.5,  label: '50% 🛡️' },
+    astronaut: { type: 'comboPlus',     value: 1,    label: 'combo +1' },
+    ghost:     { type: 'hugResist',     value: 0.8,  label: '80% 🛡️' },
   },
 
   /* ─── Actions (MVP: auto-assigned, no player choice) ─── */

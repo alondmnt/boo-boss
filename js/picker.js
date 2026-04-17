@@ -162,40 +162,42 @@ const Picker = (() => {
       return;
     }
 
-    // Lock immediately BEFORE deploy
+    // Mark as on cooldown immediately (prevents double-tap).
+    // Full cooldown animation starts when wave.js calls disableSlot with duration.
+    _onCooldown.add(creatureType);
     const monsterType = _selectedMonster;
-    disableSlot(creatureType, monsterType);
     cleanup();
 
     if (_onDeploy) _onDeploy(creatureType, roomId, monsterType);
   }
 
-  /** Start cooldown animation on a creature slot. */
-  function disableSlot(type, monsterType) {
+  /**
+   * Start cooldown animation on a creature slot.
+   * Animation is cosmetic only - enableSlot() is called by the creature's
+   * expire callback, not by the animation timer.
+   * @param {string} type - creature type
+   * @param {number} [duration] - cooldown duration in ms (from ScareFactory)
+   */
+  function disableSlot(type, duration) {
     _onCooldown.add(type);
     const slot = _getSlot(type);
     if (!slot) return;
     slot.classList.add('scare-panel__slot--cooldown');
 
     const cdEl = slot.querySelector('.scare-panel__cooldown');
-    let cooldown = CONFIG.creatureCooldowns[type] || CONFIG.creatureLifetimeMs;
-    if (GameState.get('fasterCooldowns')) cooldown = Math.round(cooldown * 0.75);
-    // Skeleton: shorter cooldown
-    const effect = GameState.get('monsterLab') ? CONFIG.monsterEffects[monsterType] : null;
-    if (effect && effect.type === 'cooldownBonus') {
-      cooldown = Math.round(cooldown * (1 - effect.value));
-    }
+    const cooldown = duration ||
+      (CONFIG.creatureCooldowns[type] || CONFIG.creatureLifetimeMs);
     const start = Date.now();
 
     function tick() {
+      if (!_onCooldown.has(type)) return; // already re-enabled (e.g., hug)
       const elapsed = Date.now() - start;
       const pct = Math.min(elapsed / cooldown, 1);
       if (cdEl) cdEl.style.setProperty('--cd-pct', pct);
       if (pct < 1) {
         requestAnimationFrame(tick);
-      } else {
-        enableSlot(type);
       }
+      // Don't self-enable; wait for ScareFactory expire callback
     }
     requestAnimationFrame(tick);
   }

@@ -263,9 +263,9 @@ maps directly to car-doctor's IIFE module pattern. each file is a `<script>` loa
 | 38 | `rat` | rat creature | creature |
 | 40 | `tower` | tower room opens (floor 3) | room |
 | 50 | `monsterLab` | monster type selection + effects (3-pick flow) | axis 2 |
-| 65 | `vampire` | vampire monster type (30% hug resist) | monster |
-| 75 | `astronaut` | astronaut monster type (combo ×2) | monster |
-| 85 | `ghost` | ghost monster type (hug immune) | monster |
+| 65 | `vampire` | vampire monster type (50% hug resist + scare) | monster |
+| 75 | `astronaut` | astronaut monster type (combo +1) | monster |
+| 85 | `ghost` | ghost monster type (80% hug resist + scare) | monster |
 
 interleaves creatures with rooms and upgrades so each unlock type feels fresh. each tier uses the same fanfare overlay + showcase pattern as car-doctor.
 
@@ -320,7 +320,7 @@ expansion 3:           4 picks + [room themes & traps] (persistent layer)
 - **biased sampling** (wave 5+): visitors tend to love what others fear, creating deploy dilemmas. probability ramps from 0.3 at wave 5 to cap 0.9. the primary strategic tension mechanic.
 - **per-creature cooldowns**: bat 12s, cat 14s, spider 15s, snake 16s, dinosaur 17s, gorilla 18s. creates tactical choices about deployment order.
 - **faster cooldowns unlock** (25 coins): 25% reduction to all cooldowns. early relief for cooldown friction.
-- **monster type effects** (50 coins, monster lab): zombie +20% points, witch +25% lifetime, skeleton -20% cooldown, vampire 30% hug resist, astronaut combo ×2, ghost hug immune. creates deployment strategy around monster type choice.
+- **monster type effects** (50 coins, monster lab): zombie +20% points, witch +25% lifetime, skeleton -20% lifetime (faster recharge), vampire 50% hug resist (+ scare on resist), astronaut combo +1, ghost 80% hug resist (+ scare on resist). creates deployment strategy around monster type choice.
 
 ### planned (not yet implemented)
 
