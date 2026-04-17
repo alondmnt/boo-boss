@@ -62,15 +62,10 @@ const Reactions = (() => {
     }, 1200);
   }
 
-  /** Brief meh reaction — visitor walks through unimpressed. */
-  function neutral(visitor) {
-    Particles.scoreFloat(visitor.el, '😐', 'particle--hug-float');
-  }
-
   /** Bouncy happy exit walk (set state + flash). */
   function exitHappy(visitor) {
     Visitor.setState(visitor, 'exiting');
   }
 
-  return { scared, hugged, neutral, exitHappy };
+  return { scared, hugged, exitHappy };
 })();

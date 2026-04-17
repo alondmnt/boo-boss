@@ -243,10 +243,6 @@ const Wave = (() => {
             }
           });
           return;
-        } else if (result.result === 'neutral' && !visitor._neutralSeen) {
-          // Show meh only on first neutral encounter per visitor
-          visitor._neutralSeen = true;
-          Reactions.neutral(visitor);
         }
       }
 
