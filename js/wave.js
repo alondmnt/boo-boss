@@ -234,9 +234,14 @@ const Wave = (() => {
             }
           });
           return;
+        } else if (result.result === 'ghostBlock') {
+          // Ghost blocked the hug - show shield, once per encounter
+          Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
+        } else if (result.result === 'neutral' && !visitor._neutralSeen) {
+          // Show meh only on first neutral encounter per visitor
+          visitor._neutralSeen = true;
+          Reactions.neutral(visitor);
         }
-        // Neutral: neither feared nor loved
-        Reactions.neutral(visitor);
       }
 
       // No encounter (or neutral): move to next room or stay in place
