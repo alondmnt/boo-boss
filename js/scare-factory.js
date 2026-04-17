@@ -13,15 +13,16 @@ const ScareFactory = (() => {
 
   /**
    * Deploy a creature to a room with a monster type and action.
-   * Monster type defaults to CONFIG.defaultMonsterType if not provided.
+   * Monster type and action default to CONFIG defaults when not provided.
    *
    * @param {string} creatureType - creature type key
    * @param {string} roomId - room to deploy into
    * @param {function} [onExpire] - called when creature's lifetime ends
    * @param {string} [chosenMonsterType] - monster type (if monster lab unlocked)
+   * @param {string} [chosenAction] - action (if director's chair unlocked)
    * @returns {object|null} creature object or null if room occupied
    */
-  function deploy(creatureType, roomId, onExpire, chosenMonsterType) {
+  function deploy(creatureType, roomId, onExpire, chosenMonsterType, chosenAction) {
     if (_deployed[roomId]) return null;
 
     // Only one instance of each creature type at a time
@@ -38,7 +39,7 @@ const ScareFactory = (() => {
       MonsterTypes.apply(creature.el, monsterType, creatureType);
     }
     creature.monsterType = monsterType;
-    creature.action = CONFIG.defaultAction[creatureType];
+    creature.action = chosenAction || CONFIG.defaultAction[creatureType];
 
     _deployed[roomId] = creature;
 

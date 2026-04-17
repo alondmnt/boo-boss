@@ -2,12 +2,15 @@
  * Picker — multi-stage pick UI for deploying scare creatures.
  * Without monster lab: 2-stage (creature -> room).
  * With monster lab: 3-stage (creature -> monster type -> room).
+ * With director's chair: 4-stage (creature -> monster type -> action -> room).
  */
 const Picker = (() => {
   let _panel = null;
   let _monsterPanel = null;
+  let _actionPanel = null;
   let _selectedType = null;
   let _selectedMonster = null;
+  let _selectedAction = null;
   let _roomClickHandlers = [];
   let _onDeploy = null;
   const _onCooldown = new Set();
@@ -15,11 +18,17 @@ const Picker = (() => {
   /** Emoji icons from CONFIG for panel buttons. */
   const CREATURE_ICONS = CONFIG.creatureIcons;
   const MONSTER_ICONS = CONFIG.monsterIcons;
+  const ACTION_ICONS = CONFIG.actionIcons;
 
   /** Bind to the scare panel container. */
   function init(container) {
     _panel = container;
-    // Create monster type sub-panel (hidden until needed)
+    // Sub-panels stack above the main panel: action on top, then monster, then creatures.
+    _actionPanel = document.createElement('div');
+    _actionPanel.id = 'action-panel';
+    _actionPanel.style.display = 'none';
+    _panel.parentNode.insertBefore(_actionPanel, _panel);
+
     _monsterPanel = document.createElement('div');
     _monsterPanel.id = 'monster-panel';
     _monsterPanel.style.display = 'none';
@@ -28,7 +37,7 @@ const Picker = (() => {
 
   /**
    * Set the deploy handler called when a creature is deployed.
-   * @param {function} handler - (creatureType, roomId, monsterType) => void
+   * @param {function} handler - (creatureType, roomId, monsterType, action) => void
    */
   function setDeployHandler(handler) {
     _onDeploy = handler;
@@ -79,8 +88,11 @@ const Picker = (() => {
     // If monster lab is unlocked, show monster type sub-panel (stage 1.5)
     if (GameState.get('monsterLab')) {
       _showMonsterPanel();
+    } else if (GameState.get('directorsChair')) {
+      // No monster lab but director's chair (unusual ordering): jump to action pick
+      _showActionPanel();
     } else {
-      // No monster lab: skip to room targeting (stage 2)
+      // No sub-panels: skip to room targeting
       _enterRoomTargeting();
     }
   }
@@ -108,7 +120,7 @@ const Picker = (() => {
     }
   }
 
-  /** Stage 1.5 -> Stage 2: player picks a monster type, enter room targeting. */
+  /** Stage 1.5 -> next: player picks a monster type. */
   function _onMonsterTap(monsterType) {
     _selectedMonster = monsterType;
 
@@ -118,6 +130,45 @@ const Picker = (() => {
         .forEach(s => s.classList.remove('monster-panel__slot--selected'));
       const slot = _monsterPanel.querySelector(`[data-monster="${monsterType}"]`);
       if (slot) slot.classList.add('monster-panel__slot--selected');
+    }
+
+    if (GameState.get('directorsChair')) {
+      _showActionPanel();
+    } else {
+      _enterRoomTargeting();
+    }
+  }
+
+  /** Stage 1.75: show action sub-panel (only with Director's Chair). */
+  function _showActionPanel() {
+    if (!_actionPanel) return;
+    _actionPanel.innerHTML = '';
+    _actionPanel.style.display = '';
+
+    const actions = CONFIG.actions;
+    for (const a of actions) {
+      const slot = document.createElement('div');
+      slot.className = 'action-panel__slot';
+      slot.dataset.action = a;
+      slot.innerHTML = `
+        <div class="action-panel__icon">${ACTION_ICONS[a] || '?'}</div>
+        <div class="action-panel__label">${a}</div>
+      `;
+      slot.addEventListener('click', () => _onActionTap(a));
+      slot.addEventListener('touchend', (e) => { e.preventDefault(); _onActionTap(a); });
+      _actionPanel.appendChild(slot);
+    }
+  }
+
+  /** Stage 1.75 -> Stage 2: player picks an action, enter room targeting. */
+  function _onActionTap(action) {
+    _selectedAction = action;
+
+    if (_actionPanel) {
+      _actionPanel.querySelectorAll('.action-panel__slot--selected')
+        .forEach(s => s.classList.remove('action-panel__slot--selected'));
+      const slot = _actionPanel.querySelector(`[data-action="${action}"]`);
+      if (slot) slot.classList.add('action-panel__slot--selected');
     }
 
     _enterRoomTargeting();
@@ -166,9 +217,10 @@ const Picker = (() => {
     // Full cooldown animation starts when wave.js calls disableSlot with duration.
     _onCooldown.add(creatureType);
     const monsterType = _selectedMonster;
+    const action = _selectedAction;
     cleanup();
 
-    if (_onDeploy) _onDeploy(creatureType, roomId, monsterType);
+    if (_onDeploy) _onDeploy(creatureType, roomId, monsterType, action);
   }
 
   /**
@@ -226,6 +278,7 @@ const Picker = (() => {
   function cleanup() {
     _selectedType = null;
     _selectedMonster = null;
+    _selectedAction = null;
 
     if (_panel) {
       _panel.querySelectorAll('.scare-panel__slot--selected')
@@ -236,6 +289,12 @@ const Picker = (() => {
     if (_monsterPanel) {
       _monsterPanel.style.display = 'none';
       _monsterPanel.innerHTML = '';
+    }
+
+    // Hide action sub-panel
+    if (_actionPanel) {
+      _actionPanel.style.display = 'none';
+      _actionPanel.innerHTML = '';
     }
 
     _clearRoomHandlers();

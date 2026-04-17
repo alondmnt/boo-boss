@@ -36,8 +36,8 @@ const Wave = (() => {
     _deployments = [];
 
     // Wire up Picker deploy handler for this wave
-    Picker.setDeployHandler((creatureType, roomId, monsterType) => {
-      _handleDeploy(creatureType, roomId, gen, monsterType);
+    Picker.setDeployHandler((creatureType, roomId, monsterType, action) => {
+      _handleDeploy(creatureType, roomId, gen, monsterType, action);
     });
 
     // Generate visitors
@@ -130,14 +130,14 @@ const Wave = (() => {
   }
 
   /** Handle a creature deployment during this wave. */
-  function _handleDeploy(creatureType, roomId, gen, monsterType) {
+  function _handleDeploy(creatureType, roomId, gen, monsterType, action) {
     if (_generation !== gen) return;
 
     const creature = ScareFactory.deploy(creatureType, roomId, (expired) => {
       // onExpire callback: re-enable picker slot
       if (_generation !== gen) return;
       Picker.enableSlot(expired.type);
-    }, monsterType);
+    }, monsterType, action);
 
     if (creature) {
       Picker.disableSlot(creatureType, creature.lifetime);
