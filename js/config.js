@@ -34,11 +34,20 @@ const CONFIG = {
     ghost:     { type: 'hugBlock',      value: 0.8,  label: '80% 🛡️' },
   },
 
-  /* ─── Actions (MVP: auto-assigned, no player choice) ─── */
+  /* ─── Actions (player-selectable once Director's Chair is unlocked) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
+  actionIcons: {
+    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂',
+  },
   defaultAction: {
     spider: 'dropFromCeiling', gorilla: 'jumpOut', bat: 'dropFromCeiling',
     cat: 'jumpOut', dinosaur: 'jumpOut', owl: 'dropFromCeiling', snake: 'jumpOut', rat: 'jumpOut',
+  },
+  /** Action behavioural effects (active only when Director's Chair is unlocked).
+   *  jumpOut is baseline (no effect) — omitted intentionally so lookup returns undefined. */
+  actionEffects: {
+    grabHat:         { type: 'extendStay',  value: 1, label: '+1 🎩' },
+    dropFromCeiling: { type: 'splashScare', value: 1, label: 'splash 💥' },
   },
 
   /* ─── Rooms ─── */
@@ -141,6 +150,7 @@ const UNLOCK_TIERS = [
   { coins: 65, key: 'vampire',         icon: '🧛', label: 'Vampire type!' },
   { coins: 75, key: 'astronaut',       icon: '🧑‍🚀', label: 'Astronaut type!' },
   { coins: 85, key: 'ghost',           icon: '👻', label: 'Ghost type!' },
+  { coins: 95, key: 'directorsChair',  icon: '🎬', label: "Director's Chair unlocked!" },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */

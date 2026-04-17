@@ -38,6 +38,8 @@ const GameState = (() => {
     vampire:    () => { _addUnique('monsterTypes', 'vampire'); },
     astronaut:  () => { _addUnique('monsterTypes', 'astronaut'); },
     ghost:      () => { _addUnique('monsterTypes', 'ghost'); },
+
+    directorsChair: () => { _booleans.directorsChair = true; },
   };
 
   /**
