@@ -83,6 +83,7 @@ html, body {
 
 /* ===== House rooms ===== */
 .house__room { cursor: pointer; }
+/* !important needed: SVG inline fill attributes override CSS class rules */
 .house__room--locked rect.house__room-bg { fill: #111 !important; }
 .house__room--locked .house__planks { opacity: 1; transition: opacity 0.4s; }
 
@@ -91,6 +92,7 @@ html, body {
   stroke-dasharray: 6 3;
   animation: room-pulse 0.8s ease-in-out infinite;
 }
+/* !important needed: overrides targetable stroke set by SVG attribute */
 .house__room--flash-red rect.house__room-bg {
   stroke: #ff4444 !important; stroke-width: 3;
 }
