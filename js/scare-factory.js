@@ -115,9 +115,13 @@ const ScareFactory = (() => {
       return { result: 'scared', points: Math.round(points) };
     }
     if (visitor.love === creature.type) {
-      // Vampire/Ghost: chance to resist hug
+      // Vampire: resist hug + scare the visitor
       if (effect && effect.type === 'hugResist' && Math.random() < effect.value) {
         return { result: 'hugResist', points: 0 };
+      }
+      // Ghost: block hug silently (no scare, no removal)
+      if (effect && effect.type === 'hugBlock' && Math.random() < effect.value) {
+        return { result: 'hugBlock', points: 0 };
       }
       return { result: 'loved', points: 0 };
     }

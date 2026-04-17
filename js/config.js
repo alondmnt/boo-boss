@@ -31,7 +31,7 @@ const CONFIG = {
     skeleton:  { type: 'lifetimeBonus', value: -0.2, label: '-3s ⚡' },
     vampire:   { type: 'hugResist',     value: 0.5,  label: '50% 🛡️' },
     astronaut: { type: 'comboPlus',     value: 1,    label: 'combo +1' },
-    ghost:     { type: 'hugResist',     value: 0.8,  label: '80% 🛡️' },
+    ghost:     { type: 'hugBlock',      value: 0.8,  label: '80% 🛡️' },
   },
 
   /* ─── Actions (MVP: auto-assigned, no player choice) ─── */

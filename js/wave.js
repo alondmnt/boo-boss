@@ -201,8 +201,12 @@ const Wave = (() => {
             }
           });
           return;
+        } else if (result.result === 'hugBlock') {
+          // Ghost: hug blocked silently, creature survives, visitor moves on
+          Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
+          // Fall through to normal movement below
         } else if (result.result === 'hugResist') {
-          // Vampire/Ghost: hug resisted, creature survives, visitor gets scared
+          // Vampire: hug resisted, creature survives, visitor gets scared
           visitor._scared = true;
           _waveScore += CONFIG.scoring.scareBase;
           _scaredVisitorCount++;
