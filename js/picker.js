@@ -178,7 +178,8 @@ const Picker = (() => {
     slot.classList.add('scare-panel__slot--cooldown');
 
     const cdEl = slot.querySelector('.scare-panel__cooldown');
-    const cooldown = GameState.get('creatureLifetimeMs');
+    let cooldown = CONFIG.creatureCooldowns[type] || CONFIG.creatureLifetimeMs;
+    if (GameState.get('fasterCooldowns')) cooldown = Math.round(cooldown * 0.75);
     const start = Date.now();
 
     function tick() {

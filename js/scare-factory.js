@@ -37,10 +37,13 @@ const ScareFactory = (() => {
 
     _deployed[roomId] = creature;
 
-    // Start lifetime timer
+    // Start lifetime timer (per-creature cooldown, reduced if fasterCooldowns unlocked)
+    let lifetime = CONFIG.creatureCooldowns[creatureType] || CONFIG.creatureLifetimeMs;
+    if (GameState.get('fasterCooldowns')) lifetime = Math.round(lifetime * 0.75);
+    creature.lifetime = lifetime;
     creature.timer = setTimeout(() => {
       _expire(creature, onExpire);
-    }, GameState.get('creatureLifetimeMs'));
+    }, lifetime);
 
     Audio.play('deploy');
     return creature;

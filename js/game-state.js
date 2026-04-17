@@ -32,10 +32,7 @@ const GameState = (() => {
     attic:    () => { _unlockRoom('attic'); },
     tower:    () => { _unlockRoom('tower'); },
 
-    fasterCooldowns: () => {
-      // 25% reduction to creature lifetime (deploy -> expire cycle)
-      _objects.creatureLifetimeMs = Math.round(CONFIG.creatureLifetimeMs * 0.75);
-    },
+    fasterCooldowns: () => { _booleans.fasterCooldowns = true; },
 
     monsterLab: () => { _booleans.monsterLab = true; },
     vampire:    () => { _addUnique('monsterTypes', 'vampire'); },
