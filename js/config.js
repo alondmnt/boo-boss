@@ -28,7 +28,7 @@ const CONFIG = {
   monsterEffects: {
     zombie:    { type: 'scareBonus',    value: 0.2,  label: '+20% 😱' },
     witch:     { type: 'lifetimeBonus', value: 0.25, label: '+4s ⏳' },
-    skeleton:  { type: 'lifetimeBonus', value: -0.2, label: '-3s ⚡' },
+    skeleton:  { type: 'lifetimeBonus', value: -0.25, label: '-4s ⚡' },
     vampire:   { type: 'hugResist',     value: 0.5,  label: '50% 🛡️' },
     astronaut: { type: 'comboPlus',     value: 1,    label: 'combo +1' },
     ghost:     { type: 'hugBlock',      value: 0.8,  label: '80% 🛡️' },
