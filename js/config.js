@@ -86,7 +86,7 @@ const CONFIG = {
 
   /* ─── Difficulty ─── */
   difficulty: {
-    biasStartWave: 8,   // wave at which like/dislike correlation begins
+    biasStartWave: 5,   // wave at which like/dislike correlation begins
     biasBaseP: 0.3,     // initial probability of biased love assignment
     biasPerWave: 0.1,   // probability increase per wave beyond biasStartWave
     biasMaxP: 0.9,      // ceiling so it's never fully deterministic
@@ -122,11 +122,11 @@ const UNLOCK_TIERS = [
   { coins: 5,  key: 'dinosaur',        icon: '🦕', label: 'Dinosaur creature!' },
   { coins: 10, key: 'bathroom',        icon: '🚿', label: 'Bathroom unlocked!' },
   { coins: 18, key: 'owl',             icon: '🦉', label: 'Owl creature!' },
-  { coins: 25, key: 'snake',           icon: '🐍', label: 'Snake creature!' },
+  { coins: 25, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
   { coins: 30, key: 'attic',           icon: '🏚️', label: 'Attic unlocked!' },
-  { coins: 35, key: 'rat',             icon: '🐀', label: 'Rat creature!' },
+  { coins: 35, key: 'snake',           icon: '🐍', label: 'Snake creature!' },
+  { coins: 38, key: 'rat',             icon: '🐀', label: 'Rat creature!' },
   { coins: 40, key: 'tower',           icon: '🗼', label: 'Tower unlocked!' },
-  { coins: 45, key: 'fasterCooldowns', icon: '⏱️', label: 'Faster cooldowns!' },
   { coins: 50, key: 'monsterLab',      icon: '🧪', label: 'Monster Lab unlocked!' },
   { coins: 65, key: 'vampire',         icon: '🧛', label: 'Vampire type!' },
   { coins: 75, key: 'astronaut',       icon: '🧑‍🚀', label: 'Astronaut type!' },
