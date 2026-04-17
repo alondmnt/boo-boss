@@ -111,6 +111,7 @@ const CONFIG = {
   /* ─── Scoring ─── */
   scoring: {
     scareBase: 10,
+    vampireResistPoints: 5,  // half of scareBase: resist is half-defense, half-offense
     combo2x: 1.5,
     combo3x: 2.0,
     waveBonusThreshold: 0.8,

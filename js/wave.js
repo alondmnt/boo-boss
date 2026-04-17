@@ -206,12 +206,13 @@ const Wave = (() => {
           Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
           // Fall through to normal movement below
         } else if (result.result === 'hugResist') {
-          // Vampire: hug resisted, creature survives, visitor gets scared
+          // Vampire: hug resisted, creature survives, visitor gets half-scare
           visitor._scared = true;
-          _waveScore += CONFIG.scoring.scareBase;
+          const resistPoints = CONFIG.scoring.vampireResistPoints;
+          _waveScore += resistPoints;
           _scaredVisitorCount++;
           _updateScore();
-          Particles.scoreFloat(creature.el, '🛡️+' + CONFIG.scoring.scareBase, 'particle--score');
+          Particles.scoreFloat(creature.el, '🛡️+' + resistPoints, 'particle--score');
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;
