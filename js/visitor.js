@@ -6,12 +6,6 @@ const Visitor = (() => {
   const NS = 'http://www.w3.org/2000/svg';
   let _nextId = 0;
 
-  /** Creature type -> emoji for thought bubbles. */
-  const CREATURE_ICONS = {
-    spider: '🕷️', gorilla: '🦍', bat: '🦇', cat: '🐱',
-    dinosaur: '🦕', owl: '🦉', snake: '🐍', rat: '🐀',
-  };
-
   /** Small palette for visitor skin tones. */
   const SKIN_TONES = ['#f5d0a9', '#d4a574', '#a0785a', '#6b4c3b', '#f0c8a0', '#e8b88a'];
 
@@ -76,13 +70,13 @@ const Visitor = (() => {
     // Fear bubble (left shoulder, green circle)
     svg += `<g class="visitor__bubble visitor__bubble--fear">`;
     svg += `  <circle cx="-18" cy="-18" r="10" fill="#44cc66" opacity="0.9" stroke="#228844" stroke-width="1"/>`;
-    svg += `  <text x="-18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[fear] || '?'}</text>`;
+    svg += `  <text x="-18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[fear] || '?'}</text>`;
     svg += `</g>`;
 
     // Love bubble (right shoulder, pink circle)
     svg += `<g class="visitor__bubble visitor__bubble--love">`;
     svg += `  <circle cx="18" cy="-18" r="10" fill="#ff88bb" opacity="0.9" stroke="#cc4477" stroke-width="1"/>`;
-    svg += `  <text x="18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CREATURE_ICONS[love] || '?'}</text>`;
+    svg += `  <text x="18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[love] || '?'}</text>`;
     svg += `</g>`;
 
     inner.innerHTML = svg;
@@ -354,5 +348,5 @@ const Visitor = (() => {
     }
   }
 
-  return { create, placeInRoom, wanderInRoom, moveToRoom, boardTrain, setState, pickNextRoom, remove, CREATURE_ICONS };
+  return { create, placeInRoom, wanderInRoom, moveToRoom, boardTrain, setState, pickNextRoom, remove };
 })();
