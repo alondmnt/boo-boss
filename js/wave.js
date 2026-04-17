@@ -218,6 +218,8 @@ const Wave = (() => {
           });
           return;
         }
+        // Neutral: neither feared nor loved
+        Reactions.neutral(visitor);
       }
 
       // No encounter (or neutral): move to next room or stay in place

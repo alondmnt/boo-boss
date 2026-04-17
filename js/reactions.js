@@ -62,9 +62,9 @@ const Reactions = (() => {
     }, 1200);
   }
 
-  /** No reaction — visitor walks through unimpressed. */
-  function neutral(_visitor) {
-    // No-op. Visitor just keeps walking.
+  /** Brief meh reaction — visitor walks through unimpressed. */
+  function neutral(visitor) {
+    Particles.scoreFloat(visitor.el, '😐', 'particle--hug-float');
   }
 
   /** Bouncy happy exit walk (set state + flash). */
