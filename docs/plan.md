@@ -185,19 +185,15 @@ in the MVP, creatures have a default monster type and default action baked in. t
 1. **entrance hall** - grand Victorian foyer, wooden panels, chandelier with cobwebs, tiled floor. track enters from outside here. (warm brown)
 2. **kitchen** - cast-iron stove, hanging copper pots, dripping tap, stone floor. track exits to outside here. (grey/metal)
 
-**floor 2** (upper) - bedroom open at start, attic locked:
+**floor 2** (upper) - bedroom open at start, bathroom locked:
 3. **bedroom** - four-poster bed with dusty canopy, wardrobe (slightly ajar), ornate mirror. (purple/dark blue)
-4. **attic** *(locked, unlocks at 12 coins)* - exposed beams, old trunks, dormer window with moonlight, dust motes. (dark grey/silver)
+4. **bathroom** *(locked, unlocks at 10 coins)* - clawfoot tub, cracked mirror, dripping pipes. (teal/grey)
 
-**floor 3** (tower) - fully locked at start:
-5. **tower** *(locked, unlocks ~coins 60)* - stone walls, narrow window with lightning flashes, bats. (dark stone grey)
-6. **observatory** *(locked, unlocks ~coins 80)* - telescope, star charts, cracked dome ceiling showing night sky, owl perch. (deep blue/black)
+**floor 3** (top) - fully locked at start:
+5. **attic** *(locked, unlocks at 30 coins)* - exposed beams, old trunks, dormer window with moonlight, dust motes. (dark grey/silver)
+6. **tower** *(locked, unlocks at 40 coins)* - stone walls, narrow window with lightning flashes, bats. (dark stone grey)
 
-**track route** (grows with unlocks):
-- MVP (3 rooms): entrance hall → bedroom (up) → kitchen → exit
-- +attic: entrance hall → bedroom → attic → kitchen → exit
-- +tower: entrance hall → bedroom → attic → tower (up) → kitchen → exit
-- +observatory: entrance hall → bedroom → attic → tower → observatory → kitchen → exit
+**track route**: the dark ride always runs the full 6-room loop (entrance → kitchen → bedroom → bathroom → attic → tower → back down → exit). locked rooms are still on the track; the train passes through them without stopping until they unlock.
 
 visitors move between adjacent rooms on foot (same floor) or ride the track between floors. 1 deployed character per room at a time (MVP constraint).
 
@@ -282,13 +278,18 @@ interleaves creatures with rooms and upgrades so each unlock type feels fresh. e
 - creature+monster combo bonuses: matching pairs (e.g., bat:skeleton, cat:witch) grant 1.25x scare points, shown via floating "COMBO" indicator
 - tower room already unlocks at 40 coins (MVP tier)
 
-### expansion 2: "the director's chair" (~coins 80-120)
+### expansion 2: "the director's chair" (~coins 95+) [INCREMENTAL]
 **unlocks axis 3: actions.** deployment becomes 4-pick: creature -> monster type -> action -> room.
-- jump out, grab hat, drop from ceiling available from the start
-- creep, chase, cackle/howl, peek-a-boo, swarm unlock progressively
-- the child's hat-grab works on any creature (spider leg reaches out, gorilla arm, bat wing, etc.)
-- combo bonuses for specific creature + monster + action triples
-- **observatory unlocks** (~coins 80) - floor 3 complete, full 6-room house open
+
+design intent: action effects operate on a **spatial/timing axis** rather than numeric modifiers. monster-type bonuses already cover the +X% lane; actions should change *behaviour* (extend journeys, splash to adjacent rooms, trigger on exit, etc.) — these land more viscerally in live play than score nudges.
+
+shipped incrementally:
+- **v0.3.0** - director's chair unlock at 95 coins; the 3 existing actions (jumpOut, grabHat, dropFromCeiling) become player-selectable. grabHat extends the scared visitor's journey (+1 room). dropFromCeiling splashes a scare to one adjacent-room visitor.
+- **v0.4.0+** - new actions unlock progressively: creep (triggers on exit, not entry), chase (follows visitor to next room), cackle/howl (room-wide scare), peek-a-boo (reusable creature), swarm (multi-hit per encounter).
+
+the child's hat-grab works on any creature (spider leg reaches out, gorilla arm, bat wing, etc.).
+
+triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
 
 ### expansion 3: "house upgrades" (~coins 120+)
 persistent room modifications, bought with coins, persist between waves.
