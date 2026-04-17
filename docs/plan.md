@@ -257,16 +257,15 @@ maps directly to car-doctor's IIFE module pattern. each file is a `<script>` loa
 | 5 | `dinosaur` | dinosaur creature (T-rex, child request) | creature |
 | 10 | `bathroom` | bathroom room opens (floor 2 complete) | room |
 | 18 | `owl` | owl creature | creature |
-| 25 | `snake` | snake creature | creature |
+| 25 | `fasterCooldowns` | all cooldowns reduced by 25% | upgrade |
 | 30 | `attic` | attic room opens | room |
-| 35 | `rat` | rat creature | creature |
+| 35 | `snake` | snake creature | creature |
+| 38 | `rat` | rat creature | creature |
 | 40 | `tower` | tower room opens (floor 3) | room |
-| 45 | `fasterCooldowns` | all cooldowns reduced by 25% | upgrade |
-| 50 | `endlessMode` | play past wave 10, increasing difficulty | upgrade |
-| 55 | `monsterLab` | monster type selection (3-pick flow) | axis 2 |
-| 65 | `vampire` | vampire monster type | monster |
-| 75 | `astronaut` | astronaut monster type (child request) | monster |
-| 85 | `ghost` | ghost monster type | monster |
+| 50 | `monsterLab` | monster type selection + effects (3-pick flow) | axis 2 |
+| 65 | `vampire` | vampire monster type (30% hug resist) | monster |
+| 75 | `astronaut` | astronaut monster type (combo ×2) | monster |
+| 85 | `ghost` | ghost monster type (hug immune) | monster |
 
 interleaves creatures with rooms and upgrades so each unlock type feels fresh. each tier uses the same fanfare overlay + showcase pattern as car-doctor.
 
@@ -312,6 +311,29 @@ expansion 1 (55-85):   [creature] + [monster type] + [room]                = 3 p
 expansion 2 (90+):     [creature] + [monster type] + [action] + [room]     = 4 picks
 expansion 3:           4 picks + [room themes & traps] (persistent layer)
 ```
+
+## difficulty scaling
+
+### implemented
+
+- **visitor count**: `3 + floor(wave × 0.5)` visitors per wave. linear scaling.
+- **biased sampling** (wave 5+): visitors tend to love what others fear, creating deploy dilemmas. probability ramps from 0.3 at wave 5 to cap 0.9. the primary strategic tension mechanic.
+- **per-creature cooldowns**: bat 12s, cat 14s, spider 15s, snake 16s, dinosaur 17s, gorilla 18s. creates tactical choices about deployment order.
+- **faster cooldowns unlock** (25 coins): 25% reduction to all cooldowns. early relief for cooldown friction.
+- **monster type effects** (50 coins, monster lab): zombie +20% points, witch +25% lifetime, skeleton -20% cooldown, vampire 30% hug resist, astronaut combo ×2, ghost hug immune. creates deployment strategy around monster type choice.
+
+### planned (not yet implemented)
+
+- **shorter visits at high waves**: reduce `visitorRoomVisits` from 4-6 to 3-4 past wave 12. less time per visitor to scare them. tightens the window without speeding anything up.
+- **faster visitor movement**: visitors walk 10-20% faster per 5 waves. subtle, compresses decision time.
+- **creature lifetime decay**: creatures expire faster at higher waves (e.g., -0.5s per 5 waves). forces more active deployment cycling.
+- **wave modifiers** (one per wave, randomly chosen at higher waves):
+  - "herd": all visitors share the same fear
+  - "fickle": visitors swap fear/love mid-wave after 2 room visits
+  - "rush": visitors dwell 50% less between rooms
+  - "brave": visitors need to be scared twice to count
+  - "dark": fear/love bubbles hidden for the first 3 seconds
+- **group dynamics**: when a visitor gets scared, adjacent visitors who share the same fear flinch (+5 points). rewards spatial planning.
 
 ## verification
 
