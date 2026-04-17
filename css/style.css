@@ -388,6 +388,15 @@ html, body {
 .particle--spooky { animation: particle-fly 0.7s ease-out forwards; }
 .particle--heart { animation: particle-float 0.9s ease-out forwards; }
 .particle--confetti { animation: particle-fly 1s ease-out forwards; font-size: 1.3rem; }
+.particle--score {
+  animation: particle-float 1s ease-out forwards;
+  font-size: 1.1rem; font-weight: 700; color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+}
+.particle--hug-float {
+  animation: particle-float 1s ease-out forwards;
+  font-size: 1.3rem;
+}
 
 /* ===== Keyframes ===== */
 

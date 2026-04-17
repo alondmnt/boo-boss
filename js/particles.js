@@ -83,5 +83,16 @@ const Particles = (() => {
     }
   }
 
-  return { spookyBurst, hearts, confetti };
+  /**
+   * Floating score indicator rising from an element.
+   * @param {Element} targetEl - element to float from
+   * @param {string} text - the text to show (e.g., "+10", "🫂")
+   * @param {string} cls - extra CSS class for styling (e.g., 'particle--score', 'particle--hug-float')
+   */
+  function scoreFloat(targetEl, text, cls) {
+    const { cx, cy } = _centre(targetEl);
+    _spawn(`particle ${cls}`, cx, cy, 0, -40, text, 1000);
+  }
+
+  return { spookyBurst, hearts, confetti, scoreFloat };
 })();

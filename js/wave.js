@@ -189,6 +189,7 @@ const Wave = (() => {
           _waveScore += result.points;
           _scaredVisitorCount++;
           _updateScore();
+          Particles.scoreFloat(creature.el, `+${result.points}`, 'particle--score');
           Reactions.scared(visitor, creature, () => {
             visitor._scared = false;
             if (_generation !== gen) return;
@@ -202,6 +203,7 @@ const Wave = (() => {
         } else if (result.result === 'loved') {
           visitor._scared = true;
           _hugCount++;
+          Particles.scoreFloat(creature.el, '🫂', 'particle--hug-float');
           Reactions.hugged(visitor, creature, () => {
             ScareFactory.clearRoom(creature.roomId);
             Creatures.remove(creature);
