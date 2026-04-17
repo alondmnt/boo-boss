@@ -65,13 +65,17 @@ const ScareFactory = (() => {
     return creature;
   }
 
-  /** Add a floating effect label above a creature SVG, positioned via anchors. */
+  /** Add a floating effect label near a creature SVG, positioned via anchors. */
   function _addEffectLabel(creatureEl, text, creatureType) {
     const NS = 'http://www.w3.org/2000/svg';
     const anchors = Creatures.getAnchors(creatureType);
+    // Bat hangs upside down - label goes below the body instead of above the head
+    const labelY = creatureType === 'bat'
+      ? anchors.bodyCenter.y + 10
+      : anchors.headTop.y - 8;
     const label = document.createElementNS(NS, 'text');
     label.setAttribute('x', '0');
-    label.setAttribute('y', String(anchors.headTop.y - 8));
+    label.setAttribute('y', String(labelY));
     label.setAttribute('text-anchor', 'middle');
     label.setAttribute('font-size', '6');
     label.setAttribute('fill', '#ffd700');
