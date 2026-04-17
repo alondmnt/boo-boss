@@ -165,17 +165,36 @@ const Visitor = (() => {
     visitor.el.style.transition = `transform ${durationMs}ms ease-in-out`;
     visitor.el.setAttribute('transform', `translate(${x}, ${y})`);
 
+    // Clean up any in-flight animation from a previous _walkTo call
+    _cleanupTransition(visitor);
+
     let done = false;
     function finish() {
       if (done) return;
       done = true;
       visitor.el.removeEventListener('transitionend', finish);
+      visitor._transitionCleanup = null;
       visitor.el.style.transition = '';
       if (onArrive) onArrive();
     }
     visitor.el.addEventListener('transitionend', finish);
     // Fallback in case transitionend doesn't fire
-    setTimeout(finish, durationMs + 50);
+    const fallback = setTimeout(finish, durationMs + 50);
+
+    // Store cleanup ref so remove() can cancel in-flight animations
+    visitor._transitionCleanup = () => {
+      done = true;
+      visitor.el.removeEventListener('transitionend', finish);
+      clearTimeout(fallback);
+    };
+  }
+
+  /** Cancel any in-flight transition on a visitor. */
+  function _cleanupTransition(visitor) {
+    if (visitor._transitionCleanup) {
+      visitor._transitionCleanup();
+      visitor._transitionCleanup = null;
+    }
   }
 
   /** Place a visitor in a room (instant, no animation). */
@@ -327,8 +346,9 @@ const Visitor = (() => {
     return unlocked[Math.floor(Math.random() * unlocked.length)];
   }
 
-  /** Remove a visitor's SVG from the DOM. */
+  /** Remove a visitor's SVG from the DOM and cancel in-flight animations. */
   function remove(visitor) {
+    _cleanupTransition(visitor);
     if (visitor.el && visitor.el.parentNode) {
       visitor.el.parentNode.removeChild(visitor.el);
     }
