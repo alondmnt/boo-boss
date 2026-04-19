@@ -16,6 +16,43 @@ const ActionScene = (() => {
     return creature && creature.el && creature.el.isConnected;
   }
 
+  /** Quadratic ease-out (default for most phases). */
+  function _easeOut(t) { return 1 - (1 - t) * (1 - t); }
+  /** Cubic ease-in (weighty drop). */
+  function _easeIn(t) { return t * t * t; }
+
+  /**
+   * Tween an SVG element's transform attribute between two states.
+   * State shape: { tx, ty, rot, sx, sy }. Uses rAF; bails if element
+   * disconnects mid-tween. Calls onDone when complete.
+   *
+   * SVG attribute transform is used (not CSS) so the rotation pivots
+   * around the element's local (0, 0) — predictable across browsers,
+   * unlike CSS transformOrigin on SVG <g>.
+   */
+  function _tweenTransform(el, from, to, durationMs, easing, onDone) {
+    const ease = easing || _easeOut;
+    const start = performance.now();
+    function step(now) {
+      if (!el || !el.isConnected) { if (onDone) onDone(); return; }
+      const t = Math.min(1, (now - start) / durationMs);
+      const e = ease(t);
+      const tx  = from.tx + (to.tx - from.tx) * e;
+      const ty  = from.ty + (to.ty - from.ty) * e;
+      const rot = from.rot + (to.rot - from.rot) * e;
+      const sx  = from.sx + (to.sx - from.sx) * e;
+      const sy  = from.sy + (to.sy - from.sy) * e;
+      el.setAttribute('transform',
+        `translate(${tx.toFixed(2)} ${ty.toFixed(2)}) ` +
+        `rotate(${rot.toFixed(1)}) ` +
+        `scale(${sx.toFixed(3)} ${sy.toFixed(3)})`
+      );
+      if (t < 1) requestAnimationFrame(step);
+      else if (onDone) onDone();
+    }
+    requestAnimationFrame(step);
+  }
+
   /** Return +1 if visitor is to the right of creature, -1 if to the left. */
   function _lungeDirection(visitor, creature) {
     try {
@@ -158,47 +195,40 @@ const ActionScene = (() => {
   }
 
   /**
-   * dropFromCeiling: creature climbs to the ceiling, hangs briefly,
-   * then drops with a squash landing and delivers the scare.
+   * dropFromCeiling: creature scurries sideways to the nearest wall
+   * (rotated 90° so its feet touch the wall, scaled down for perspective),
+   * clings briefly, then lunges off the wall toward the visitor with a
+   * weighty squash landing. Uses SVG attribute transform via rAF tween
+   * because CSS rotate+transformOrigin on SVG <g> is unreliable.
    */
   function _dropFromCeiling(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
     const inner = creature.innerEl || creature.el;
+    const dir = _lungeDirection(visitor, creature); // +1 visitor right → right wall, -1 → left wall
 
-    // Rise to ceiling
-    inner.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-    inner.style.transformOrigin = 'center bottom';
-    inner.style.transform = 'translateY(-60px)';
-    inner.style.opacity = '0.7';
+    // Rotate so feet touch the wall and head points back into the room
+    // (rotate -90 for the right wall, +90 for the left wall).
+    const rest   = { tx: 0,         ty: 0,   rot: 0,         sx: 1,    sy: 1    };
+    const wall   = { tx: 55 * dir,  ty: -12, rot: -90 * dir, sx: 0.7,  sy: 0.7  };
+    const squash = { tx: 0,         ty: 0,   rot: 0,         sx: 1.15, sy: 0.8  };
 
-    setTimeout(() => {
-      if (!_live(creature)) return;
-      // Hang (no change, just wait)
-    }, 400);
-
-    setTimeout(() => {
-      if (!_live(creature)) return;
-      // Drop fast with squash
-      inner.style.transition = 'transform 0.3s cubic-bezier(0.6, 0.0, 0.8, 0.3), opacity 0.15s linear';
-      inner.style.opacity = '1';
-      inner.style.transform = 'translateY(0px) scaleY(0.85) scaleX(1.1)';
-    }, 700);
-
-    setTimeout(() => {
+    // Phase 1: scramble to the wall (rotate + shrink)
+    _tweenTransform(inner, rest, wall, 450, _easeOut, () => {
       if (!_live(creature)) { if (onDone) onDone(); return; }
-      // Landing bounce back to normal scale
-      inner.style.transition = 'transform 0.2s ease-out';
-      inner.style.transform = 'translateY(0px) scale(1)';
-      _payoffScare(visitor, creature, () => {
-        if (_live(creature)) {
-          inner.style.transition = '';
-          inner.style.transform = '';
-          inner.style.transformOrigin = '';
-          inner.style.opacity = '';
-        }
-        if (onDone) onDone();
-      }, 400);
-    }, 1000);
+      // Phase 2: cling to the wall briefly
+      setTimeout(() => {
+        if (!_live(creature)) { if (onDone) onDone(); return; }
+        // Phase 3: fast weighty lunge off the wall, ending in a squash
+        _tweenTransform(inner, wall, squash, 300, _easeIn, () => {
+          if (!_live(creature)) { if (onDone) onDone(); return; }
+          // Phase 4: recover to rest + deliver the scare
+          _tweenTransform(inner, squash, rest, 160, _easeOut, () => {
+            if (_live(creature)) inner.removeAttribute('transform');
+          });
+          _payoffScare(visitor, creature, onDone, 400);
+        });
+      }, 250);
+    });
   }
 
   /** Registered scenes keyed by action type. */
