@@ -16,21 +16,27 @@ const Reactions = (() => {
 
   /**
    * Play the scared reaction sequence.
-   * Creature performs its scare action, visitor jumps, spooky particles burst.
+   * When Director's Chair is unlocked and the creature's action has a
+   * registered ActionScene, delegate to it for a scripted mini-scene.
+   * Otherwise run the default: scare pose + visitor scared + particles.
    *
    * @param {object} visitor - visitor object
    * @param {object} creature - creature object
    * @param {function} [onDone] - called when animation sequence completes
    */
   function scared(visitor, creature, onDone) {
-    // Creature: trigger action animation on inner wrapper (not outer positioned <g>)
+    if (GameState.get('directorsChair') && ActionScene.has(creature.action)) {
+      ActionScene.play(creature.action, visitor, creature, onDone);
+      return;
+    }
+
+    // Default: creature action CSS flash + scare pose + visitor jump
     const actionCls = Actions.getKeyframes(creature.action);
     const actionDur = Actions.getDuration(creature.action);
     _flash(creature.innerEl || creature.el, actionCls, actionDur);
     Creatures.setPose(creature, 'scare');
     setTimeout(() => Creatures.setPose(creature, 'idle'), 1000);
 
-    // Visitor: scared state
     Visitor.setState(visitor, 'scared');
     setTimeout(() => {
       Visitor.setState(visitor, 'walking');
