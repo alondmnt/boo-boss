@@ -9,6 +9,9 @@ const Visitor = (() => {
   /** Small palette for visitor skin tones. */
   const SKIN_TONES = ['#f5d0a9', '#d4a574', '#a0785a', '#6b4c3b', '#f0c8a0', '#e8b88a'];
 
+  /** Hat colour palette — every visitor wears a hat so grabHat always has a target. */
+  const HAT_COLOURS = ['#4a3a6a', '#6a3a3a', '#3a4a6a', '#4a6a3a', '#6a5a2a', '#2a4a4a'];
+
   /**
    * Create a visitor object with fear/love thought bubbles.
    * Fear and love are always different creature types.
@@ -16,7 +19,7 @@ const Visitor = (() => {
   function create(fear, love) {
     const id = _nextId++;
     const skin = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
-    const hasHat = Math.random() < 0.15;
+    const hatColour = HAT_COLOURS[Math.floor(Math.random() * HAT_COLOURS.length)];
     const hasGlasses = Math.random() < 0.12;
 
     const g = document.createElementNS(NS, 'g');
@@ -34,11 +37,12 @@ const Visitor = (() => {
     // Head
     svg += `<circle cx="0" cy="-32" r="6" fill="${skin}" stroke="#333" stroke-width="0.8"/>`;
 
-    // Optional hat
-    if (hasHat) {
-      svg += `<rect x="-7" y="-40" width="14" height="4" rx="1" fill="#4a3a6a"/>`;
-      svg += `<rect x="-4" y="-44" width="8" height="5" rx="1" fill="#4a3a6a"/>`;
-    }
+    // Hat — universal so grabHat has a reliable target.
+    // Wrapped in a <g class="visitor__hat"> for targetability by ActionScene.
+    svg += `<g class="visitor__hat">`;
+    svg += `  <rect x="-7" y="-40" width="14" height="4" rx="1" fill="${hatColour}"/>`;
+    svg += `  <rect x="-4" y="-44" width="8" height="5" rx="1" fill="${hatColour}"/>`;
+    svg += `</g>`;
 
     // Optional glasses
     if (hasGlasses) {
@@ -340,6 +344,21 @@ const Visitor = (() => {
     return unlocked[Math.floor(Math.random() * unlocked.length)];
   }
 
+  /**
+   * Pop the visitor's hat off with a quick upward fade.
+   * Used by ActionScene.grabHat — idempotent (no-op if hat already gone).
+   */
+  function removeHat(visitor) {
+    const hat = visitor.innerEl && visitor.innerEl.querySelector('.visitor__hat');
+    if (!hat) return;
+    hat.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+    hat.style.transform = 'translateY(-20px)';
+    hat.style.opacity = '0';
+    setTimeout(() => {
+      if (hat.parentNode) hat.parentNode.removeChild(hat);
+    }, 300);
+  }
+
   /** Remove a visitor's SVG from the DOM and cancel in-flight animations. */
   function remove(visitor) {
     _cleanupTransition(visitor);
@@ -348,5 +367,5 @@ const Visitor = (() => {
     }
   }
 
-  return { create, placeInRoom, wanderInRoom, moveToRoom, boardTrain, setState, pickNextRoom, remove };
+  return { create, placeInRoom, wanderInRoom, moveToRoom, boardTrain, setState, pickNextRoom, remove, removeHat };
 })();
