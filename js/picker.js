@@ -20,6 +20,11 @@ const Picker = (() => {
   const MONSTER_ICONS = CONFIG.monsterIcons;
   const ACTION_ICONS = CONFIG.actionIcons;
 
+  /** Humanise a camelCase string for aria-label / hover tooltip. */
+  function _humanise(s) {
+    return s.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+  }
+
   /** Bind to the scare panel container. */
   function init(container) {
     _panel = container;
@@ -57,10 +62,11 @@ const Picker = (() => {
       const slot = document.createElement('div');
       slot.className = 'scare-panel__slot';
       slot.dataset.creature = type;
+      slot.setAttribute('aria-label', type);
+      slot.setAttribute('title', type);
       slot.innerHTML = `
         <div class="scare-panel__icon">${CREATURE_ICONS[type] || '?'}</div>
         <div class="scare-panel__cooldown"></div>
-        <div class="scare-panel__label">${type}</div>
       `;
       slot.addEventListener('click', () => _onSlotTap(type));
       slot.addEventListener('touchend', (e) => { e.preventDefault(); _onSlotTap(type); });
@@ -110,9 +116,10 @@ const Picker = (() => {
       const slot = document.createElement('div');
       slot.className = 'monster-panel__slot';
       slot.dataset.monster = mt;
+      slot.setAttribute('aria-label', mt);
+      slot.setAttribute('title', mt);
       slot.innerHTML = `
         <div class="monster-panel__icon">${MONSTER_ICONS[mt] || '?'}</div>
-        <div class="monster-panel__label">${mt}</div>
       `;
       slot.addEventListener('click', () => _onMonsterTap(mt));
       slot.addEventListener('touchend', (e) => { e.preventDefault(); _onMonsterTap(mt); });
@@ -150,9 +157,11 @@ const Picker = (() => {
       const slot = document.createElement('div');
       slot.className = 'action-panel__slot';
       slot.dataset.action = a;
+      const label = _humanise(a);
+      slot.setAttribute('aria-label', label);
+      slot.setAttribute('title', label);
       slot.innerHTML = `
         <div class="action-panel__icon">${ACTION_ICONS[a] || '?'}</div>
-        <div class="action-panel__label">${a}</div>
       `;
       slot.addEventListener('click', () => _onActionTap(a));
       slot.addEventListener('touchend', (e) => { e.preventDefault(); _onActionTap(a); });
