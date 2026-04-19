@@ -139,20 +139,22 @@ so a "zombie spider" has the spider body plan but green-tinted, with torn web, d
 
 #### axis 3: action (how they scare)
 
-the scare behaviour performed when a visitor enters the room. each action is a short animation sequence triggered on the combined creature+monster SVG.
+the scare behaviour performed when a visitor enters the room. each action is a **scripted mini-scene** — a short choreography with setup, pause, and payoff — that REPLACES the default scare flow for that encounter. not a decorative overlay on top of the generic scare pose, but the scare itself. the gag/timing is the mechanic.
 
 **MVP actions** (3 at start, more unlock):
 
-- **jump out**: character hidden (opacity 0 or behind furniture), snaps to full visibility with scale bounce. universal, works for any creature.
-- **grab hat**: character reaches toward visitor (the child's idea). a hand/leg/wing extends. visitor's hat/accessory lifts off briefly. works best with limbed creatures.
-- **drop from ceiling**: character descends from above (like spider on thread, bat swooping, cat leaping down). vertical translation animation.
+- **jump out**: creature primes itself — slow fade with embarrassed face (eyes pointing up/side) → pause → fast reappearing snap. timing is the gag.
+- **grab hat**: creature extends a limb (leg/arm/wing) with a quick snatch motion; visitor's hat lifts off and disappears. the child's signature idea. all visitors wear a hat (see visitor section) so this always lands.
+- **drop from ceiling**: creature descends from above with weight (spider on thread, bat swooping, cat leaping down). lands in front of the visitor.
 
-**unlockable actions**:
-- **creep up**: slow approach from behind (horizontal slide, growing larger)
-- **chase**: character rushes across room toward visitor (fast horizontal movement)
-- **cackle/howl**: character stays still but emits visible sound waves (concentric arcs radiating from mouth). sound-focused scare.
-- **peek-a-boo**: character pops in and out of furniture (wardrobe, trunk, cauldron)
-- **swarm**: character multiplies briefly (3-4 copies appear then merge back)
+**unlockable actions** (each also a scripted mini-scene):
+- **creep up**: creature sneaks up from behind visitor (slow horizontal slide, growing larger), then tap-on-shoulder.
+- **chase**: creature rushes across the room toward visitor (fast horizontal dash).
+- **cackle/howl**: creature throws head back, concentric sound-wave arcs radiate outward. sound-focused scare.
+- **peek-a-boo**: creature pops in and out of furniture (wardrobe, trunk, cauldron) a few times before the final reveal.
+- **swarm**: creature multiplies briefly (3-4 copies appear then merge back).
+
+each action is a per-action choreography function in actions.js orchestrating pose changes, opacity, particles, prop changes, audio. reactions.scared delegates to the action when one is selected.
 
 #### axis 4: room (where to deploy)
 
@@ -201,7 +203,7 @@ visitors move between adjacent rooms on foot (same floor) or ride the track betw
 
 visitors are intentionally simple - stick-figure-level SVG outlines so the scare characters remain the visual focus.
 
-- simple side-view silhouettes (~40px tall). circle head, rectangle body, two line-legs. minimal randomisation: skin tone fill, maybe a hat or glasses.
+- simple side-view silhouettes (~40px tall). circle head with a **small hat** (universal — top hat or cap, gives grabHat a reliable target), rectangle body, two line-legs. minimal randomisation: skin tone fill, hat colour.
 - **thought bubbles** are the key visual element: fear icon in a red jagged bubble, love icon in a pink heart bubble. these are what the player reads to make decisions.
 - **states** (CSS class swaps, no complex animation):
   - `walking`: legs alternate (basic 2-frame walk cycle)
@@ -281,13 +283,15 @@ interleaves creatures with rooms and upgrades so each unlock type feels fresh. e
 ### expansion 2: "the director's chair" (~coins 95+) [INCREMENTAL]
 **unlocks axis 3: actions.** deployment becomes 4-pick: creature -> monster type -> action -> room.
 
-design intent: action effects operate on a **spatial/timing axis** rather than numeric modifiers. monster-type bonuses already cover the +X% lane; actions should change *behaviour* (extend journeys, splash to adjacent rooms, trigger on exit, etc.) — these land more viscerally in live play than score nudges.
+design intent: actions are **scripted mini-scenes** — each action replaces the default scare animation with a distinctive choreography (setup → pause → payoff). the gag/timing is the mechanic; players pick an action for its *style* of scare. earlier v0.3.0 work-in-progress treated actions as decorative transforms layered on top of the default scare, which felt invisible against the dominant scare-pose change; that approach was reverted in favour of this scripted-scene model.
 
 shipped incrementally:
-- **v0.3.0** - director's chair unlock at 95 coins; the 3 existing actions (jumpOut, grabHat, dropFromCeiling) become player-selectable. grabHat extends the scared visitor's journey (+1 room). dropFromCeiling splashes a scare to one adjacent-room visitor.
-- **v0.4.0+** - new actions unlock progressively: creep (triggers on exit, not entry), chase (follows visitor to next room), cackle/howl (room-wide scare), peek-a-boo (reusable creature), swarm (multi-hit per encounter).
+- **v0.3.0** — director's chair unlock at 95 coins; the 3 existing actions (jumpOut, grabHat, dropFromCeiling) rewritten as scripted mini-scenes. universal hat added to visitors so grabHat always has a target.
+- **v0.4.0+** — new actions unlock progressively (creep, chase, cackle/howl, peek-a-boo, swarm). each is a scripted scene with its own choreography.
 
 the child's hat-grab works on any creature (spider leg reaches out, gorilla arm, bat wing, etc.).
+
+**future polish — randomised visitor props**: instead of a universal hat, each visitor wears one of a small set (hat, cap, flower, balloon, umbrella). grabHat snatches whatever they have — more variety and narrative charm. deferred because drawing a prop library is a separate chunk of work; universal hat ships first (v0.3.0), prop variety lands later.
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
 
