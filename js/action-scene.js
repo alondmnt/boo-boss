@@ -207,9 +207,16 @@ const ActionScene = (() => {
 
     const inner = document.createElementNS(NS, 'g');
     inner.classList.add('grabber__stretch');
+    const L  = length.toFixed(1);
+    const Lh = (length + 7).toFixed(1);
+    // Thin cream halo underneath the dark-wood core so the prop reads
+    // against any wall colour without bulking up the shape (~0.5 unit
+    // wider per side).
     inner.innerHTML = `
-      <rect x="0" y="-1.2" width="${length.toFixed(1)}" height="2.4" rx="0.8" fill="#6b4226" stroke="#3a2010" stroke-width="0.3"/>
-      <path d="M ${length.toFixed(1)} -4 Q ${(length + 7).toFixed(1)} 0 ${length.toFixed(1)} 4" fill="none" stroke="#6b4226" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="-0.5" y="-1.7" width="${(length + 1).toFixed(1)}" height="3.4" rx="1.1" fill="#f5e6c0"/>
+      <path d="M ${L} -4.5 Q ${(length + 7.5).toFixed(1)} 0 ${L} 4.5" fill="none" stroke="#f5e6c0" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="0"    y="-1.2" width="${L}" height="2.4" rx="0.8" fill="#6b4226"/>
+      <path d="M ${L} -4 Q ${Lh} 0 ${L} 4" fill="none" stroke="#6b4226" stroke-width="1.8" stroke-linecap="round"/>
     `;
     outer.appendChild(inner);
     return { outer, inner };
