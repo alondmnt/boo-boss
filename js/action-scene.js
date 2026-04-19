@@ -64,6 +64,34 @@ const ActionScene = (() => {
     }
   }
 
+  /** Parse an SVG translate(x, y) from an element's transform attribute. */
+  function _parseTranslate(el) {
+    const t = (el && el.getAttribute && el.getAttribute('transform')) || '';
+    const m = t.match(/translate\(\s*(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)\s*\)/);
+    return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : { x: 0, y: 0 };
+  }
+
+  /**
+   * Compute angle (degrees) and distance from the creature's bodyCenter
+   * to the visitor's hat, expressed in the creature's parent SVG coordinates.
+   * Visitor hat sits ~40 units above the visitor's local origin.
+   */
+  function _aimAtHat(visitor, creature) {
+    const cPos = _parseTranslate(creature.el);
+    const vPos = _parseTranslate(visitor.el);
+    const anchors = Creatures.getAnchors(creature.type);
+    const bodyX = cPos.x + anchors.bodyCenter.x;
+    const bodyY = cPos.y + anchors.bodyCenter.y;
+    const hatX  = vPos.x;
+    const hatY  = vPos.y - 40;
+    const dx = hatX - bodyX;
+    const dy = hatY - bodyY;
+    return {
+      angleDeg: Math.atan2(dy, dx) * 180 / Math.PI,
+      distance: Math.sqrt(dx * dx + dy * dy),
+    };
+  }
+
   /**
    * Add an embarrassed-face overlay on top of the current pose.
    * Uses the creature's headCenter anchor + scale. The overlay is
@@ -164,39 +192,62 @@ const ActionScene = (() => {
   }
 
   /**
-   * grabHat: creature lunges toward the visitor, snatches their hat off,
-   * returns to position, then delivers the scare.
+   * Build a hook-on-stick grabber SVG rooted at the creature's bodyCenter,
+   * rotated to aim at the target and sized to the reach distance.
+   * Returns { outer, inner } — outer positions + rotates; inner is the
+   * stretch target (scaleX 0 → 1) for extension and retraction.
+   */
+  function _makeGrabber(creature, angleDeg, length) {
+    const anchors = Creatures.getAnchors(creature.type);
+    const { x: bx, y: by } = anchors.bodyCenter;
+
+    const outer = document.createElementNS(NS, 'g');
+    outer.classList.add('grabber');
+    outer.setAttribute('transform', `translate(${bx} ${by}) rotate(${angleDeg.toFixed(1)})`);
+
+    const inner = document.createElementNS(NS, 'g');
+    inner.classList.add('grabber__stretch');
+    inner.innerHTML = `
+      <rect x="0" y="-1.2" width="${length.toFixed(1)}" height="2.4" rx="0.8" fill="#6b4226" stroke="#3a2010" stroke-width="0.3"/>
+      <path d="M ${length.toFixed(1)} -4 Q ${(length + 7).toFixed(1)} 0 ${length.toFixed(1)} 4" fill="none" stroke="#6b4226" stroke-width="1.8" stroke-linecap="round"/>
+    `;
+    outer.appendChild(inner);
+    return { outer, inner };
+  }
+
+  /**
+   * grabHat: a hook-on-stick aims at the visitor's hat, extends to reach,
+   * snatches the hat at peak reach, then retracts. Standard scare pose
+   * delivers the payoff. Universal prop — no per-creature limb work.
    */
   function _grabHat(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
-    const inner = creature.innerEl || creature.el;
-    const dir = _lungeDirection(visitor, creature);
-    const dx = 18 * dir;
+    const aim = _aimAtHat(visitor, creature);
+    // Clamp the stick length so an odd position doesn't produce a stub or a tree-trunk.
+    const length = Math.max(20, Math.min(80, aim.distance - 4));
+    const { outer, inner } = _makeGrabber(creature, aim.angleDeg, length);
+    creature.el.appendChild(outer);
 
-    // Lunge toward visitor
-    inner.style.transition = 'transform 0.35s ease-out';
-    inner.style.transformOrigin = 'center';
-    inner.style.transform = `translateX(${dx}px) scale(1.05)`;
+    const retracted = { tx: 0, ty: 0, rot: 0, sx: 0, sy: 1 };
+    const extended  = { tx: 0, ty: 0, rot: 0, sx: 1, sy: 1 };
 
-    setTimeout(() => {
-      if (!_live(creature)) return;
-      // Snatch: remove the hat + recoil back
-      Visitor.removeHat(visitor);
-      inner.style.transition = 'transform 0.2s ease-in';
-      inner.style.transform = 'translateX(0px) scale(1)';
-    }, 400);
-
-    setTimeout(() => {
-      if (!_live(creature)) { if (onDone) onDone(); return; }
-      _payoffScare(visitor, creature, () => {
-        if (_live(creature)) {
-          inner.style.transition = '';
-          inner.style.transform = '';
-          inner.style.transformOrigin = '';
-        }
+    // Phase 1: extend toward visitor
+    _tweenTransform(inner, retracted, extended, 350, _easeOut, () => {
+      if (!_live(creature)) {
+        if (outer.parentNode) outer.parentNode.removeChild(outer);
         if (onDone) onDone();
-      }, 400);
-    }, 600);
+        return;
+      }
+      // Phase 2: snatch the hat at peak reach
+      Visitor.removeHat(visitor);
+      // Phase 3: retract (slightly snappier)
+      _tweenTransform(inner, extended, retracted, 260, _easeIn, () => {
+        if (outer.parentNode) outer.parentNode.removeChild(outer);
+        if (!_live(creature)) { if (onDone) onDone(); return; }
+        // Phase 4: payoff scare
+        _payoffScare(visitor, creature, onDone, 400);
+      });
+    });
   }
 
   /**
