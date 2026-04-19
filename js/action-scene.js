@@ -66,11 +66,16 @@ const ActionScene = (() => {
 
   /**
    * Add an embarrassed-face overlay on top of the current pose.
-   * Uses the creature's headCenter anchor + scale. Returns the group so
-   * the caller can remove it later.
+   * Uses the creature's headCenter anchor + scale. The overlay is
+   * appended INSIDE the active pose group so it inherits any pose-level
+   * animations (e.g. spider-sway) and stays glued to the creature's head.
    */
   function _addEmbarrassedFace(creature) {
     if (!_live(creature)) return null;
+    const poseName = creature.pose || 'idle';
+    const poseGroup = creature.el.querySelector(`.creature__pose--${poseName}`);
+    if (!poseGroup) return null;
+
     const anchors = Creatures.getAnchors(creature.type);
     const { x, y } = anchors.headCenter;
     const s = anchors.scale || 1;
@@ -86,7 +91,7 @@ const ActionScene = (() => {
       <ellipse cx="-5" cy="2.2" rx="1.1" ry="0.5" fill="#ff9999" opacity="0.55"/>
       <ellipse cx="5"  cy="2.2" rx="1.1" ry="0.5" fill="#ff9999" opacity="0.55"/>
     `;
-    creature.el.appendChild(g);
+    poseGroup.appendChild(g);
     return g;
   }
 
