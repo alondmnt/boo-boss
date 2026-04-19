@@ -296,7 +296,9 @@ the child's hat-grab works on any creature (spider leg reaches out, gorilla arm,
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
 
 ### expansion 3: "house upgrades" (~coins 120+)
-persistent room modifications, bought with coins, persist between waves.
+persistent upgrades, bought with coins, persist between waves.
+
+**track customisation** (rollercoaster upgrades): reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
 
 **room themes** (decorations): theme a room to match a **creature** type. changes the room's visual style and gives a scare bonus (+50% scare points) for the matching creature deployed there. examples:
 - spider theme: cobwebs fill corners, egg sacs on ceiling, silk strands across doorway
