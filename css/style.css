@@ -144,26 +144,6 @@ html, body {
   50% { transform: translateY(-4px); }
 }
 
-/* ===== Action keyframes ===== */
-.action--jump-out { animation: action-jump-out 0.6s ease-out; }
-@keyframes action-jump-out {
-  0% { opacity: 0; transform: scale(0.3); }
-  60% { opacity: 1; transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-.action--grab-hat { animation: action-grab-hat 0.8s ease-in-out; }
-@keyframes action-grab-hat {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(15px) translateY(-5px); }
-}
-
-.action--drop-ceiling { animation: action-drop-ceiling 0.7s ease-in; }
-@keyframes action-drop-ceiling {
-  0% { transform: translateY(-80px); opacity: 0.5; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
 /* ===== Scare panel ===== */
 #scare-panel {
   position: fixed; bottom: 40px; left: 0; right: 0;

@@ -5,16 +5,6 @@
  */
 const Reactions = (() => {
   /**
-   * Add a CSS class to an element, auto-remove after duration.
-   * Core pattern from car-doctor.
-   */
-  function _flash(el, cls, duration) {
-    if (!el) return;
-    el.classList.add(cls);
-    setTimeout(() => el.classList.remove(cls), duration);
-  }
-
-  /**
    * Play the scared reaction sequence.
    * When Director's Chair is unlocked and the creature's action has a
    * registered ActionScene, delegate to it for a scripted mini-scene.
@@ -30,10 +20,7 @@ const Reactions = (() => {
       return;
     }
 
-    // Default: creature action CSS flash + scare pose + visitor jump
-    const actionCls = Actions.getKeyframes(creature.action);
-    const actionDur = Actions.getDuration(creature.action);
-    _flash(creature.innerEl || creature.el, actionCls, actionDur);
+    // Default: scare pose + visitor jump + particles
     Creatures.setPose(creature, 'scare');
     setTimeout(() => Creatures.setPose(creature, 'idle'), 1000);
 
