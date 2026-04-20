@@ -14,6 +14,8 @@ const Wave = (() => {
   let _onComplete = null;
   let _hugCount = 0;
   let _typesUsed = new Set();
+  let _creaturesUsed = new Set();
+  let _actionsUsed = new Set();
   let _deployments = [];
   let _runningTotal = 0;
 
@@ -33,6 +35,8 @@ const Wave = (() => {
     _scaredVisitorCount = 0;
     _hugCount = 0;
     _typesUsed = new Set();
+    _creaturesUsed = new Set();
+    _actionsUsed = new Set();
     _deployments = [];
 
     // Wire up Picker deploy handler for this wave
@@ -142,6 +146,8 @@ const Wave = (() => {
     if (creature) {
       Picker.disableSlot(creatureType, creature.lifetime);
       _typesUsed.add(creature.monsterType);
+      _creaturesUsed.add(creatureType);
+      if (creature.action) _actionsUsed.add(creature.action);
       _deployments.push({ creature: creatureType, monsterType: creature.monsterType });
     } else {
       Audio.play('occupied');
@@ -334,8 +340,13 @@ const Wave = (() => {
   /**
    * Calculate wave scoring: points, bonuses, coins.
    * Pure function - no DOM or side effects.
+   *
+   * Variety axes: types (gated on monsterLab), creatures (gated on roster ≥
+   * creatureFullCastMin), actions (gated on directorsChair). Each used unit
+   * scores varietyPerUnit. A single +1 coin is awarded only when every
+   * currently-active axis is fully used.
    */
-  function _calcScore(visitors, waveScore, hugCount, deployments, typesUsed) {
+  function _calcScore(visitors, waveScore, hugCount, deployments, typesUsed, creaturesUsed, actionsUsed) {
     const totalVisitors = visitors.length;
     const scaredVisitors = visitors.filter(v => v.scareCount > 0).length;
     const scarePct = totalVisitors > 0 ? scaredVisitors / totalVisitors : 0;
@@ -345,12 +356,31 @@ const Wave = (() => {
     const noHugs = hugCount === 0 && deployments.length > 0;
     const noHugPoints = noHugs ? CONFIG.scoring.noHugBonus : 0;
 
+    const perUnit = CONFIG.scoring.varietyPerUnit;
+    const _axis = (active, unlockedCount, usedSet) => {
+      const usedCount = usedSet.size;
+      return {
+        active,
+        unlocked: unlockedCount,
+        usedCount,
+        points: active ? usedCount * perUnit : 0,
+        fullCast: active && unlockedCount > 0 && usedCount >= unlockedCount,
+      };
+    };
+
+    const creaturesUnlocked = GameState.get('creatures').length;
     const hasLab = GameState.get('monsterLab');
-    const typesUnlocked = hasLab ? GameState.get('monsterTypes').length : 0;
-    const typesUsedCount = typesUsed.size;
-    const varietyPoints = hasLab ? typesUsedCount * CONFIG.scoring.varietyPerType : 0;
-    const allTypesUsed = typesUnlocked > 0 && typesUsedCount >= typesUnlocked;
-    const varietyCoin = allTypesUsed ? 1 : 0;
+    const hasChair = GameState.get('directorsChair');
+
+    const variety = {
+      creatures: _axis(creaturesUnlocked >= CONFIG.scoring.creatureFullCastMin, creaturesUnlocked, creaturesUsed),
+      types: _axis(hasLab, hasLab ? GameState.get('monsterTypes').length : 0, typesUsed),
+      actions: _axis(hasChair, hasChair ? GameState.get('actions').length : 0, actionsUsed),
+    };
+    const activeAxes = Object.values(variety).filter(a => a.active);
+    const varietyPoints = activeAxes.reduce((sum, a) => sum + a.points, 0);
+    const allAxesFullCast = activeAxes.length > 0 && activeAxes.every(a => a.fullCast);
+    const varietyCoin = allAxesFullCast ? 1 : 0;
 
     const totalPoints = waveScore + bonusPoints + noHugPoints + varietyPoints;
     const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
@@ -358,7 +388,7 @@ const Wave = (() => {
     return {
       totalVisitors, scaredVisitors, hitBonus, bonusPoints,
       noHugs, noHugPoints,
-      hasLab, typesUnlocked, typesUsedCount, varietyPoints, allTypesUsed,
+      variety, varietyPoints, allAxesFullCast,
       totalPoints, coinsEarned,
     };
   }
@@ -370,8 +400,10 @@ const Wave = (() => {
     const countEl = document.getElementById('visitor-count');
     if (countEl) countEl.textContent = '';
 
-    const s = _calcScore(_visitors, _waveScore, _hugCount, _deployments, _typesUsed);
+    const s = _calcScore(_visitors, _waveScore, _hugCount, _deployments, _typesUsed, _creaturesUsed, _actionsUsed);
     const mi = CONFIG.monsterIcons;
+    const ci = CONFIG.creatureIcons;
+    const ai = CONFIG.actionIcons;
 
     /* scared row: faces + inline score */
     const faces = _visitors.map(v => {
@@ -400,21 +432,23 @@ const Wave = (() => {
       </div>`;
     }
 
-    /* variety row (only with monster lab), with inline score */
-    let varietyRow = '';
-    if (s.hasLab) {
-      const typeEmojis = [..._typesUsed].map(t =>
-        `<span class="wave-summary__type-icon">${mi[t] || t}</span>`
+    /* variety rows — one per active axis */
+    const _varietyRow = (axis, used, iconMap, label) => {
+      if (!axis.active) return '';
+      const icons = [...used].map(k =>
+        `<span class="wave-summary__type-icon">${iconMap[k] || k}</span>`
       ).join('');
-      const tag = s.allTypesUsed
-        ? ' <span class="wave-summary__variety">FULL CAST!</span>'
-        : '';
-      varietyRow = `<div class="wave-summary__row">
-        ${typeEmojis}
-        <span class="wave-summary__label">${s.typesUsedCount}/${s.typesUnlocked} types</span>${tag}
-        <span class="wave-summary__points">+${s.varietyPoints}</span>
+      const tag = axis.fullCast ? ' <span class="wave-summary__variety">FULL CAST!</span>' : '';
+      return `<div class="wave-summary__row">
+        ${icons}
+        <span class="wave-summary__label">${axis.usedCount}/${axis.unlocked} ${label}</span>${tag}
+        <span class="wave-summary__points">+${axis.points}</span>
       </div>`;
-    }
+    };
+
+    const creaturesRow = _varietyRow(s.variety.creatures, _creaturesUsed, ci, 'creatures');
+    const typesRow = _varietyRow(s.variety.types, _typesUsed, mi, 'types');
+    const actionsRow = _varietyRow(s.variety.actions, _actionsUsed, ai, 'actions');
 
     /* wave bonus row */
     const bonusRow = s.hitBonus
@@ -446,7 +480,9 @@ const Wave = (() => {
         <div class="wave-summary__title">Wave ${_waveNum} Complete</div>
         ${scaredRow}
         ${hugRow}
-        ${varietyRow}
+        ${creaturesRow}
+        ${typesRow}
+        ${actionsRow}
         ${bonusRow}
         <hr class="wave-summary__divider">
         ${coinsRow}
@@ -456,7 +492,7 @@ const Wave = (() => {
     if (overlay) overlay.classList.remove('overlay--hidden');
 
     Audio.play('waveEnd');
-    if (s.hitBonus || s.noHugs || s.allTypesUsed) Audio.play('coin');
+    if (s.hitBonus || s.noHugs || s.allAxesFullCast) Audio.play('coin');
 
     // Award coins (triggers unlock check)
     Progress.addCoins(s.coinsEarned);

@@ -126,7 +126,8 @@ const CONFIG = {
     waveBonusThreshold: 0.8,
     waveBonus: 50,
     noHugBonus: 30,
-    varietyPerType: 10,
+    varietyPerUnit: 1,
+    creatureFullCastMin: 5,
   },
 
   /* ─── Coins ─── */
