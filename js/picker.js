@@ -152,7 +152,7 @@ const Picker = (() => {
     _actionPanel.innerHTML = '';
     _actionPanel.style.display = '';
 
-    const actions = CONFIG.actions;
+    const actions = GameState.get('actions');
     for (const a of actions) {
       const slot = document.createElement('div');
       slot.className = 'action-panel__slot';

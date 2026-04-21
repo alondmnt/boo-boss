@@ -40,6 +40,7 @@ const GameState = (() => {
     ghost:      () => { _addUnique('monsterTypes', 'ghost'); },
 
     directorsChair: () => { _booleans.directorsChair = true; },
+    swarm:          () => { _addUnique('actions', 'swarm'); },
   };
 
   /**

@@ -337,6 +337,90 @@ const ActionScene = (() => {
   }
 
   /**
+   * swarm — payoff-only: on encounter, the scare pose multiplies briefly.
+   * Four translucent copies of the creature fan out to the diagonal
+   * corners around the original (TR, BR, BL, TL), hold for a beat while
+   * the scare pose plays, then collapse back and dissolve. Diagonal
+   * placement keeps clones clear of wide scare silhouettes (splayed
+   * spider legs, gorilla arms) better than cardinal top/bottom would.
+   * No arm: the visual punch is concentrated in the payoff moment, which
+   * makes the action a timing gag rather than a staging gag.
+   *
+   * Clones are full creature.el copies so the scare pose inherits correctly
+   * (pose visibility is via inline opacity on the pose groups). Clones are
+   * desaturated + blurred so they read as echoes rather than real creatures
+   * missing their monster overlay. The effect label is stripped so it
+   * doesn't multiply above the room.
+   */
+  const _SWARM_RADIUS = 28;
+  const _SWARM_DIAG = _SWARM_RADIUS * Math.SQRT1_2; // radius projected onto each axis
+  const _SWARM_OFFSETS = [
+    { dx:  _SWARM_DIAG, dy: -_SWARM_DIAG },  // top-right
+    { dx:  _SWARM_DIAG, dy:  _SWARM_DIAG },  // bottom-right
+    { dx: -_SWARM_DIAG, dy:  _SWARM_DIAG },  // bottom-left
+    { dx: -_SWARM_DIAG, dy: -_SWARM_DIAG },  // top-left
+  ];
+
+  function _swarm(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+
+    Creatures.setPose(creature, 'scare');
+
+    const parent = creature.el.parentNode;
+    const base = _parseTranslate(creature.el);
+    const clones = [];
+
+    for (const { dx, dy } of _SWARM_OFFSETS) {
+      const g = creature.el.cloneNode(true);
+      g.style.pointerEvents = 'none';
+      g.style.filter = 'saturate(0.15) brightness(1.15) blur(0.5px)';
+      g.style.opacity = '0';
+      g.style.transition = 'opacity 0.18s ease-out';
+      g.setAttribute('transform', `translate(${base.x} ${base.y}) scale(1)`);
+      // Strip overlays that shouldn't duplicate
+      const label = g.querySelector('.creature__effect-label');
+      if (label && label.parentNode) label.parentNode.removeChild(label);
+      parent.appendChild(g);
+      clones.push({ el: g, dx, dy });
+    }
+
+    // Fan out
+    for (const { el, dx, dy } of clones) {
+      el.style.opacity = '0.55';
+      _tweenTransform(el,
+        { tx: base.x,      ty: base.y,      rot: 0, sx: 1,   sy: 1 },
+        { tx: base.x + dx, ty: base.y + dy, rot: 0, sx: 0.9, sy: 0.9 },
+        220, _easeOut);
+    }
+
+    // Scare payoff runs concurrently with the swarm visual
+    Visitor.setState(visitor, 'scared');
+    Audio.play('scare');
+    Particles.spookyBurst(visitor.el);
+
+    // Collapse back after the hold
+    setTimeout(() => {
+      for (const { el, dx, dy } of clones) {
+        if (!el.isConnected) continue;
+        el.style.opacity = '0';
+        _tweenTransform(el,
+          { tx: base.x + dx, ty: base.y + dy, rot: 0, sx: 0.9, sy: 0.9 },
+          { tx: base.x,      ty: base.y,      rot: 0, sx: 1,   sy: 1 },
+          180, _easeIn);
+      }
+    }, 380);
+
+    setTimeout(() => {
+      for (const { el } of clones) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }
+      if (_live(creature)) Creatures.setPose(creature, 'idle');
+      Visitor.setState(visitor, 'walking');
+      if (onDone) onDone();
+    }, 640);
+  }
+
+  /**
    * Registered scenes keyed by action type.
    *
    * - `arm(creature)` — optional pre-stage run on idle (deploy / post-payoff).
@@ -353,6 +437,7 @@ const ActionScene = (() => {
     jumpOut:         { arm: _jumpOutArm,         payoff: _jumpOutPayoff },
     grabHat:         {                           payoff: _grabHat },
     dropFromCeiling: { arm: _dropFromCeilingArm, payoff: _dropFromCeilingPayoff },
+    swarm:           {                           payoff: _swarm },
   };
 
   /** Does this action have a registered scene? */
