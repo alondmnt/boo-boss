@@ -3,10 +3,18 @@
  * Each scene orchestrates a setup → pause → payoff sequence that REPLACES
  * the default scare reaction when Director's Chair is unlocked.
  *
- * Scenes are intentionally short (≤1200ms) and defensive: each phase checks
- * creature.el.isConnected before mutating so reset mid-scene is safe without
- * explicit generation threading. The final onDone runs wave.js's generation
- * check as usual.
+ * Scenes are defensive on two axes:
+ *   - creature.el.isConnected checks guard against full removal (wave reset).
+ *   - A scene-generation counter (creature._sceneGen) lets play() and
+ *     disarm() invalidate all in-flight tweens and scheduled continuations
+ *     so a hug mid-scare cleanly interrupts the scare choreography without
+ *     leaving the creature mid-transform. Scenes grab an is-stale closure
+ *     at entry (_makeIsStale) and thread it through their tweens + timers.
+ *
+ * The caller's onDone is stashed on creature._sceneOnDone during a scene
+ * and flushed by disarm or a superseding play(), so the wave state machine
+ * (visitor._scared reset, next movement tick) always advances even when a
+ * scene is cut short.
  */
 const ActionScene = (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -29,12 +37,18 @@ const ActionScene = (() => {
    * SVG attribute transform is used (not CSS) so the rotation pivots
    * around the element's local (0, 0) — predictable across browsers,
    * unlike CSS transformOrigin on SVG <g>.
+   *
+   * Optional abortIf predicate is polled each frame: when it returns
+   * true, the tween stops writing and skips its onDone. Scenes pass
+   * an is-stale closure here so hug-interrupt can cancel in-flight
+   * transforms cleanly.
    */
-  function _tweenTransform(el, from, to, durationMs, easing, onDone) {
+  function _tweenTransform(el, from, to, durationMs, easing, onDone, abortIf) {
     const ease = easing || _easeOut;
     const start = performance.now();
     function step(now) {
       if (!el || !el.isConnected) { if (onDone) onDone(); return; }
+      if (abortIf && abortIf()) return;
       const t = Math.min(1, (now - start) / durationMs);
       const e = ease(t);
       const tx  = from.tx + (to.tx - from.tx) * e;
@@ -131,8 +145,13 @@ const ActionScene = (() => {
     if (face && face.parentNode) face.parentNode.removeChild(face);
   }
 
-  /** Finish the scare: particles, audio, visitor scared state, then onDone. */
-  function _payoffScare(visitor, creature, onDone, totalMs) {
+  /**
+   * Finish the scare: particles, audio, visitor scared state, then onDone.
+   * Optional isStale lets the hold-end setTimeout bail on abort so the
+   * trailing pose reset doesn't stomp a hug pose that started mid-scare;
+   * the caller's _sceneOnDone flush covers the wave-state side separately.
+   */
+  function _payoffScare(visitor, creature, onDone, totalMs, isStale) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
     Creatures.setPose(creature, 'scare');
     Visitor.setState(visitor, 'scared');
@@ -140,10 +159,35 @@ const ActionScene = (() => {
     Particles.spookyBurst(visitor.el);
 
     setTimeout(() => {
+      if (isStale && isStale()) return;
       if (_live(creature)) Creatures.setPose(creature, 'idle');
       Visitor.setState(visitor, 'walking');
       if (onDone) onDone();
     }, totalMs);
+  }
+
+  /**
+   * Build an is-stale predicate keyed to the creature's current scene
+   * generation. Scenes call this once at entry. The closure returns
+   * true after any play() or disarm() bumps _sceneGen — every tween
+   * and setTimeout gated by it aborts cleanly.
+   */
+  function _makeIsStale(creature) {
+    const gen = creature._sceneGen;
+    return () => creature._sceneGen !== gen;
+  }
+
+  /**
+   * Fire any pending wave-state onDone from a superseded scene so the
+   * caller's state machine (visitor._scared reset, next movement tick)
+   * advances even when a scene is aborted mid-way.
+   */
+  function _flushPendingOnDone(creature) {
+    if (!creature) return;
+    const pending = creature._sceneOnDone;
+    if (!pending) return;
+    creature._sceneOnDone = null;
+    pending();
   }
 
   /**
@@ -173,6 +217,7 @@ const ActionScene = (() => {
    */
   function _jumpOutPayoff(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
     const inner = creature.innerEl || creature.el;
 
     // Disappear fully, remove the embarrassed face.
@@ -181,12 +226,14 @@ const ActionScene = (() => {
     _removeEmbarrassedFace(creature);
 
     setTimeout(() => {
+      if (isStale()) return;
       if (!_live(creature)) { if (onDone) onDone(); return; }
       // Snap back with scale bounce.
       inner.style.transition = 'opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
       inner.style.opacity = '1';
       inner.style.transform = 'rotate(0deg) scale(1.15)';
       setTimeout(() => {
+        if (isStale()) return;
         if (_live(creature)) {
           inner.style.transition = 'transform 0.15s ease-out';
           inner.style.transform = 'rotate(0deg) scale(1)';
@@ -200,7 +247,7 @@ const ActionScene = (() => {
           inner.style.opacity = '';
         }
         if (onDone) onDone();
-      }, 400);
+      }, 400, isStale);
     }, 300);
   }
 
@@ -242,6 +289,7 @@ const ActionScene = (() => {
    */
   function _grabHat(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
     const aim = _aimAtHat(visitor, creature);
     // Clamp the stick length so an odd position doesn't produce a stub or a tree-trunk.
     const length = Math.max(20, Math.min(80, aim.distance - 4));
@@ -251,10 +299,15 @@ const ActionScene = (() => {
     const retracted = { tx: 0, ty: 0, rot: 0, sx: 0, sy: 1 };
     const extended  = { tx: 0, ty: 0, rot: 0, sx: 1, sy: 1 };
 
+    const cleanupGrabber = () => {
+      if (outer.parentNode) outer.parentNode.removeChild(outer);
+    };
+
     // Phase 1: extend toward visitor
     _tweenTransform(inner, retracted, extended, 350, _easeOut, () => {
+      if (isStale()) { cleanupGrabber(); return; }
       if (!_live(creature)) {
-        if (outer.parentNode) outer.parentNode.removeChild(outer);
+        cleanupGrabber();
         if (onDone) onDone();
         return;
       }
@@ -262,12 +315,13 @@ const ActionScene = (() => {
       Visitor.removeHat(visitor);
       // Phase 3: retract (slightly snappier)
       _tweenTransform(inner, extended, retracted, 260, _easeIn, () => {
-        if (outer.parentNode) outer.parentNode.removeChild(outer);
+        cleanupGrabber();
+        if (isStale()) return;
         if (!_live(creature)) { if (onDone) onDone(); return; }
         // Phase 4: payoff scare
-        _payoffScare(visitor, creature, onDone, 400);
-      });
-    });
+        _payoffScare(visitor, creature, onDone, 400, isStale);
+      }, isStale);
+    }, isStale);
   }
 
   /**
@@ -291,7 +345,8 @@ const ActionScene = (() => {
     const dir = Math.random() < 0.5 ? -1 : 1;
     creature._dropDir = dir;
     const inner = creature.innerEl || creature.el;
-    _tweenTransform(inner, _DROP_REST, _dropWall(dir), 450, _easeOut);
+    const isStale = _makeIsStale(creature);
+    _tweenTransform(inner, _DROP_REST, _dropWall(dir), 450, _easeOut, null, isStale);
     return 450;
   }
 
@@ -300,15 +355,17 @@ const ActionScene = (() => {
    * Payoff scare runs concurrently with the squash-to-rest tween so the
    * scare pose snaps in as the creature lands.
    */
-  function _dropFromCeilingLunge(visitor, creature, from, onDone) {
+  function _dropFromCeilingLunge(visitor, creature, from, onDone, isStale) {
     const inner = creature.innerEl || creature.el;
     _tweenTransform(inner, from, _DROP_SQUASH, 300, _easeIn, () => {
+      if (isStale()) return;
       if (!_live(creature)) { if (onDone) onDone(); return; }
       _tweenTransform(inner, _DROP_SQUASH, _DROP_REST, 160, _easeOut, () => {
+        if (isStale()) return;
         if (_live(creature)) inner.removeAttribute('transform');
-      });
-      _payoffScare(visitor, creature, onDone, 400);
-    });
+      }, isStale);
+      _payoffScare(visitor, creature, onDone, 400, isStale);
+    }, isStale);
   }
 
   /**
@@ -318,9 +375,10 @@ const ActionScene = (() => {
    */
   function _dropFromCeilingPayoff(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
 
     if (creature.armed) {
-      _dropFromCeilingLunge(visitor, creature, _dropWall(creature._dropDir || 1), onDone);
+      _dropFromCeilingLunge(visitor, creature, _dropWall(creature._dropDir || 1), onDone, isStale);
       return;
     }
 
@@ -328,12 +386,14 @@ const ActionScene = (() => {
     const wall = _dropWall(_lungeDirection(visitor, creature));
 
     _tweenTransform(inner, _DROP_REST, wall, 450, _easeOut, () => {
+      if (isStale()) return;
       if (!_live(creature)) { if (onDone) onDone(); return; }
       setTimeout(() => {
+        if (isStale()) return;
         if (!_live(creature)) { if (onDone) onDone(); return; }
-        _dropFromCeilingLunge(visitor, creature, wall, onDone);
+        _dropFromCeilingLunge(visitor, creature, wall, onDone, isStale);
       }, 250);
-    });
+    }, isStale);
   }
 
   /**
@@ -363,6 +423,7 @@ const ActionScene = (() => {
 
   function _swarm(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
 
     Creatures.setPose(creature, 'scare');
 
@@ -384,13 +445,19 @@ const ActionScene = (() => {
       clones.push({ el: g, dx, dy });
     }
 
+    const cleanupClones = () => {
+      for (const { el } of clones) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }
+    };
+
     // Fan out
     for (const { el, dx, dy } of clones) {
       el.style.opacity = '0.55';
       _tweenTransform(el,
         { tx: base.x,      ty: base.y,      rot: 0, sx: 1,   sy: 1 },
         { tx: base.x + dx, ty: base.y + dy, rot: 0, sx: 0.9, sy: 0.9 },
-        220, _easeOut);
+        220, _easeOut, null, isStale);
     }
 
     // Scare payoff runs concurrently with the swarm visual
@@ -400,20 +467,20 @@ const ActionScene = (() => {
 
     // Collapse back after the hold
     setTimeout(() => {
+      if (isStale()) { cleanupClones(); return; }
       for (const { el, dx, dy } of clones) {
         if (!el.isConnected) continue;
         el.style.opacity = '0';
         _tweenTransform(el,
           { tx: base.x + dx, ty: base.y + dy, rot: 0, sx: 0.9, sy: 0.9 },
           { tx: base.x,      ty: base.y,      rot: 0, sx: 1,   sy: 1 },
-          180, _easeIn);
+          180, _easeIn, null, isStale);
       }
     }, 380);
 
     setTimeout(() => {
-      for (const { el } of clones) {
-        if (el.parentNode) el.parentNode.removeChild(el);
-      }
+      cleanupClones();
+      if (isStale()) return;
       if (_live(creature)) Creatures.setPose(creature, 'idle');
       Visitor.setState(visitor, 'walking');
       if (onDone) onDone();
@@ -466,39 +533,42 @@ const ActionScene = (() => {
   function _peekABooArm(creature) {
     if (!_live(creature)) return 0;
     const inner = creature.innerEl || creature.el;
+    const isStale = _makeIsStale(creature);
     inner.style.transition = 'opacity 0.25s ease-out';
     inner.style.opacity = '0';
-    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, 250, _easeIn);
+    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, 250, _easeIn, null, isStale);
     _addFloorShadow(creature);
     return 250;
   }
 
   /** Rise from hidden to visible (opacity + translate). */
-  function _peekShow(creature, durationMs) {
+  function _peekShow(creature, durationMs, isStale) {
     if (!_live(creature)) return;
     const inner = creature.innerEl || creature.el;
     inner.style.transition = `opacity ${(durationMs / 1000).toFixed(2)}s ease-out`;
     inner.style.opacity = '1';
-    _tweenTransform(inner, _PEEK_HIDDEN, _PEEK_VISIBLE, durationMs, _easeOut);
+    _tweenTransform(inner, _PEEK_HIDDEN, _PEEK_VISIBLE, durationMs, _easeOut, null, isStale);
   }
 
   /** Sink back to hidden. */
-  function _peekHide(creature, durationMs) {
+  function _peekHide(creature, durationMs, isStale) {
     if (!_live(creature)) return;
     const inner = creature.innerEl || creature.el;
     inner.style.transition = `opacity ${(durationMs / 1000).toFixed(2)}s ease-out`;
     inner.style.opacity = '0';
-    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, durationMs, _easeIn);
+    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, durationMs, _easeIn, null, isStale);
   }
 
   /**
    * Final beat: rise, run scare payoff, then reset inner styles and
    * clear the SVG transform so the creature is back to idle state.
    */
-  function _peekFinal(visitor, creature, onDone) {
+  function _peekFinal(visitor, creature, onDone, isStale) {
+    if (isStale()) return;
     if (!_live(creature)) { _removeFloorShadow(creature); if (onDone) onDone(); return; }
-    _peekShow(creature, 160);
+    _peekShow(creature, 160, isStale);
     setTimeout(() => {
+      if (isStale()) return;
       _payoffScare(visitor, creature, () => {
         _removeFloorShadow(creature);
         if (_live(creature)) {
@@ -508,7 +578,7 @@ const ActionScene = (() => {
           inner.style.opacity = '';
         }
         if (onDone) onDone();
-      }, 400);
+      }, 400, isStale);
     }, 160);
   }
 
@@ -516,17 +586,19 @@ const ActionScene = (() => {
    * One quick peek (rise, hold, sink, pause) then the final reveal.
    * Step array keeps the timing readable; each entry is [action, delay
    * until next step]. Live check on every tick bails to cleanup if the
-   * creature dies mid-sequence.
+   * creature dies mid-sequence; is-stale bails silently (disarm owns the
+   * cleanup in that case).
    */
-  function _runPeekSequence(visitor, creature, onDone) {
+  function _runPeekSequence(visitor, creature, onDone, isStale) {
     const bail = () => { _removeFloorShadow(creature); if (onDone) onDone(); };
     const steps = [
-      [() => _peekShow(creature, 140), 240],  // rise + visible hold
-      [() => _peekHide(creature, 120), 220],  // sink + hidden pause
-      [() => _peekFinal(visitor, creature, onDone), 0],
+      [() => _peekShow(creature, 140, isStale), 240],  // rise + visible hold
+      [() => _peekHide(creature, 120, isStale), 220],  // sink + hidden pause
+      [() => _peekFinal(visitor, creature, onDone, isStale), 0],
     ];
     let i = 0;
     const next = () => {
+      if (isStale()) return;
       if (!_live(creature)) return bail();
       const [fn, delay] = steps[i++];
       fn();
@@ -542,11 +614,15 @@ const ActionScene = (() => {
    */
   function _peekABooPayoff(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
     if (creature.armed) {
-      _runPeekSequence(visitor, creature, onDone);
+      _runPeekSequence(visitor, creature, onDone, isStale);
     } else {
       _peekABooArm(creature);
-      setTimeout(() => _runPeekSequence(visitor, creature, onDone), 250);
+      setTimeout(() => {
+        if (isStale()) return;
+        _runPeekSequence(visitor, creature, onDone, isStale);
+      }, 250);
     }
   }
 
@@ -614,6 +690,11 @@ const ActionScene = (() => {
     if (!creature) return;
     _cancelArming(creature);
     creature.armed = false;
+    // Bump scene-gen so any in-flight tweens / continuations abort, then
+    // fire the pending onDone so the caller's state machine advances even
+    // when the scene is cut short mid-way.
+    creature._sceneGen = (creature._sceneGen || 0) + 1;
+    _flushPendingOnDone(creature);
     _removeEmbarrassedFace(creature);
     _removeFloorShadow(creature);
     const inner = creature.innerEl || creature.el;
@@ -641,13 +722,27 @@ const ActionScene = (() => {
 
     _cancelArming(creature);
 
+    // Bump scene-gen before dispatching so any superseded continuations
+    // see a stale gen and abort. Flush any pending onDone from the prior
+    // scene so its caller's state machine advances before this one starts.
+    creature._sceneGen = (creature._sceneGen || 0) + 1;
+    const gen = creature._sceneGen;
+    _flushPendingOnDone(creature);
+    creature._sceneOnDone = onDone;
+
     const finish = () => {
+      // If _sceneOnDone no longer points at ours, the onDone was already
+      // fired via flush (disarm/new-scene); skip the normal completion path.
+      if (creature._sceneOnDone !== onDone) return;
+      creature._sceneOnDone = null;
       creature.armed = false;
       if (onDone) onDone();
       // Re-arm for the next visitor, after a short breath so the creature
       // reads as "back to normal" before the setup begins again.
       if (scene.arm && _live(creature)) {
-        setTimeout(() => arm(creature), 150);
+        setTimeout(() => {
+          if (creature._sceneGen === gen) arm(creature);
+        }, 150);
       }
     };
 
