@@ -627,6 +627,63 @@ const ActionScene = (() => {
   }
 
   /**
+   * chase — payoff-only: creature enters scare pose, dashes horizontally
+   * toward the visitor with a slight lean into the direction of travel
+   * for motion reading, fires the scare beat at peak reach, then dashes
+   * back to its deploy position. Cold-only (like grabHat) — the dash
+   * direction depends on where the visitor is, so nothing to pre-stage.
+   *
+   * Uses the existing scare pose rather than a dedicated side-facing run
+   * pose — scare silhouettes are already dynamic (splayed spider legs,
+   * roaring gorilla arms) and a slight rotation sells the horizontal
+   * motion well enough for the brief dash window (~670ms). If it reads
+   * flat in play-testing, we can promote to proper run poses later.
+   */
+  function _chase(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
+    const inner = creature.innerEl || creature.el;
+
+    const dir = _lungeDirection(visitor, creature);
+    const rest  = { tx: 0,       ty: 0, rot: 0,       sx: 1, sy: 1 };
+    const reach = { tx: 22 * dir, ty: 0, rot: 8 * dir, sx: 1, sy: 1 };
+
+    Creatures.setPose(creature, 'scare');
+    // Phase 1: dash toward visitor
+    _tweenTransform(inner, rest, reach, 220, _easeOut, () => {
+      if (isStale()) return;
+      if (!_live(creature)) {
+        if (inner) inner.removeAttribute('transform');
+        if (onDone) onDone();
+        return;
+      }
+      // Phase 2: impact beat — visitor scared, audio, particles, hold
+      Visitor.setState(visitor, 'scared');
+      Audio.play('scare');
+      Particles.spookyBurst(visitor.el);
+
+      setTimeout(() => {
+        if (isStale()) return;
+        if (!_live(creature)) {
+          if (inner) inner.removeAttribute('transform');
+          if (onDone) onDone();
+          return;
+        }
+        // Phase 3: dash back to origin, still in scare pose
+        _tweenTransform(inner, reach, rest, 200, _easeIn, () => {
+          if (isStale()) return;
+          if (_live(creature)) {
+            inner.removeAttribute('transform');
+            Creatures.setPose(creature, 'idle');
+          }
+          Visitor.setState(visitor, 'walking');
+          if (onDone) onDone();
+        }, isStale);
+      }, 250);
+    }, isStale);
+  }
+
+  /**
    * Registered scenes keyed by action type.
    *
    * - `arm(creature)` — optional pre-stage run on idle (deploy / post-payoff).
@@ -645,6 +702,7 @@ const ActionScene = (() => {
     dropFromCeiling: { arm: _dropFromCeilingArm, payoff: _dropFromCeilingPayoff },
     swarm:           {                           payoff: _swarm },
     peekABoo:        { arm: _peekABooArm,        payoff: _peekABooPayoff },
+    chase:           {                           payoff: _chase },
   };
 
   /** Does this action have a registered scene? */
