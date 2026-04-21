@@ -41,6 +41,7 @@ const GameState = (() => {
 
     directorsChair: () => { _booleans.directorsChair = true; },
     swarm:          () => { _addUnique('actions', 'swarm'); },
+    peekABoo:       () => { _addUnique('actions', 'peekABoo'); },
   };
 
   /**

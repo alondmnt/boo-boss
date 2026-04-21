@@ -421,6 +421,136 @@ const ActionScene = (() => {
   }
 
   /**
+   * Transform targets for peek-a-boo. Hidden sinks the creature below
+   * its rest position with zero opacity; visible is the standard rest
+   * pose. Amplitude is modest so the creature reads as emerging from
+   * the floor rather than teleporting.
+   */
+  const _PEEK_HIDDEN  = { tx: 0, ty: 15, rot: 0, sx: 1, sy: 1 };
+  const _PEEK_VISIBLE = { tx: 0, ty: 0,  rot: 0, sx: 1, sy: 1 };
+
+  /**
+   * Add a dark elliptical shadow at floor level on the creature, fading
+   * in. The shadow sits on creature.el (not inner), so it stays put
+   * while the inner group sinks and rises during peeks. Idempotent.
+   */
+  function _addFloorShadow(creature) {
+    if (!_live(creature)) return null;
+    _removeFloorShadow(creature);
+    const shadow = document.createElementNS(NS, 'ellipse');
+    shadow.classList.add('creature__peek-shadow');
+    shadow.setAttribute('cx', '0');
+    shadow.setAttribute('cy', '22');
+    shadow.setAttribute('rx', '22');
+    shadow.setAttribute('ry', '4');
+    shadow.setAttribute('fill', '#000');
+    shadow.style.opacity = '0';
+    shadow.style.transition = 'opacity 0.3s ease-out';
+    // Insert as first child so it renders behind the creature body.
+    creature.el.insertBefore(shadow, creature.el.firstChild);
+    requestAnimationFrame(() => { shadow.style.opacity = '0.4'; });
+    return shadow;
+  }
+
+  function _removeFloorShadow(creature) {
+    if (!creature || !creature.el) return;
+    const shadow = creature.el.querySelector('.creature__peek-shadow');
+    if (shadow && shadow.parentNode) shadow.parentNode.removeChild(shadow);
+  }
+
+  /**
+   * peek-a-boo — setup: sink the creature below the floor and draw a
+   * shadow at floor level as the visible tell. Returns the tween
+   * duration so arm() can mark armed when the sink completes.
+   */
+  function _peekABooArm(creature) {
+    if (!_live(creature)) return 0;
+    const inner = creature.innerEl || creature.el;
+    inner.style.transition = 'opacity 0.25s ease-out';
+    inner.style.opacity = '0';
+    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, 250, _easeIn);
+    _addFloorShadow(creature);
+    return 250;
+  }
+
+  /** Rise from hidden to visible (opacity + translate). */
+  function _peekShow(creature, durationMs) {
+    if (!_live(creature)) return;
+    const inner = creature.innerEl || creature.el;
+    inner.style.transition = `opacity ${(durationMs / 1000).toFixed(2)}s ease-out`;
+    inner.style.opacity = '1';
+    _tweenTransform(inner, _PEEK_HIDDEN, _PEEK_VISIBLE, durationMs, _easeOut);
+  }
+
+  /** Sink back to hidden. */
+  function _peekHide(creature, durationMs) {
+    if (!_live(creature)) return;
+    const inner = creature.innerEl || creature.el;
+    inner.style.transition = `opacity ${(durationMs / 1000).toFixed(2)}s ease-out`;
+    inner.style.opacity = '0';
+    _tweenTransform(inner, _PEEK_VISIBLE, _PEEK_HIDDEN, durationMs, _easeIn);
+  }
+
+  /**
+   * Final beat: rise, run scare payoff, then reset inner styles and
+   * clear the SVG transform so the creature is back to idle state.
+   */
+  function _peekFinal(visitor, creature, onDone) {
+    if (!_live(creature)) { _removeFloorShadow(creature); if (onDone) onDone(); return; }
+    _peekShow(creature, 160);
+    setTimeout(() => {
+      _payoffScare(visitor, creature, () => {
+        _removeFloorShadow(creature);
+        if (_live(creature)) {
+          const inner = creature.innerEl || creature.el;
+          inner.removeAttribute('transform');
+          inner.style.transition = '';
+          inner.style.opacity = '';
+        }
+        if (onDone) onDone();
+      }, 400);
+    }, 160);
+  }
+
+  /**
+   * One quick peek (rise, hold, sink, pause) then the final reveal.
+   * Step array keeps the timing readable; each entry is [action, delay
+   * until next step]. Live check on every tick bails to cleanup if the
+   * creature dies mid-sequence.
+   */
+  function _runPeekSequence(visitor, creature, onDone) {
+    const bail = () => { _removeFloorShadow(creature); if (onDone) onDone(); };
+    const steps = [
+      [() => _peekShow(creature, 140), 240],  // rise + visible hold
+      [() => _peekHide(creature, 120), 220],  // sink + hidden pause
+      [() => _peekFinal(visitor, creature, onDone), 0],
+    ];
+    let i = 0;
+    const next = () => {
+      if (!_live(creature)) return bail();
+      const [fn, delay] = steps[i++];
+      fn();
+      if (i < steps.length) setTimeout(next, delay);
+    };
+    next();
+  }
+
+  /**
+   * peek-a-boo — payoff: run the peek sequence. If not armed (visitor
+   * arrived before arm completed, or director's chair just unlocked),
+   * run the arm inline first so the scene always starts from hidden.
+   */
+  function _peekABooPayoff(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+    if (creature.armed) {
+      _runPeekSequence(visitor, creature, onDone);
+    } else {
+      _peekABooArm(creature);
+      setTimeout(() => _runPeekSequence(visitor, creature, onDone), 250);
+    }
+  }
+
+  /**
    * Registered scenes keyed by action type.
    *
    * - `arm(creature)` — optional pre-stage run on idle (deploy / post-payoff).
@@ -438,6 +568,7 @@ const ActionScene = (() => {
     grabHat:         {                           payoff: _grabHat },
     dropFromCeiling: { arm: _dropFromCeilingArm, payoff: _dropFromCeilingPayoff },
     swarm:           {                           payoff: _swarm },
+    peekABoo:        { arm: _peekABooArm,        payoff: _peekABooPayoff },
   };
 
   /** Does this action have a registered scene? */
@@ -484,12 +615,16 @@ const ActionScene = (() => {
     _cancelArming(creature);
     creature.armed = false;
     _removeEmbarrassedFace(creature);
+    _removeFloorShadow(creature);
     const inner = creature.innerEl || creature.el;
-    if (inner && inner.style) {
-      inner.style.transition = '';
-      inner.style.transform = '';
-      inner.style.transformOrigin = '';
-      inner.style.opacity = '';
+    if (inner) {
+      inner.removeAttribute('transform');
+      if (inner.style) {
+        inner.style.transition = '';
+        inner.style.transform = '';
+        inner.style.transformOrigin = '';
+        inner.style.opacity = '';
+      }
     }
   }
 

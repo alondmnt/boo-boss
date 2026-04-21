@@ -37,7 +37,7 @@ const CONFIG = {
   /* ─── Actions (player-selectable once Director's Chair is unlocked) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
   actionIcons: {
-    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥',
+    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥', peekABoo: '🫣',
   },
   defaultAction: {
     spider: 'dropFromCeiling', gorilla: 'jumpOut', bat: 'dropFromCeiling',
@@ -153,6 +153,7 @@ const UNLOCK_TIERS = [
   { coins: 85, key: 'ghost',           icon: '👻', label: 'Ghost type!' },
   { coins: 95, key: 'directorsChair',  icon: '🎬', label: "Director's Chair unlocked!" },
   { coins: 105, key: 'swarm',          icon: '👥', label: 'Swarm action!' },
+  { coins: 115, key: 'peekABoo',       icon: '🫣', label: 'Peek-a-boo action!' },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */
