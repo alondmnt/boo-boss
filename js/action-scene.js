@@ -627,17 +627,18 @@ const ActionScene = (() => {
   }
 
   /**
-   * chase — payoff-only: creature enters scare pose, dashes horizontally
-   * toward the visitor with a slight lean into the direction of travel
-   * for motion reading, fires the scare beat at peak reach, then dashes
-   * back to its deploy position. Cold-only (like grabHat) — the dash
-   * direction depends on where the visitor is, so nothing to pre-stage.
+   * chase — payoff-only: creature enters scare pose, shrinks as if
+   * retreating into the depth of the room, then barrels back toward
+   * the visitor through two sub-tweens that swing rotation opposite
+   * ways (reads as a running footfall cadence) while scaling up (reads
+   * as depth closing) and stepping toward the visitor's side. Scare
+   * beat lands at peak reach, then the creature settles back to its
+   * deploy position.
    *
-   * Uses the existing scare pose rather than a dedicated side-facing run
-   * pose — scare silhouettes are already dynamic (splayed spider legs,
-   * roaring gorilla arms) and a slight rotation sells the horizontal
-   * motion well enough for the brief dash window (~670ms). If it reads
-   * flat in play-testing, we can promote to proper run poses later.
+   * Cold-only (like grabHat) — dash direction depends on where the
+   * visitor is, so nothing to pre-stage. Uses the existing scare pose
+   * rather than a dedicated side-facing run pose; the depth-scaling
+   * and rotation wobble do the motion heavy-lifting.
    */
   function _chase(visitor, creature, onDone) {
     if (!_live(creature)) { if (onDone) onDone(); return; }
@@ -645,41 +646,53 @@ const ActionScene = (() => {
     const inner = creature.innerEl || creature.el;
 
     const dir = _lungeDirection(visitor, creature);
-    const rest  = { tx: 0,       ty: 0, rot: 0,       sx: 1, sy: 1 };
-    const reach = { tx: 22 * dir, ty: 0, rot: 8 * dir, sx: 1, sy: 1 };
+    const rest  = { tx: 0,        ty: 0, rot: 0,        sx: 1,    sy: 1    };
+    // Far back, leaning away — "retreating into the depth of the room"
+    const start = { tx: 0,        ty: 0, rot: -5 * dir, sx: 0.55, sy: 0.55 };
+    // First footfall: lean forward, half-way in x, grown
+    const mid   = { tx: 11 * dir, ty: 0, rot:  6 * dir, sx: 0.85, sy: 0.85 };
+    // Impact: opposite lean (wobble), full scale, at the visitor's side
+    const reach = { tx: 22 * dir, ty: 0, rot: -3 * dir, sx: 1.1,  sy: 1.1  };
 
     Creatures.setPose(creature, 'scare');
-    // Phase 1: dash toward visitor
-    _tweenTransform(inner, rest, reach, 220, _easeOut, () => {
-      if (isStale()) return;
-      if (!_live(creature)) {
-        if (inner) inner.removeAttribute('transform');
-        if (onDone) onDone();
-        return;
-      }
-      // Phase 2: impact beat — visitor scared, audio, particles, hold
-      Visitor.setState(visitor, 'scared');
-      Audio.play('scare');
-      Particles.spookyBurst(visitor.el);
+    // Snap to the small, tilted-back starting state — the visible "crouch
+    // back into depth" beat before the rush.
+    inner.setAttribute('transform',
+      `translate(${start.tx} ${start.ty}) rotate(${start.rot}) scale(${start.sx} ${start.sy})`);
 
-      setTimeout(() => {
+    const bail = () => {
+      if (inner) inner.removeAttribute('transform');
+      if (onDone) onDone();
+    };
+
+    // Phase 1a: first footfall — lean forward, grow, step half-way
+    _tweenTransform(inner, start, mid, 120, _easeOut, () => {
+      if (isStale()) return;
+      if (!_live(creature)) return bail();
+      // Phase 1b: second footfall — wobble rotation back, finish growing, land
+      _tweenTransform(inner, mid, reach, 120, _easeOut, () => {
         if (isStale()) return;
-        if (!_live(creature)) {
-          if (inner) inner.removeAttribute('transform');
-          if (onDone) onDone();
-          return;
-        }
-        // Phase 3: dash back to origin, still in scare pose
-        _tweenTransform(inner, reach, rest, 200, _easeIn, () => {
+        if (!_live(creature)) return bail();
+        // Phase 2: impact beat
+        Visitor.setState(visitor, 'scared');
+        Audio.play('scare');
+        Particles.spookyBurst(visitor.el);
+
+        setTimeout(() => {
           if (isStale()) return;
-          if (_live(creature)) {
-            inner.removeAttribute('transform');
-            Creatures.setPose(creature, 'idle');
-          }
-          Visitor.setState(visitor, 'walking');
-          if (onDone) onDone();
-        }, isStale);
-      }, 250);
+          if (!_live(creature)) return bail();
+          // Phase 3: settle back to deploy position
+          _tweenTransform(inner, reach, rest, 200, _easeIn, () => {
+            if (isStale()) return;
+            if (_live(creature)) {
+              inner.removeAttribute('transform');
+              Creatures.setPose(creature, 'idle');
+            }
+            Visitor.setState(visitor, 'walking');
+            if (onDone) onDone();
+          }, isStale);
+        }, 250);
+      }, isStale);
     }, isStale);
   }
 
