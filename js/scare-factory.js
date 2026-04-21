@@ -63,6 +63,11 @@ const ScareFactory = (() => {
     }
 
     Audio.play('deploy');
+
+    // Pre-stage the action in the idle room, so the creature is visibly
+    // primed before any visitor arrives. No-op if the action has no arm.
+    ActionScene.arm(creature);
+
     return creature;
   }
 

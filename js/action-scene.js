@@ -97,9 +97,11 @@ const ActionScene = (() => {
    * Uses the creature's headCenter anchor + scale. The overlay is
    * appended INSIDE the active pose group so it inherits any pose-level
    * animations (e.g. spider-sway) and stays glued to the creature's head.
+   * Idempotent: removes any existing face first so repeat calls don't stack.
    */
   function _addEmbarrassedFace(creature) {
     if (!_live(creature)) return null;
+    _removeEmbarrassedFace(creature);
     const poseName = creature.pose || 'idle';
     const poseGroup = creature.el.querySelector(`.creature__pose--${poseName}`);
     if (!poseGroup) return null;
@@ -145,31 +147,40 @@ const ActionScene = (() => {
   }
 
   /**
-   * jumpOut: creature primes itself with an embarrassed fade, disappears,
-   * then snaps back with a bounce into the scare pose.
+   * jumpOut — setup: embarrassed fade + tilt, hold at half-opacity "armed" look.
+   * Runs on deploy (and after each payoff). Half-opacity hold is the visible
+   * tell that the creature is primed; going fully invisible only happens as
+   * part of the payoff transition, so a visitor never enters to an empty room.
    */
-  function _jumpOut(visitor, creature, onDone) {
-    if (!_live(creature)) { if (onDone) onDone(); return; }
+  function _jumpOutArm(creature) {
+    if (!_live(creature)) return;
     const inner = creature.innerEl || creature.el;
     _addEmbarrassedFace(creature);
-
-    // Setup: embarrassed fade-out with tilt
     inner.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
     inner.style.transformOrigin = 'center';
     inner.style.opacity = '0.3';
     inner.style.transform = 'rotate(-6deg)';
+  }
 
-    setTimeout(() => {
-      if (!_live(creature)) return;
-      // Pause: fully invisible, remove embarrassed face
-      inner.style.transition = 'opacity 0.2s linear';
-      inner.style.opacity = '0';
-      _removeEmbarrassedFace(creature);
-    }, 500);
+  /**
+   * jumpOut — payoff: disappear briefly, then snap back with a scale bounce
+   * into the scare pose. Assumes the creature is armed (half-opacity, tilted,
+   * face visible); if called cold, the creature simply fades from full
+   * opacity instead of from the embarrassed hold — still a crisp scare,
+   * just without the priming beat.
+   */
+  function _jumpOutPayoff(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+    const inner = creature.innerEl || creature.el;
+
+    // Disappear fully, remove the embarrassed face.
+    inner.style.transition = 'opacity 0.2s linear';
+    inner.style.opacity = '0';
+    _removeEmbarrassedFace(creature);
 
     setTimeout(() => {
       if (!_live(creature)) { if (onDone) onDone(); return; }
-      // Payoff: snap back with scale bounce
+      // Snap back with scale bounce.
       inner.style.transition = 'opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
       inner.style.opacity = '1';
       inner.style.transform = 'rotate(0deg) scale(1.15)';
@@ -188,7 +199,7 @@ const ActionScene = (() => {
         }
         if (onDone) onDone();
       }, 400);
-    }, 800);
+    }, 300);
   }
 
   /**
@@ -294,11 +305,21 @@ const ActionScene = (() => {
     });
   }
 
-  /** Registered scenes keyed by action type. */
+  /**
+   * Registered scenes keyed by action type.
+   *
+   * - `arm(creature)` — optional pre-stage run on idle (deploy / post-payoff).
+   *   Leaves the creature in an "armed" visual state, then sets creature.armed.
+   * - `payoff(visitor, creature, onDone)` — the scare proper. Expects the
+   *   armed state but must degrade gracefully from a cold start.
+   *
+   * Actions without an arm run payoff only (they're always "cold" — e.g.
+   * grabHat, whose hook must aim at the visitor).
+   */
   const SCENES = {
-    jumpOut:         _jumpOut,
-    grabHat:         _grabHat,
-    dropFromCeiling: _dropFromCeiling,
+    jumpOut:         { arm: _jumpOutArm, payoff: _jumpOutPayoff },
+    grabHat:         { payoff: _grabHat },
+    dropFromCeiling: { payoff: _dropFromCeiling },
   };
 
   /** Does this action have a registered scene? */
@@ -306,15 +327,73 @@ const ActionScene = (() => {
     return !!SCENES[action];
   }
 
-  /** Play the scene for an action. Falls through to onDone if unknown. */
-  function play(action, visitor, creature, onDone) {
-    const scene = SCENES[action];
-    if (scene) {
-      scene(visitor, creature, onDone);
-    } else if (onDone) {
-      onDone();
+  /** Cancel any pending re-arm timer on a creature. */
+  function _cancelArming(creature) {
+    if (creature && creature._armTimer) {
+      clearTimeout(creature._armTimer);
+      creature._armTimer = null;
     }
   }
 
-  return { play, has };
+  /**
+   * Pre-stage the creature's action on idle. Safe to call multiple times:
+   * cancels any pending arm timer first, then runs the action's arm.
+   * No-op if director's chair isn't unlocked, the action has no arm, or
+   * the creature isn't live.
+   */
+  function arm(creature) {
+    if (!creature || !_live(creature)) return;
+    if (!GameState.get('directorsChair')) return;
+    const scene = SCENES[creature.action];
+    if (!scene || !scene.arm) return;
+    _cancelArming(creature);
+    creature.armed = false;
+    scene.arm(creature);
+    // Setup tweens run for ~500ms; mark armed when they complete.
+    creature._armTimer = setTimeout(() => {
+      creature._armTimer = null;
+      if (_live(creature)) creature.armed = true;
+    }, 500);
+  }
+
+  /**
+   * Strip any armed visual state from the creature — inner-element styles,
+   * embarrassed face, pending arm timer. Called before non-scare reactions
+   * (e.g. hug) so the armed look doesn't leak into the next pose.
+   */
+  function disarm(creature) {
+    if (!creature) return;
+    _cancelArming(creature);
+    creature.armed = false;
+    _removeEmbarrassedFace(creature);
+    const inner = creature.innerEl || creature.el;
+    if (inner && inner.style) {
+      inner.style.transition = '';
+      inner.style.transform = '';
+      inner.style.transformOrigin = '';
+      inner.style.opacity = '';
+    }
+  }
+
+  /** Play the scene for an action. Falls through to onDone if unknown. */
+  function play(action, visitor, creature, onDone) {
+    const scene = SCENES[action];
+    if (!scene) { if (onDone) onDone(); return; }
+
+    _cancelArming(creature);
+    creature.armed = false;
+
+    const finish = () => {
+      if (onDone) onDone();
+      // Re-arm for the next visitor, after a short breath so the creature
+      // reads as "back to normal" before the embarrassed fade begins again.
+      if (scene.arm && _live(creature)) {
+        setTimeout(() => arm(creature), 150);
+      }
+    };
+
+    scene.payoff(visitor, creature, finish);
+  }
+
+  return { play, has, arm, disarm };
 })();

@@ -43,6 +43,7 @@ const Reactions = (() => {
    * @param {function} [onDone] - called after creature removal (caller handles cleanup)
    */
   function hugged(visitor, creature, onDone) {
+    ActionScene.disarm(creature);
     Visitor.setState(visitor, 'hugging');
     Creatures.setPose(creature, 'hug');
 
