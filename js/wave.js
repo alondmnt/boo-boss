@@ -437,7 +437,7 @@ const Wave = (() => {
       const icons = [...used].map(k =>
         `<span class="wave-summary__type-icon">${iconMap[k] || k}</span>`
       ).join('');
-      const tag = axis.fullCast ? ' <span class="wave-summary__variety">FULL CAST!</span>' : '';
+      const tag = axis.fullCast ? ' <span class="wave-summary__variety">FULL CAST! 🪙</span>' : '';
       return `<div class="wave-summary__row">
         ${icons}
         <span class="wave-summary__label">${axis.usedCount}/${axis.unlocked} ${label}</span>${tag}
@@ -452,7 +452,7 @@ const Wave = (() => {
     /* wave bonus row */
     const bonusRow = s.hitBonus
       ? `<div class="wave-summary__row">
-          <span class="wave-summary__bonus">Wave bonus!</span>
+          <span class="wave-summary__bonus">Wave bonus! 🪙</span>
           <span class="wave-summary__points">+${s.bonusPoints}</span>
         </div>`
       : '';
