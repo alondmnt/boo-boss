@@ -343,8 +343,8 @@ const Wave = (() => {
    *
    * Variety axes: types (gated on monsterLab), creatures (gated on roster ≥
    * creatureFullCastMin), actions (gated on directorsChair). Each used unit
-   * scores varietyPerUnit. A single +1 coin is awarded only when every
-   * currently-active axis is fully used.
+   * scores varietyPerUnit. One +1 coin is awarded per active axis that
+   * reaches full cast in the wave (independent across axes).
    */
   function _calcScore(visitors, waveScore, hugCount, deployments, typesUsed, creaturesUsed, actionsUsed) {
     const totalVisitors = visitors.length;
@@ -379,16 +379,15 @@ const Wave = (() => {
     };
     const activeAxes = Object.values(variety).filter(a => a.active);
     const varietyPoints = activeAxes.reduce((sum, a) => sum + a.points, 0);
-    const allAxesFullCast = activeAxes.length > 0 && activeAxes.every(a => a.fullCast);
-    const varietyCoin = allAxesFullCast ? 1 : 0;
+    const varietyCoins = activeAxes.filter(a => a.fullCast).length;
 
     const totalPoints = waveScore + bonusPoints + noHugPoints + varietyPoints;
-    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoin;
+    const coinsEarned = CONFIG.coinsPerWave + (hitBonus ? CONFIG.coinsBonusWave : 0) + varietyCoins;
 
     return {
       totalVisitors, scaredVisitors, hitBonus, bonusPoints,
       noHugs, noHugPoints,
-      variety, varietyPoints, allAxesFullCast,
+      variety, varietyPoints, varietyCoins,
       totalPoints, coinsEarned,
     };
   }
@@ -492,7 +491,7 @@ const Wave = (() => {
     if (overlay) overlay.classList.remove('overlay--hidden');
 
     Audio.play('waveEnd');
-    if (s.hitBonus || s.noHugs || s.allAxesFullCast) Audio.play('coin');
+    if (s.hitBonus || s.noHugs || s.varietyCoins > 0) Audio.play('coin');
 
     // Award coins (triggers unlock check)
     Progress.addCoins(s.coinsEarned);
