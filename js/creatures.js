@@ -1482,16 +1482,22 @@ const Creatures = (() => {
       return null;
     }
 
-    // Build the outer <g> wrapper with positioning
-    // Inner <g> wrapper receives action animation classes so they don't
-    // clobber the translate-based positioning on the outer <g>.
+    // Three-layer wrapping:
+    //   .creature          — outer, room positioning (translate)
+    //   .creature__inner   — scene choreography (action-scene tweens)
+    //   .creature__hover   — ambient body motion (e.g. ghost hover)
+    // Separating scene transforms from ambient CSS animations so they
+    // don't fight for the same `transform` property on the same element.
     const NS = 'http://www.w3.org/2000/svg';
     const g = document.createElementNS(NS, 'g');
     g.classList.add('creature', `creature--${creatureType}`);
     g.setAttribute('transform', `translate(${centre.x}, ${centre.y})`);
     const inner = document.createElementNS(NS, 'g');
     inner.classList.add('creature__inner');
-    inner.innerHTML = factory();
+    const hover = document.createElementNS(NS, 'g');
+    hover.classList.add('creature__hover');
+    hover.innerHTML = factory();
+    inner.appendChild(hover);
     g.appendChild(inner);
     layer.appendChild(g);
 
