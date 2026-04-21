@@ -646,52 +646,53 @@ const ActionScene = (() => {
     const inner = creature.innerEl || creature.el;
 
     const dir = _lungeDirection(visitor, creature);
-    const rest  = { tx: 0,        ty: 0, rot: 0,        sx: 1,    sy: 1    };
-    // Far back, leaning away — "retreating into the depth of the room"
-    const start = { tx: 0,        ty: 0, rot: -5 * dir, sx: 0.55, sy: 0.55 };
-    // First footfall: lean forward, half-way in x, grown
-    const mid   = { tx: 11 * dir, ty: 0, rot:  6 * dir, sx: 0.85, sy: 0.85 };
+    const rest  = { tx: 0,        ty: 0, rot: 0,         sx: 1,    sy: 1    };
+    // Far back and small — "retreating into the depth of the room"
+    const far   = { tx: 0,        ty: 0, rot: -9 * dir,  sx: 0.4,  sy: 0.4  };
+    // First footfall: lean into the charge, half-way in x, half-grown
+    const mid   = { tx: 11 * dir, ty: 0, rot: 12 * dir,  sx: 0.75, sy: 0.75 };
     // Impact: opposite lean (wobble), full scale, at the visitor's side
-    const reach = { tx: 22 * dir, ty: 0, rot: -3 * dir, sx: 1.1,  sy: 1.1  };
+    const reach = { tx: 22 * dir, ty: 0, rot: -5 * dir,  sx: 1.15, sy: 1.15 };
 
     Creatures.setPose(creature, 'scare');
-    // Snap to the small, tilted-back starting state — the visible "crouch
-    // back into depth" beat before the rush.
-    inner.setAttribute('transform',
-      `translate(${start.tx} ${start.ty}) rotate(${start.rot}) scale(${start.sx} ${start.sy})`);
 
     const bail = () => {
       if (inner) inner.removeAttribute('transform');
       if (onDone) onDone();
     };
 
-    // Phase 1a: first footfall — lean forward, grow, step half-way
-    _tweenTransform(inner, start, mid, 120, _easeOut, () => {
+    // Phase 1: tween the retreat into depth (visible, not a snap)
+    _tweenTransform(inner, rest, far, 300, _easeIn, () => {
       if (isStale()) return;
       if (!_live(creature)) return bail();
-      // Phase 1b: second footfall — wobble rotation back, finish growing, land
-      _tweenTransform(inner, mid, reach, 120, _easeOut, () => {
+      // Phase 2a: first footfall — lean forward, grow, step
+      _tweenTransform(inner, far, mid, 220, _easeOut, () => {
         if (isStale()) return;
         if (!_live(creature)) return bail();
-        // Phase 2: impact beat
-        Visitor.setState(visitor, 'scared');
-        Audio.play('scare');
-        Particles.spookyBurst(visitor.el);
-
-        setTimeout(() => {
+        // Phase 2b: second footfall — wobble rotation back, finish growing, land
+        _tweenTransform(inner, mid, reach, 220, _easeOut, () => {
           if (isStale()) return;
           if (!_live(creature)) return bail();
-          // Phase 3: settle back to deploy position
-          _tweenTransform(inner, reach, rest, 200, _easeIn, () => {
+          // Phase 3: impact beat
+          Visitor.setState(visitor, 'scared');
+          Audio.play('scare');
+          Particles.spookyBurst(visitor.el);
+
+          setTimeout(() => {
             if (isStale()) return;
-            if (_live(creature)) {
-              inner.removeAttribute('transform');
-              Creatures.setPose(creature, 'idle');
-            }
-            Visitor.setState(visitor, 'walking');
-            if (onDone) onDone();
-          }, isStale);
-        }, 250);
+            if (!_live(creature)) return bail();
+            // Phase 4: settle back to deploy position
+            _tweenTransform(inner, reach, rest, 260, _easeIn, () => {
+              if (isStale()) return;
+              if (_live(creature)) {
+                inner.removeAttribute('transform');
+                Creatures.setPose(creature, 'idle');
+              }
+              Visitor.setState(visitor, 'walking');
+              if (onDone) onDone();
+            }, isStale);
+          }, 320);
+        }, isStale);
       }, isStale);
     }, isStale);
   }
