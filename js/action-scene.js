@@ -151,15 +151,17 @@ const ActionScene = (() => {
    * Runs on deploy (and after each payoff). Half-opacity hold is the visible
    * tell that the creature is primed; going fully invisible only happens as
    * part of the payoff transition, so a visitor never enters to an empty room.
+   * Returns the tween duration so arm() can mark armed when visuals settle.
    */
   function _jumpOutArm(creature) {
-    if (!_live(creature)) return;
+    if (!_live(creature)) return 0;
     const inner = creature.innerEl || creature.el;
     _addEmbarrassedFace(creature);
     inner.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
     inner.style.transformOrigin = 'center';
     inner.style.opacity = '0.3';
     inner.style.transform = 'rotate(-6deg)';
+    return 500;
   }
 
   /**
@@ -269,38 +271,67 @@ const ActionScene = (() => {
   }
 
   /**
-   * dropFromCeiling: creature scurries sideways to the nearest wall
-   * (rotated 90° so its feet touch the wall, scaled down for perspective),
-   * clings briefly, then lunges off the wall toward the visitor with a
-   * weighty squash landing. Uses SVG attribute transform via rAF tween
-   * because CSS rotate+transformOrigin on SVG <g> is unreliable.
+   * Transform targets for dropFromCeiling. The wall pose rotates 90° so the
+   * creature's feet touch the wall and the head points into the room;
+   * squash is the landing beat after lunging off.
    */
-  function _dropFromCeiling(visitor, creature, onDone) {
-    if (!_live(creature)) { if (onDone) onDone(); return; }
+  const _DROP_REST   = { tx: 0, ty: 0,   rot: 0,   sx: 1,    sy: 1    };
+  const _DROP_SQUASH = { tx: 0, ty: 0,   rot: 0,   sx: 1.15, sy: 0.8  };
+  const _dropWall = (dir) =>
+    ({ tx: 55 * dir, ty: -12, rot: -90 * dir, sx: 0.7, sy: 0.7 });
+
+  /**
+   * dropFromCeiling — setup: scramble to a random wall (left or right) and
+   * cling. The chosen direction is stashed on the creature so the armed
+   * payoff lunges off the correct wall. The cold-path inline scene still
+   * picks the wall nearest the visitor instead.
+   */
+  function _dropFromCeilingArm(creature) {
+    if (!_live(creature)) return 0;
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    creature._dropDir = dir;
     const inner = creature.innerEl || creature.el;
-    const dir = _lungeDirection(visitor, creature); // +1 visitor right → right wall, -1 → left wall
+    _tweenTransform(inner, _DROP_REST, _dropWall(dir), 450, _easeOut);
+    return 450;
+  }
 
-    // Rotate so feet touch the wall and head points back into the room
-    // (rotate -90 for the right wall, +90 for the left wall).
-    const rest   = { tx: 0,         ty: 0,   rot: 0,         sx: 1,    sy: 1    };
-    const wall   = { tx: 55 * dir,  ty: -12, rot: -90 * dir, sx: 0.7,  sy: 0.7  };
-    const squash = { tx: 0,         ty: 0,   rot: 0,         sx: 1.15, sy: 0.8  };
-
-    // Phase 1: scramble to the wall (rotate + shrink)
-    _tweenTransform(inner, rest, wall, 450, _easeOut, () => {
+  /**
+   * Shared lunge → squash → rest tail used by both the armed and cold paths.
+   * Payoff scare runs concurrently with the squash-to-rest tween so the
+   * scare pose snaps in as the creature lands.
+   */
+  function _dropFromCeilingLunge(visitor, creature, from, onDone) {
+    const inner = creature.innerEl || creature.el;
+    _tweenTransform(inner, from, _DROP_SQUASH, 300, _easeIn, () => {
       if (!_live(creature)) { if (onDone) onDone(); return; }
-      // Phase 2: cling to the wall briefly
+      _tweenTransform(inner, _DROP_SQUASH, _DROP_REST, 160, _easeOut, () => {
+        if (_live(creature)) inner.removeAttribute('transform');
+      });
+      _payoffScare(visitor, creature, onDone, 400);
+    });
+  }
+
+  /**
+   * dropFromCeiling — payoff: lunge off the wall with a weighty squash.
+   * Armed path lunges directly from the pre-staged right wall. Cold path
+   * scrambles to the wall nearest the visitor, clings briefly, then lunges.
+   */
+  function _dropFromCeilingPayoff(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+
+    if (creature.armed) {
+      _dropFromCeilingLunge(visitor, creature, _dropWall(creature._dropDir || 1), onDone);
+      return;
+    }
+
+    const inner = creature.innerEl || creature.el;
+    const wall = _dropWall(_lungeDirection(visitor, creature));
+
+    _tweenTransform(inner, _DROP_REST, wall, 450, _easeOut, () => {
+      if (!_live(creature)) { if (onDone) onDone(); return; }
       setTimeout(() => {
         if (!_live(creature)) { if (onDone) onDone(); return; }
-        // Phase 3: fast weighty lunge off the wall, ending in a squash
-        _tweenTransform(inner, wall, squash, 300, _easeIn, () => {
-          if (!_live(creature)) { if (onDone) onDone(); return; }
-          // Phase 4: recover to rest + deliver the scare
-          _tweenTransform(inner, squash, rest, 160, _easeOut, () => {
-            if (_live(creature)) inner.removeAttribute('transform');
-          });
-          _payoffScare(visitor, creature, onDone, 400);
-        });
+        _dropFromCeilingLunge(visitor, creature, wall, onDone);
       }, 250);
     });
   }
@@ -309,17 +340,19 @@ const ActionScene = (() => {
    * Registered scenes keyed by action type.
    *
    * - `arm(creature)` — optional pre-stage run on idle (deploy / post-payoff).
-   *   Leaves the creature in an "armed" visual state, then sets creature.armed.
-   * - `payoff(visitor, creature, onDone)` — the scare proper. Expects the
-   *   armed state but must degrade gracefully from a cold start.
+   *   Kicks off the setup visuals and returns the duration in ms; the outer
+   *   arm() marks creature.armed = true after that window.
+   * - `payoff(visitor, creature, onDone)` — the scare proper. Reads
+   *   creature.armed to choose between a fast armed path and the cold
+   *   full-scene path.
    *
    * Actions without an arm run payoff only (they're always "cold" — e.g.
    * grabHat, whose hook must aim at the visitor).
    */
   const SCENES = {
-    jumpOut:         { arm: _jumpOutArm, payoff: _jumpOutPayoff },
-    grabHat:         { payoff: _grabHat },
-    dropFromCeiling: { payoff: _dropFromCeiling },
+    jumpOut:         { arm: _jumpOutArm,         payoff: _jumpOutPayoff },
+    grabHat:         {                           payoff: _grabHat },
+    dropFromCeiling: { arm: _dropFromCeilingArm, payoff: _dropFromCeilingPayoff },
   };
 
   /** Does this action have a registered scene? */
@@ -348,12 +381,12 @@ const ActionScene = (() => {
     if (!scene || !scene.arm) return;
     _cancelArming(creature);
     creature.armed = false;
-    scene.arm(creature);
-    // Setup tweens run for ~500ms; mark armed when they complete.
+    const durationMs = scene.arm(creature) || 0;
+    if (!durationMs) return;
     creature._armTimer = setTimeout(() => {
       creature._armTimer = null;
       if (_live(creature)) creature.armed = true;
-    }, 500);
+    }, durationMs);
   }
 
   /**
@@ -375,18 +408,24 @@ const ActionScene = (() => {
     }
   }
 
-  /** Play the scene for an action. Falls through to onDone if unknown. */
+  /**
+   * Play the scene for an action. Falls through to onDone if unknown.
+   *
+   * creature.armed is NOT cleared before payoff — the payoff reads it to
+   * choose between the armed fast-path and the cold full-scene path.
+   * finish() clears it after the scene completes.
+   */
   function play(action, visitor, creature, onDone) {
     const scene = SCENES[action];
     if (!scene) { if (onDone) onDone(); return; }
 
     _cancelArming(creature);
-    creature.armed = false;
 
     const finish = () => {
+      creature.armed = false;
       if (onDone) onDone();
       // Re-arm for the next visitor, after a short breath so the creature
-      // reads as "back to normal" before the embarrassed fade begins again.
+      // reads as "back to normal" before the setup begins again.
       if (scene.arm && _live(creature)) {
         setTimeout(() => arm(creature), 150);
       }
