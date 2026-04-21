@@ -282,25 +282,30 @@ interleaves creatures with rooms and upgrades so each unlock type feels fresh. e
 - creature+monster combo bonuses: matching pairs (e.g., bat:skeleton, cat:witch) grant 1.25x scare points, shown via floating "COMBO" indicator
 - tower room already unlocks at 40 coins (MVP tier)
 
-### expansion 2: "the director's chair" (~coins 95+) [INCREMENTAL]
+### expansion 2: "the director's chair" (~coins 95+) [IMPLEMENTED]
 **unlocks axis 3: actions.** deployment becomes 4-pick: creature -> monster type -> action -> room.
 
 design intent: actions are **scripted mini-scenes** — each action replaces the default scare animation with a distinctive choreography (setup → pause → payoff). the gag/timing is the mechanic; players pick an action for its *style* of scare. earlier v0.3.0 work-in-progress treated actions as decorative transforms layered on top of the default scare, which felt invisible against the dominant scare-pose change; that approach was reverted in favour of this scripted-scene model.
 
-shipped incrementally:
-- **v0.3.0** — director's chair unlock at 95 coins; the 3 existing actions (jumpOut, grabHat, dropFromCeiling) rewritten as scripted mini-scenes. universal hat added to visitors so grabHat always has a target.
-- **v0.4.0+** — new actions unlock progressively (creep, chase, cackle/howl, peek-a-boo, swarm). each is a scripted scene with its own choreography.
+shipped in **v0.3.0**: director's chair unlock at 95 coins; 4-stage picker (creature + monster + action + room); the 3 base actions (jumpOut, grabHat, dropFromCeiling) rewritten as scripted mini-scenes; universal hat added to visitors so grabHat always has a target; 3 new unlockable actions — swarm (105), peek-a-boo (115), chase (130).
 
 the child's hat-grab works on any creature (spider leg reaches out, gorilla arm, bat wing, etc.).
 
-**future polish — randomised visitor props**: instead of a universal hat, each visitor wears one of a small set (hat, cap, flower, balloon, umbrella). grabHat snatches whatever they have — more variety and narrative charm. deferred because drawing a prop library is a separate chunk of work; universal hat ships first (v0.3.0), prop variety lands later.
+**on hold — remaining actions (creep, cackle/howl)**: the three shipped unlockable actions plus the three rewritten base actions already make the axis feel rich. more can land later if the content ladder needs extending.
+
+**future polish — randomised visitor props**: instead of a universal hat, each visitor wears one of a small set (hat, cap, flower, balloon, umbrella). grabHat snatches whatever they have — more variety and narrative charm. deferred because drawing a prop library is a separate chunk of work.
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
 
-### expansion 3: "house upgrades" (~coins 120+)
-persistent upgrades, bought with coins, persist between waves.
+### track customisation — rollercoaster [STANDALONE]
+carved out from expansion 3 because it's the most distinctive idea there and interacts with existing axes rather than adding new ones.
 
-**track customisation** (rollercoaster upgrades): reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
+reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
+
+### expansion 3: "house upgrades" (~coins 120+) [ON HOLD]
+on hold: the game already has enough layers (creatures + monster types + actions + rooms, plus variety and full-cast coins). revisit only if later versions need new progression hooks.
+
+persistent upgrades, bought with coins, persist between waves.
 
 **room themes** (decorations): theme a room to match a **creature** type. changes the room's visual style and gives a scare bonus (+50% scare points) for the matching creature deployed there. examples:
 - spider theme: cobwebs fill corners, egg sacs on ceiling, silk strands across doorway
@@ -317,11 +322,11 @@ strategic layer: do you theme rooms to match the creatures you deploy most, or s
 ```
 MVP (0-50):            [creature] + [room]                                  = 2 picks
 expansion 1 (55-85):   [creature] + [monster type] + [room]                = 3 picks [DONE]
-expansion 2 (90+):     [creature] + [monster type] + [action] + [room]     = 4 picks
-expansion 3:           4 picks + [room themes & traps] (persistent layer)
+expansion 2 (95+):     [creature] + [monster type] + [action] + [room]     = 4 picks [DONE]
+expansion 3:           4 picks + [room themes & traps] (persistent layer)    [ON HOLD]
 ```
 
-## difficulty scaling
+## difficulty scaling [NEXT]
 
 ### implemented
 
