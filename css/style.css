@@ -124,6 +124,13 @@ html, body {
   animation: bubble-bob 2s ease-in-out infinite;
 }
 .visitor__bubble--love { animation-delay: 0.5s; }
+/* Pause bob during walk transitions — imperceptible in motion, and with
+   many visitors on screen this is 2N perpetual keyframe animations that
+   would otherwise never rest. */
+.visitor--walking .visitor__bubble--fear,
+.visitor--walking .visitor__bubble--love {
+  animation-play-state: paused;
+}
 
 /* ===== Creatures ===== */
 .creature { transition: opacity 0.3s; }
