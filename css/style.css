@@ -106,11 +106,16 @@ html, body {
 
 /* ===== Train & track ===== */
 .train__rail { stroke-linecap: round; }
-.train__cart { transition: none; }
+.train__cart { transition: none; will-change: transform; }
 
 /* ===== Visitors ===== */
 .visitor {
   pointer-events: none;
+  /* Hint the compositor to rasterise each visitor once and just
+     re-composite during walk transitions, rather than re-painting the
+     stick-figure subtree every frame. SVG layer promotion is less
+     reliable than HTML but this is a cheap, revertable try. */
+  will-change: transform;
 }
 .visitor--walking .visitor__leg-l { animation: visitor-walk-l 0.4s steps(2) infinite; }
 .visitor--walking .visitor__leg-r { animation: visitor-walk-r 0.4s steps(2) infinite; }
@@ -133,7 +138,11 @@ html, body {
 }
 
 /* ===== Creatures ===== */
-.creature { transition: opacity 0.3s; }
+.creature {
+  transition: opacity 0.3s;
+  /* Layer promotion hint — same rationale as .visitor. */
+  will-change: transform;
+}
 .creature__pose { transition: opacity 0.3s ease-in-out; }
 
 /* Idle animations (subtle, adds life) */
