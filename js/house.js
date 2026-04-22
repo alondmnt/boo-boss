@@ -796,6 +796,12 @@ const House = (() => {
     let svg = `<svg xmlns="${NS}" viewBox="-20 0 ${vbW + 20} ${L.svgH}"
                     class="house" preserveAspectRatio="xMidYMid meet">`;
 
+    // Static structure wrapper — rooms, walls, decorations, everything that
+    // doesn't animate. The drop-shadow filter lives on this group (not the
+    // root SVG) so the animated sibling layers below don't force the whole
+    // scene to re-rasterise on every child animation.
+    svg += `<g class="house__structure">`;
+
     // Background
     svg += `<rect width="${L.svgW}" height="${L.svgH}" fill="#0d0520"/>`;
 
@@ -881,6 +887,9 @@ const House = (() => {
         svg += `<rect x="${sx}" y="${sy}" width="5" height="2" fill="#2a1a0a" opacity="0.4"/>`;
       }
     }
+
+    // Close static structure wrapper — animated sibling layers follow.
+    svg += `</g>`;
 
     // Track layer placeholder (Train module will populate this)
     svg += `<g class="house__track-layer"></g>`;
