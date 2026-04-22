@@ -10,6 +10,13 @@ const Train = (() => {
   let _cartEl = null;
   let _animId = null;
 
+  // Pre-sampled path points: getPointAtLength is O(path-complexity) and was
+  // previously called every rAF frame plus ~250 times at startup. We sample
+  // once per _renderTrack into a flat Float32Array and read via _sampleAt.
+  let _pathSamples = null;   // Float32Array of [x0,y0, x1,y1, ...]
+  let _pathSampleStep = 2;   // units between consecutive samples
+  let _pathTotalLen = 0;
+
   /** Create the cart SVG group (~30×20). */
   function _createCart() {
     const g = document.createElementNS(NS, 'g');
@@ -96,9 +103,53 @@ const Train = (() => {
     return { d, route };
   }
 
+  /**
+   * Sample the current _pathEl into a flat Float32Array so per-frame and
+   * per-tie position lookups become O(1) array reads instead of O(path)
+   * getPointAtLength calls. Called once per _renderTrack.
+   */
+  function _samplePath() {
+    const totalLen = _pathEl.getTotalLength();
+    if (!(totalLen > 0)) { _pathSamples = null; _pathTotalLen = 0; return; }
+    const step = _pathSampleStep;
+    const n = Math.ceil(totalLen / step) + 1;
+    const samples = new Float32Array(n * 2);
+    for (let i = 0; i < n; i++) {
+      const pt = _pathEl.getPointAtLength(Math.min(i * step, totalLen));
+      samples[i * 2]     = pt.x;
+      samples[i * 2 + 1] = pt.y;
+    }
+    _pathSamples = samples;
+    _pathTotalLen = totalLen;
+  }
+
+  /**
+   * Linearly interpolate the sampled path at distance d.
+   * Returns a plain {x, y} object (same shape as SVGPoint, easier to pool).
+   */
+  function _sampleAt(d) {
+    if (!_pathSamples) return { x: 0, y: 0 };
+    const step = _pathSampleStep;
+    if (d <= 0) return { x: _pathSamples[0], y: _pathSamples[1] };
+    if (d >= _pathTotalLen) {
+      const last = _pathSamples.length - 2;
+      return { x: _pathSamples[last], y: _pathSamples[last + 1] };
+    }
+    const f = d / step;
+    const i = f | 0;
+    const t = f - i;
+    const a = i * 2;
+    const b = a + 2;
+    return {
+      x: _pathSamples[a]     + (_pathSamples[b]     - _pathSamples[a])     * t,
+      y: _pathSamples[a + 1] + (_pathSamples[b + 1] - _pathSamples[a + 1]) * t,
+    };
+  }
+
   /** Render track rails and crossties onto the track layer. */
   function _renderTrack(d) {
     _trackLayer.innerHTML = '';
+    _pathSamples = null;
 
     if (!d) return;
 
@@ -129,11 +180,15 @@ const Train = (() => {
     rail2.setAttribute('transform', 'translate(0,4)');
     _trackLayer.appendChild(rail2);
 
+    // Sample the path once — all subsequent position lookups read from
+    // _pathSamples instead of calling getPointAtLength per frame/per tie.
+    _samplePath();
+
     // Crossties at intervals
-    const totalLen = _pathEl.getTotalLength();
+    const totalLen = _pathTotalLen;
     const tieSpacing = 18;
     for (let dist = 0; dist < totalLen; dist += tieSpacing) {
-      const pt = _pathEl.getPointAtLength(dist);
+      const pt = _sampleAt(dist);
       const tie = document.createElementNS(NS, 'line');
       tie.setAttribute('x1', pt.x);
       tie.setAttribute('y1', pt.y - 5);
@@ -151,26 +206,26 @@ const Train = (() => {
 
   /** Compute distance along path for each room stop. */
   function _computeStopDistances(route) {
-    if (!_pathEl) return [];
-    const totalLen = _pathEl.getTotalLength();
+    if (!_pathSamples) return [];
+    const step = _pathSampleStep;
+    const n = _pathSamples.length / 2;
     const stops = [];
 
     for (const roomId of route) {
       const centre = House.getRoomCentre(roomId);
-      // Find closest point on path to room centre
-      let bestDist = 0;
+      // Find closest sample to room centre
+      let bestIdx = 0;
       let bestDelta = Infinity;
-      for (let d = 0; d <= totalLen; d += 2) {
-        const pt = _pathEl.getPointAtLength(d);
-        const dx = pt.x - centre.x;
-        const dy = pt.y - centre.y;
+      for (let i = 0; i < n; i++) {
+        const dx = _pathSamples[i * 2]     - centre.x;
+        const dy = _pathSamples[i * 2 + 1] - centre.y;
         const delta = dx * dx + dy * dy;
         if (delta < bestDelta) {
           bestDelta = delta;
-          bestDist = d;
+          bestIdx = i;
         }
       }
-      stops.push({ roomId, distance: bestDist });
+      stops.push({ roomId, distance: Math.min(bestIdx * step, _pathTotalLen) });
     }
 
     return stops;
@@ -197,7 +252,7 @@ const Train = (() => {
 
     const { route } = _computeTrack();
     const stops = _computeStopDistances(route);
-    const totalLen = _pathEl.getTotalLength();
+    const totalLen = _pathTotalLen;
     const speed = totalLen / CONFIG.trainSpeedMs;
     let currentDist = 0;
     let nextStopIdx = 0;
@@ -230,7 +285,7 @@ const Train = (() => {
       }
 
       // Position cart
-      const pt = _pathEl.getPointAtLength(currentDist);
+      const pt = _sampleAt(currentDist);
       _cartEl.setAttribute('transform', `translate(${pt.x},${pt.y})`);
 
       // Check for room stops
@@ -260,7 +315,7 @@ const Train = (() => {
 
     const { route } = _computeTrack();
     const stops = _computeStopDistances(route);
-    const totalLen = _pathEl.getTotalLength();
+    const totalLen = _pathTotalLen;
     const speed = totalLen / (CONFIG.trainSpeedMs * 0.7); // faster collection run
     let nextStopIdx = 0;
     let paused = false;
@@ -293,7 +348,7 @@ const Train = (() => {
         return;
       }
 
-      const pt = _pathEl.getPointAtLength(currentDist);
+      const pt = _sampleAt(currentDist);
       _cartEl.setAttribute('transform', `translate(${pt.x},${pt.y})`);
 
       // Check for room stops
