@@ -5,6 +5,7 @@
  */
 const ScareFactory = (() => {
   const _deployed = {}; // roomId -> creature object
+  let _onChange = null; // optional listener notified after occupancy changes
 
   /** Look up the active monster type effect, or null if lab not unlocked. */
   function _getEffect(monsterType) {
@@ -12,15 +13,23 @@ const ScareFactory = (() => {
   }
 
   /**
-   * Toggle body.crowd--many when 2+ creatures are deployed. Drives CSS rules
-   * that pause creature idle animations (spider-sway, ghost-hover) to free
-   * compositor cycles during the heaviest on-screen moments. Mid-animation
-   * pause leaves the creature at its current position — aesthetically fine.
+   * Called after any mutation to _deployed: toggles body.crowd--many for
+   * CSS (pauses idle animations under load) and notifies a single
+   * subscriber (the Picker while in room-targeting mode) so the
+   * targetable-room highlight stays in sync with live occupancy.
    */
-  function _updateCrowdClass() {
+  function _onDeployChange() {
     const count = Object.keys(_deployed).length;
     document.body.classList.toggle('crowd--many', count >= 2);
+    if (_onChange) _onChange();
   }
+
+  /**
+   * Register a single listener fired after any deploy/clear. Pass null
+   * to unsubscribe. Single-slot by design — only the Picker uses this,
+   * and only while the player is choosing a room.
+   */
+  function setChangeListener(cb) { _onChange = cb; }
 
   /**
    * Deploy a creature to a room with a monster type and action.
@@ -53,7 +62,7 @@ const ScareFactory = (() => {
     creature.action = chosenAction || CONFIG.defaultAction[creatureType];
 
     _deployed[roomId] = creature;
-    _updateCrowdClass();
+    _onDeployChange();
 
     // Start lifetime timer (per-creature cooldown, reduced if fasterCooldowns unlocked)
     let lifetime = CONFIG.creatureCooldowns[creatureType] || CONFIG.creatureLifetimeMs;
@@ -159,7 +168,7 @@ const ScareFactory = (() => {
   /** Clear the room occupancy record (after removal or hug). */
   function clearRoom(roomId) {
     delete _deployed[roomId];
-    _updateCrowdClass();
+    _onDeployChange();
   }
 
   /** Clear all deployed creatures (on wave/game reset). */
@@ -169,8 +178,8 @@ const ScareFactory = (() => {
       Creatures.remove(creature);
       delete _deployed[roomId];
     }
-    _updateCrowdClass();
+    _onDeployChange();
   }
 
-  return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll };
+  return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll, setChangeListener };
 })();

@@ -183,7 +183,16 @@ const Picker = (() => {
     _enterRoomTargeting();
   }
 
-  /** Stage 2: highlight targetable rooms and attach click handlers. */
+  /**
+   * Stage 2: highlight targetable rooms and attach click handlers.
+   *
+   * Attach click handlers to EVERY unlocked room (not just currently-free
+   * ones): occupancy is re-checked at tap time in _onRoomTap, so rooms
+   * that free up mid-selection work without the player re-selecting.
+   * The highlight class only goes on currently-free rooms, and we
+   * subscribe to ScareFactory so it stays in sync with live occupancy
+   * while the picker is open.
+   */
   function _enterRoomTargeting() {
     // Clear any existing room handlers (in case re-entering from monster change)
     _clearRoomHandlers();
@@ -191,11 +200,13 @@ const Picker = (() => {
     const rooms = GameState.get('rooms');
     for (const [id, def] of Object.entries(rooms)) {
       if (def.locked) continue;
-      if (ScareFactory.isOccupied(id)) continue;
 
       const roomEl = House.getRoomEl(id);
       if (!roomEl) continue;
-      roomEl.classList.add('house__room--targetable');
+
+      if (!ScareFactory.isOccupied(id)) {
+        roomEl.classList.add('house__room--targetable');
+      }
 
       const handler = (e) => {
         e.stopPropagation();
@@ -204,6 +215,21 @@ const Picker = (() => {
       roomEl.addEventListener('click', handler);
       roomEl.addEventListener('touchend', handler);
       _roomClickHandlers.push({ el: roomEl, handler });
+    }
+
+    ScareFactory.setChangeListener(_refreshTargetableHighlight);
+  }
+
+  /**
+   * Re-sync the targetable highlight class with current occupancy.
+   * Called whenever ScareFactory fires a deploy/clear event while the
+   * picker is in room-targeting mode.
+   */
+  function _refreshTargetableHighlight() {
+    for (const { el } of _roomClickHandlers) {
+      const id = el.dataset.room;
+      if (!id) continue;
+      el.classList.toggle('house__room--targetable', !ScareFactory.isOccupied(id));
     }
   }
 
@@ -281,6 +307,7 @@ const Picker = (() => {
       el.removeEventListener('touchend', handler);
     }
     _roomClickHandlers = [];
+    ScareFactory.setChangeListener(null);
   }
 
   /** Clear all selection state. */
