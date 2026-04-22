@@ -7,7 +7,7 @@ html, body {
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
-  background: #1a0a2e;
+  background: radial-gradient(ellipse at center, #3d2566 0%, #1a0a2e 100%);
   color: #e0d0ff;
 }
 
