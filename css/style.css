@@ -94,7 +94,11 @@ html, body {
 .house__room--targetable rect.house__room-bg {
   stroke: #ffcc00; stroke-width: 3;
   stroke-dasharray: 6 3;
-  animation: room-pulse 0.8s ease-in-out infinite;
+  /* No pulse animation: rooms are inside .house__structure (filtered
+     with drop-shadow), so an infinite keyframe on stroke-opacity was
+     re-rastering the entire structure subtree every frame while the
+     picker was open — the main hitch Alon noticed. The static dashed
+     yellow stroke is still a strong affordance on its own. */
 }
 /* !important needed: overrides targetable stroke set by SVG attribute */
 .house__room--flash-red rect.house__room-bg {
@@ -426,11 +430,6 @@ body.crowd--many .creature--ghost .creature__hover {
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
-}
-
-@keyframes room-pulse {
-  0%, 100% { stroke-opacity: 0.4; }
-  50% { stroke-opacity: 1; }
 }
 
 @keyframes visitor-walk-l {
