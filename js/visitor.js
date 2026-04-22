@@ -71,16 +71,20 @@ const Visitor = (() => {
     svg += `<path d="M-2.5 -30 Q0 -28 2.5 -30" stroke="#333" stroke-width="0.6" fill="none"
                   class="visitor__smile" style="display:none"/>`;
 
-    // Fear bubble (left shoulder, green circle)
+    // Fear bubble (left shoulder, green circle).
+    // paint-order + white stroke on the text gives the emoji a halo so
+    // it reads against any bubble colour — cheap, no SVG filter cost.
     svg += `<g class="visitor__bubble visitor__bubble--fear">`;
-    svg += `  <circle cx="-18" cy="-18" r="10" fill="#44cc66" opacity="0.9" stroke="#228844" stroke-width="1"/>`;
-    svg += `  <text x="-18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[fear] || '?'}</text>`;
+    svg += `  <circle cx="-18" cy="-18" r="12" fill="#44cc66" stroke="#228844" stroke-width="1.5"/>`;
+    svg += `  <text x="-18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central"
+                   paint-order="stroke" stroke="#ffffff" stroke-width="2" stroke-linejoin="round">${CONFIG.creatureIcons[fear] || '?'}</text>`;
     svg += `</g>`;
 
     // Love bubble (right shoulder, pink circle)
     svg += `<g class="visitor__bubble visitor__bubble--love">`;
-    svg += `  <circle cx="18" cy="-18" r="10" fill="#ff88bb" opacity="0.9" stroke="#cc4477" stroke-width="1"/>`;
-    svg += `  <text x="18" y="-17" font-size="14" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[love] || '?'}</text>`;
+    svg += `  <circle cx="18" cy="-18" r="12" fill="#ff88bb" stroke="#cc4477" stroke-width="1.5"/>`;
+    svg += `  <text x="18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central"
+                   paint-order="stroke" stroke="#ffffff" stroke-width="2" stroke-linejoin="round">${CONFIG.creatureIcons[love] || '?'}</text>`;
     svg += `</g>`;
 
     inner.innerHTML = svg;
