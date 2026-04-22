@@ -12,6 +12,17 @@ const ScareFactory = (() => {
   }
 
   /**
+   * Toggle body.crowd--many when 2+ creatures are deployed. Drives CSS rules
+   * that pause creature idle animations (spider-sway, ghost-hover) to free
+   * compositor cycles during the heaviest on-screen moments. Mid-animation
+   * pause leaves the creature at its current position — aesthetically fine.
+   */
+  function _updateCrowdClass() {
+    const count = Object.keys(_deployed).length;
+    document.body.classList.toggle('crowd--many', count >= 2);
+  }
+
+  /**
    * Deploy a creature to a room with a monster type and action.
    * Monster type and action default to CONFIG defaults when not provided.
    *
@@ -42,6 +53,7 @@ const ScareFactory = (() => {
     creature.action = chosenAction || CONFIG.defaultAction[creatureType];
 
     _deployed[roomId] = creature;
+    _updateCrowdClass();
 
     // Start lifetime timer (per-creature cooldown, reduced if fasterCooldowns unlocked)
     let lifetime = CONFIG.creatureCooldowns[creatureType] || CONFIG.creatureLifetimeMs;
@@ -145,7 +157,10 @@ const ScareFactory = (() => {
   function getDeployed(roomId) { return _deployed[roomId] || null; }
 
   /** Clear the room occupancy record (after removal or hug). */
-  function clearRoom(roomId) { delete _deployed[roomId]; }
+  function clearRoom(roomId) {
+    delete _deployed[roomId];
+    _updateCrowdClass();
+  }
 
   /** Clear all deployed creatures (on wave/game reset). */
   function clearAll() {
@@ -154,6 +169,7 @@ const ScareFactory = (() => {
       Creatures.remove(creature);
       delete _deployed[roomId];
     }
+    _updateCrowdClass();
   }
 
   return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll };

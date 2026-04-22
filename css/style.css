@@ -150,6 +150,14 @@ html, body {
 .creature--astronaut { filter: brightness(1.1) saturate(0.7); }
 .creature--ghost { filter: brightness(1.4) saturate(0.3); opacity: 0.65; }
 .creature--ghost .creature__hover { animation: ghost-hover 2s ease-in-out infinite; }
+
+/* When 2+ creatures are deployed, pause idle animations. Each idle
+   animation transforms a ~100-element SVG subtree per frame; pausing
+   under load relieves compositor pressure with no gameplay impact. */
+body.crowd--many .creature--spider .creature__pose--idle,
+body.crowd--many .creature--ghost .creature__hover {
+  animation-play-state: paused;
+}
 @keyframes ghost-hover {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
