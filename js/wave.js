@@ -10,7 +10,6 @@ const Wave = (() => {
   let _visitors = [];
   let _exitedCount = 0;
   let _waveScore = 0;
-  let _scaredVisitorCount = 0;
   let _onComplete = null;
   let _hugCount = 0;
   let _typesUsed = new Set();
@@ -32,7 +31,6 @@ const Wave = (() => {
     _visitors = [];
     _exitedCount = 0;
     _waveScore = 0;
-    _scaredVisitorCount = 0;
     _hugCount = 0;
     _typesUsed = new Set();
     _creaturesUsed = new Set();
@@ -199,7 +197,6 @@ const Wave = (() => {
         if (result.result === 'scared') {
           visitor._scared = true;
           _waveScore += result.points;
-          _scaredVisitorCount++;
           _updateScore();
           Particles.scoreFloat(creature.el, `+${result.points}`, 'particle--score');
           Reactions.scared(visitor, creature, () => {
@@ -217,11 +214,13 @@ const Wave = (() => {
           Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
           // Fall through to normal movement below
         } else if (result.result === 'hugResist') {
-          // Vampire: hug resisted, creature survives, visitor gets half-scare
+          // Vampire: hug resisted, creature survives, visitor gets half-credit
+          // points. Not a full scare — doesn't bump visitor.scareCount, so
+          // it's excluded from the summary's scared count and the 80% bonus
+          // threshold, matching the half-points pricing.
           visitor._scared = true;
           const resistPoints = CONFIG.scoring.vampireResistPoints;
           _waveScore += resistPoints;
-          _scaredVisitorCount++;
           _updateScore();
           Particles.scoreFloat(creature.el, '🛡️+' + resistPoints, 'particle--score');
           Reactions.scared(visitor, creature, () => {
