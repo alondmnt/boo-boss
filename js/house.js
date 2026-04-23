@@ -796,6 +796,18 @@ const House = (() => {
     let svg = `<svg xmlns="${NS}" viewBox="-20 0 ${vbW + 20} ${L.svgH}"
                     class="house" preserveAspectRatio="xMidYMid meet">`;
 
+    // Shared filter defs. The bubble-halo puts a crisp white outline behind
+    // emoji glyphs in visitor thought bubbles so they read against any
+    // bubble colour and against emoji palettes that vary from light to dark.
+    // We can't use `stroke` on the text: Firefox strips colour emojis when
+    // stroke is applied. feDropShadow operates on SourceAlpha, which keeps
+    // the colour glyph intact.
+    svg += `<defs>
+      <filter id="bubble-halo" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="1.0" flood-color="#ffffff" flood-opacity="1"/>
+      </filter>
+    </defs>`;
+
     // Static structure wrapper — rooms, walls, decorations, everything that
     // doesn't animate. The drop-shadow filter lives on this group (not the
     // root SVG) so the animated sibling layers below don't force the whole
