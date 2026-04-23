@@ -112,7 +112,7 @@ const CONFIG = {
 
   /* ─── Waves ─── */
   waveSizing: { base: 3, perWave: 0.5 },
-  visitorDwellMs: { min: 2000, max: 3000 },
+  visitorDwellMs: { min: 3000, max: 4500 },
   visitorRoomVisits: { min: 4, max: 6 },
   trainSpeedMs: 3000,
   trainStopMs: 600,

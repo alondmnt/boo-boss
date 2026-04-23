@@ -126,9 +126,14 @@ const Wave = (() => {
         }
         _state = 'visiting';
         _updateVisitorCount();
-        for (const visitor of _visitors) {
-          _wanderLoop(visitor, gen);
-        }
+        // Post-disembark settle: give the player a moment to read the fresh
+        // visitors before they start moving through rooms.
+        setTimeout(() => {
+          if (_generation !== gen) return;
+          for (const visitor of _visitors) {
+            _wanderLoop(visitor, gen);
+          }
+        }, 1500);
       }
     );
   }

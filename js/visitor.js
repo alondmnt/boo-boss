@@ -269,7 +269,7 @@ const Visitor = (() => {
     if (sameFloor) {
       // Continuous walk through the shared wall - single smooth transition
       visitor.currentRoom = roomId;
-      _walkTo(visitor, innerPos.x, innerPos.y, 800, () => {
+      _walkTo(visitor, innerPos.x, innerPos.y, 1200, () => {
         if (onArrive) onArrive();
       });
     } else {
