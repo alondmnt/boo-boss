@@ -155,7 +155,10 @@ const ScareFactory = (() => {
   }
 
   /**
-   * Evaluate what happens when a visitor encounters a deployed creature.
+   * Classify what happens when a visitor encounters a deployed creature.
+   * Pure: does not mutate the visitor. The caller bumps visitor.scareCount
+   * on the 'scared' branch so combo math stays honest for any repeat calls
+   * (e.g. preview, debug) without side effects leaking.
    *
    * @param {object} visitor - visitor object with fear/love/scareCount
    * @param {object} creature - creature object with type
@@ -165,9 +168,10 @@ const ScareFactory = (() => {
     const effect = _getEffect(creature.monsterType);
 
     if (visitor.fear === creature.type) {
-      visitor.scareCount++;
+      // Forward-looking: this scare will be the Nth for the visitor.
+      const scareNumber = visitor.scareCount + 1;
       // Astronaut: combo +1 (each scare counts one level higher)
-      const comboLevel = visitor.scareCount +
+      const comboLevel = scareNumber +
         (effect && effect.type === 'comboPlus' ? effect.value : 0);
       let mult = comboLevel <= 1 ? 1
         : comboLevel === 2 ? CONFIG.scoring.combo2x

@@ -195,6 +195,7 @@ const Wave = (() => {
         const result = ScareFactory.evaluate(visitor, creature);
 
         if (result.result === 'scared') {
+          visitor.scareCount++;
           visitor._scared = true;
           _waveScore += result.points;
           _updateScore();
