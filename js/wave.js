@@ -186,81 +186,92 @@ const Wave = (() => {
     // Step 1: wander within the current room (2-3 steps)
     const steps = 2 + Math.floor(Math.random() * 2);
     Visitor.wanderInRoom(visitor, steps, () => {
-      if (_generation !== gen) return;
-
-      // Check for creature encounter in this room
-      const currentRoom = visitor.currentRoom;
-      const creature = ScareFactory.getDeployed(currentRoom);
-      if (creature && !visitor._scared) {
-        const result = ScareFactory.evaluate(visitor, creature);
-
-        if (result.result === 'scared') {
-          visitor.scareCount++;
-          visitor._scared = true;
-          _waveScore += result.points;
-          _updateScore();
-          Particles.scoreFloat(creature.el, `+${result.points}`, 'particle--score');
-          Reactions.scared(visitor, creature, () => {
-            visitor._scared = false;
-            if (_generation !== gen) return;
-            if (visitor._readyToLeave) {
-              _dwellThenWander(visitor, gen);
-            } else {
-              _fleeFromScare(visitor, gen);
-            }
-          });
-          return;
-        } else if (result.result === 'hugBlock') {
-          // Ghost: hug blocked this encounter (rolled fresh on every visit)
-          Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
-          // Fall through to normal movement below
-        } else if (result.result === 'hugResist') {
-          // Vampire: hug resisted, creature survives, visitor gets half-credit
-          // points. Not a full scare — doesn't bump visitor.scareCount, so
-          // it's excluded from the summary's scared count and the 80% bonus
-          // threshold, matching the half-points pricing.
-          visitor._scared = true;
-          const resistPoints = CONFIG.scoring.vampireResistPoints;
-          _waveScore += resistPoints;
-          _updateScore();
-          Particles.scoreFloat(creature.el, '🛡️+' + resistPoints, 'particle--score');
-          Reactions.scared(visitor, creature, () => {
-            visitor._scared = false;
-            if (_generation !== gen) return;
-            if (visitor._readyToLeave) {
-              _dwellThenWander(visitor, gen);
-            } else {
-              _fleeFromScare(visitor, gen);
-            }
-          });
-          return;
-        } else if (result.result === 'loved') {
-          visitor._scared = true;
-          _hugCount++;
-          Particles.scoreFloat(creature.el, '🫂', 'particle--hug-float');
-          Reactions.hugged(visitor, creature, () => {
-            ScareFactory.clearRoom(creature.roomId);
-            Creatures.remove(creature);
-            Picker.enableSlot(creature.type);
-            visitor._scared = false;
-            if (_generation !== gen) return;
-            if (visitor._readyToLeave) {
-              _dwellThenWander(visitor, gen);
-            } else {
-              _moveToNextRoom(visitor, gen);
-            }
-          });
-          return;
-        }
-      }
-
-      // No encounter (or neutral): move to next room or stay in place
+      if (_tryEncounter(visitor, gen)) return;
       if (visitor._readyToLeave) {
         _dwellThenWander(visitor, gen);
       } else {
         _moveToNextRoom(visitor, gen);
       }
     });
+  }
+
+  /**
+   * Evaluate the room's deployed creature (if any) against the visitor and
+   * dispatch the resulting scare/hug/resist/block reaction. Returns true if
+   * the helper took ownership of the visitor's next step (async reaction is
+   * running, caller should stop). Returns false when the caller should
+   * continue with default movement (no creature, neutral, hugBlock, or the
+   * wave has ended — the stale-generation check at entry returns true).
+   */
+  function _tryEncounter(visitor, gen) {
+    if (_generation !== gen) return true;
+    const creature = ScareFactory.getDeployed(visitor.currentRoom);
+    if (!creature || visitor._scared) return false;
+
+    const result = ScareFactory.evaluate(visitor, creature);
+
+    if (result.result === 'scared') {
+      visitor.scareCount++;
+      visitor._scared = true;
+      _waveScore += result.points;
+      _updateScore();
+      Particles.scoreFloat(creature.el, `+${result.points}`, 'particle--score');
+      Reactions.scared(visitor, creature, () => {
+        visitor._scared = false;
+        if (_generation !== gen) return;
+        if (visitor._readyToLeave) {
+          _dwellThenWander(visitor, gen);
+        } else {
+          _fleeFromScare(visitor, gen);
+        }
+      });
+      return true;
+    }
+    if (result.result === 'hugResist') {
+      // Vampire: hug resisted, creature survives, visitor gets half-credit
+      // points. Not a full scare — doesn't bump visitor.scareCount, so
+      // it's excluded from the summary's scared count and the 80% bonus
+      // threshold, matching the half-points pricing.
+      visitor._scared = true;
+      const resistPoints = CONFIG.scoring.vampireResistPoints;
+      _waveScore += resistPoints;
+      _updateScore();
+      Particles.scoreFloat(creature.el, '🛡️+' + resistPoints, 'particle--score');
+      Reactions.scared(visitor, creature, () => {
+        visitor._scared = false;
+        if (_generation !== gen) return;
+        if (visitor._readyToLeave) {
+          _dwellThenWander(visitor, gen);
+        } else {
+          _fleeFromScare(visitor, gen);
+        }
+      });
+      return true;
+    }
+    if (result.result === 'loved') {
+      visitor._scared = true;
+      _hugCount++;
+      Particles.scoreFloat(creature.el, '🫂', 'particle--hug-float');
+      Reactions.hugged(visitor, creature, () => {
+        ScareFactory.clearRoom(creature.roomId);
+        Creatures.remove(creature);
+        Picker.enableSlot(creature.type);
+        visitor._scared = false;
+        if (_generation !== gen) return;
+        if (visitor._readyToLeave) {
+          _dwellThenWander(visitor, gen);
+        } else {
+          _moveToNextRoom(visitor, gen);
+        }
+      });
+      return true;
+    }
+    if (result.result === 'hugBlock') {
+      // Ghost: hug blocked this encounter (rolled fresh on every visit).
+      Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
+      return false; // caller handles move-on
+    }
+    return false; // neutral
   }
 
   /** Scared visitor bolts to an adjacent room, then resumes wandering. */
