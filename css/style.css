@@ -211,7 +211,12 @@ body.crowd--many .creature--ghost .creature__hover {
     rgba(0, 0, 0, 0.6) calc(var(--cd-pct, 0) * 360deg)
   );
   pointer-events: none;
+  /* Only show while the slot is cooling down — otherwise the gradient at
+     cd-pct=0 renders as a solid 60% black layer that dims every ready
+     creature slot. */
+  display: none;
 }
+.scare-panel__slot--cooldown .scare-panel__cooldown { display: block; }
 .scare-panel__icon {
   font-size: 2rem; line-height: 1;
   text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5);
