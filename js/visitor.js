@@ -9,8 +9,25 @@ const Visitor = (() => {
   /** Small palette for visitor skin tones. */
   const SKIN_TONES = ['#f5d0a9', '#d4a574', '#a0785a', '#6b4c3b', '#f0c8a0', '#e8b88a'];
 
-  /** Hat colour palette — every visitor wears a hat so grabHat always has a target. */
+  /** Prop colour palette — used for every prop except `flower`, which has
+   *  its own brighter petals. Dark-ish Victorian tones. */
   const HAT_COLOURS = ['#4a3a6a', '#6a3a3a', '#3a4a6a', '#4a6a3a', '#6a5a2a', '#2a4a4a'];
+
+  /** Hair styles. Assigned independently from prop so visitor variety spans
+   *  gender presentations without forced pairings. */
+  const HAIR_STYLES = ['short', 'long', 'bun', 'pigtails'];
+
+  /** Hair colour palette. Picked independently of skin tone. */
+  const HAIR_COLOURS = ['#1a0f08', '#3a2010', '#5a3a20', '#c8a060', '#808080', '#b85040', '#e0e0e0'];
+
+  /** Headwear prop types. Gender mix tilts slightly feminine to offset the
+   *  top hat's visual dominance: topHat (M-coded), bow + flower + bonnet
+   *  (F-coded), beanie (neutral). Every visitor still has exactly one prop
+   *  inside `.visitor__hat` so grabHat always has a target. */
+  const PROP_TYPES = ['topHat', 'bow', 'flower', 'bonnet', 'beanie'];
+
+  /** Brighter palette used for the flower prop's petals. */
+  const FLOWER_COLOURS = ['#ff88bb', '#dd5555', '#ffcc33', '#88bbff', '#cc88cc', '#ff7777'];
 
   /**
    * Create a visitor object with fear/love thought bubbles.
@@ -18,8 +35,11 @@ const Visitor = (() => {
    */
   function create(fear, love) {
     const id = _nextId++;
-    const skin = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
-    const hatColour = HAT_COLOURS[Math.floor(Math.random() * HAT_COLOURS.length)];
+    const skin = _pick(SKIN_TONES);
+    const hair = _pick(HAIR_STYLES);
+    const hairColour = _pick(HAIR_COLOURS);
+    const prop = _pick(PROP_TYPES);
+    const propColour = prop === 'flower' ? _pick(FLOWER_COLOURS) : _pick(HAT_COLOURS);
     const hasGlasses = Math.random() < 0.12;
 
     const g = document.createElementNS(NS, 'g');
@@ -37,12 +57,15 @@ const Visitor = (() => {
     // Head
     svg += `<circle cx="0" cy="-32" r="6" fill="${skin}" stroke="#333" stroke-width="0.8"/>`;
 
-    // Hat — universal so grabHat has a reliable target.
-    // Wrapped in a <g class="visitor__hat"> for targetability by ActionScene.
-    svg += `<g class="visitor__hat">`;
-    svg += `  <rect x="-7" y="-40" width="14" height="4" rx="1" fill="${hatColour}"/>`;
-    svg += `  <rect x="-4" y="-44" width="8" height="5" rx="1" fill="${hatColour}"/>`;
-    svg += `</g>`;
+    // Hair — drawn after the head, before the prop, so props sit on top of
+    // hair where they overlap. Not inside .visitor__hat so grabHat leaves
+    // hair intact.
+    const hairMarkup = _hairSvg(hair, hairColour);
+    if (hairMarkup) svg += `<g class="visitor__hair">${hairMarkup}</g>`;
+
+    // Prop (headwear) — one of five shapes, inside .visitor__hat so grabHat
+    // (ActionScene) can snap it off regardless of shape.
+    svg += `<g class="visitor__hat">${_propSvg(prop, propColour)}</g>`;
 
     // Optional glasses
     if (hasGlasses) {
@@ -104,6 +127,89 @@ const Visitor = (() => {
     };
 
     return visitor;
+  }
+
+  /** Pick a random element from an array. */
+  function _pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /**
+   * SVG for a hair style. Drawn between head and prop so props visually sit
+   * on top where they overlap.
+   */
+  function _hairSvg(style, colour) {
+    // Solid dome from the hairline at y=-34 (just above eyes at cy=-33) up
+    // over the head top. Control y=-43 so the quadratic's actual peak lands
+    // at y=-38.5 — half a pixel above the head top (y=-38) and above it at
+    // every x. Covers the full scalp when the prop is grabbed away.
+    const topArc = `<path d="M-6 -34 Q 0 -43 6 -34 Z" fill="${colour}"/>`;
+    switch (style) {
+      case 'short':
+        return topArc;
+      case 'long':
+        return `
+          <path d="M-6 -34 Q -8 -22 -6 -16 L -4 -16 Q -5 -22 -4 -34 Z" fill="${colour}"/>
+          <path d="M6 -34 Q 8 -22 6 -16 L 4 -16 Q 5 -22 4 -34 Z" fill="${colour}"/>
+          ${topArc}
+        `;
+      case 'bun':
+        return `
+          <circle cx="5" cy="-38" r="2.5" fill="${colour}"/>
+          ${topArc}
+        `;
+      case 'pigtails':
+        return `
+          <ellipse cx="-9" cy="-27" rx="2.5" ry="4" fill="${colour}"/>
+          <ellipse cx="9" cy="-27" rx="2.5" ry="4" fill="${colour}"/>
+          ${topArc}
+        `;
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * SVG for a headwear prop. Caller wraps in `<g class="visitor__hat">` so
+   * grabHat can snap the whole group away regardless of shape. All props
+   * sit in y ∈ [-44, -34] so grabHat's fixed aim point (vPos.y - 40) lands
+   * on them visually.
+   */
+  function _propSvg(type, colour) {
+    switch (type) {
+      case 'topHat':
+        return `
+          <rect x="-7" y="-40" width="14" height="4" rx="1" fill="${colour}"/>
+          <rect x="-4" y="-44" width="8" height="5" rx="1" fill="${colour}"/>
+        `;
+      case 'bow':
+        return `
+          <polygon points="-6,-42 0,-38 -6,-34" fill="${colour}"/>
+          <polygon points="6,-42 0,-38 6,-34" fill="${colour}"/>
+          <circle cx="0" cy="-38" r="1.2" fill="${colour}"/>
+        `;
+      case 'flower':
+        return `
+          <circle cx="-3" cy="-39" r="2" fill="${colour}"/>
+          <circle cx="3" cy="-39" r="2" fill="${colour}"/>
+          <circle cx="0" cy="-41.5" r="2" fill="${colour}"/>
+          <circle cx="0" cy="-36.5" r="2" fill="${colour}"/>
+          <circle cx="0" cy="-39" r="1.2" fill="#ffcc33"/>
+        `;
+      case 'bonnet':
+        return `
+          <path d="M-9 -35 Q -10 -42 0 -42 Q 10 -42 9 -35 L 9 -34 L -9 -34 Z" fill="${colour}"/>
+          <line x1="-6" y1="-33" x2="-3" y2="-27" stroke="${colour}" stroke-width="0.8" opacity="0.7"/>
+          <line x1="6" y1="-33" x2="3" y2="-27" stroke="${colour}" stroke-width="0.8" opacity="0.7"/>
+        `;
+      case 'beanie':
+        return `
+          <path d="M-6 -34 Q -7 -42 0 -43 Q 7 -42 6 -34 Z" fill="${colour}"/>
+          <circle cx="0" cy="-44" r="1.8" fill="${colour}" opacity="0.8"/>
+        `;
+      default:
+        return '';
+    }
   }
 
   /** Compute a random position within a room, clamped to bounds. */
