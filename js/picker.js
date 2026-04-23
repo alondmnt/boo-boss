@@ -74,44 +74,46 @@ const Picker = (() => {
     }
   }
 
-  /** Stage 1: player taps a creature slot. */
+  /**
+   * Stage 1: player taps a creature slot.
+   *
+   * Changing the creature preserves any monster/action already picked in
+   * this picker session, so the player can swap one axis without re-clicking
+   * the others. Tapping the already-selected creature is the cancel gesture
+   * and does a full cleanup.
+   */
   function _onSlotTap(type) {
     if (_onCooldown.has(type)) return;
     const slot = _getSlot(type);
     if (!slot) return;
 
-    // If already selected, deselect
     if (_selectedType === type) {
       cleanup();
       return;
     }
 
-    // Select this creature
-    cleanup();
     _selectedType = type;
+    if (_panel) {
+      _panel.querySelectorAll('.scare-panel__slot--selected')
+        .forEach(s => s.classList.remove('scare-panel__slot--selected'));
+    }
     slot.classList.add('scare-panel__slot--selected');
 
-    // If monster lab is unlocked, show monster type sub-panel (stage 1.5)
-    if (GameState.get('monsterLab')) {
-      _showMonsterPanel();
-    } else if (GameState.get('directorsChair')) {
-      // No monster lab but director's chair (unusual ordering): jump to action pick
-      _showActionPanel();
-    } else {
-      // No sub-panels: skip to room targeting
-      _enterRoomTargeting();
-    }
+    _renderSubPanels();
+    _advanceIfComplete();
   }
 
-  /** Stage 1.5: show monster type sub-panel. */
+  /**
+   * Show the monster type sub-panel. Idempotent: if already populated with
+   * slots, just make sure it's visible. Re-population happens after cleanup
+   * (which empties the innerHTML).
+   */
   function _showMonsterPanel() {
     if (!_monsterPanel) return;
-    _monsterPanel.innerHTML = '';
     _monsterPanel.style.display = '';
+    if (_monsterPanel.children.length > 0) return;
 
-    // Available types: base 3 + any unlocked
     const types = GameState.get('monsterTypes');
-
     for (const mt of types) {
       const slot = document.createElement('div');
       slot.className = 'monster-panel__slot';
@@ -127,30 +129,18 @@ const Picker = (() => {
     }
   }
 
-  /** Stage 1.5 -> next: player picks a monster type. */
+  /** Stage 1.5: player picks a monster type. Preserves action selection. */
   function _onMonsterTap(monsterType) {
     _selectedMonster = monsterType;
-
-    // Highlight selected monster slot
-    if (_monsterPanel) {
-      _monsterPanel.querySelectorAll('.monster-panel__slot--selected')
-        .forEach(s => s.classList.remove('monster-panel__slot--selected'));
-      const slot = _monsterPanel.querySelector(`[data-monster="${monsterType}"]`);
-      if (slot) slot.classList.add('monster-panel__slot--selected');
-    }
-
-    if (GameState.get('directorsChair')) {
-      _showActionPanel();
-    } else {
-      _enterRoomTargeting();
-    }
+    _renderSubPanels();
+    _advanceIfComplete();
   }
 
-  /** Stage 1.75: show action sub-panel (only with Director's Chair). */
+  /** Show the action sub-panel. Idempotent — see _showMonsterPanel. */
   function _showActionPanel() {
     if (!_actionPanel) return;
-    _actionPanel.innerHTML = '';
     _actionPanel.style.display = '';
+    if (_actionPanel.children.length > 0) return;
 
     const actions = GameState.get('actions');
     for (const a of actions) {
@@ -169,18 +159,55 @@ const Picker = (() => {
     }
   }
 
-  /** Stage 1.75 -> Stage 2: player picks an action, enter room targeting. */
+  /** Stage 1.75: player picks an action. */
   function _onActionTap(action) {
     _selectedAction = action;
+    _renderSubPanels();
+    _advanceIfComplete();
+  }
 
-    if (_actionPanel) {
+  /**
+   * Show whichever sub-panels are required by current unlocks, and reflect
+   * the current _selectedMonster / _selectedAction in their highlights.
+   * Called after any in-picker pick so persisted selections stay visible
+   * when the player swaps an earlier stage.
+   */
+  function _renderSubPanels() {
+    if (GameState.get('monsterLab')) {
+      _showMonsterPanel();
+      _monsterPanel.querySelectorAll('.monster-panel__slot--selected')
+        .forEach(s => s.classList.remove('monster-panel__slot--selected'));
+      if (_selectedMonster) {
+        const sl = _monsterPanel.querySelector(`[data-monster="${_selectedMonster}"]`);
+        if (sl) sl.classList.add('monster-panel__slot--selected');
+      }
+    }
+    // Action panel only appears once the monster requirement is satisfied,
+    // so the player sees a predictable left-to-right stage order.
+    const monsterReady = !GameState.get('monsterLab') || _selectedMonster;
+    if (GameState.get('directorsChair') && monsterReady) {
+      _showActionPanel();
       _actionPanel.querySelectorAll('.action-panel__slot--selected')
         .forEach(s => s.classList.remove('action-panel__slot--selected'));
-      const slot = _actionPanel.querySelector(`[data-action="${action}"]`);
-      if (slot) slot.classList.add('action-panel__slot--selected');
+      if (_selectedAction) {
+        const sl = _actionPanel.querySelector(`[data-action="${_selectedAction}"]`);
+        if (sl) sl.classList.add('action-panel__slot--selected');
+      }
     }
+  }
 
-    _enterRoomTargeting();
+  /**
+   * Enter room targeting once every required stage has a selection.
+   * _enterRoomTargeting clears prior handlers before re-attaching, so
+   * calling this repeatedly as the player tweaks picks is safe.
+   */
+  function _advanceIfComplete() {
+    if (!_selectedType) return;
+    const needsMonster = GameState.get('monsterLab') && !_selectedMonster;
+    const needsAction = GameState.get('directorsChair') && !_selectedAction;
+    if (!needsMonster && !needsAction) {
+      _enterRoomTargeting();
+    }
   }
 
   /**
