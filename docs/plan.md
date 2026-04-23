@@ -146,7 +146,7 @@ the scare behaviour performed when a visitor enters the room. each action is a *
 **MVP actions** (3 at start, more unlock):
 
 - **jump out**: creature primes itself — slow fade with embarrassed face (eyes pointing up/side) → pause → fast reappearing snap. timing is the gag.
-- **grab hat**: creature extends a limb (leg/arm/wing) with a quick snatch motion; visitor's hat lifts off and disappears. the child's signature idea. all visitors wear a hat (see visitor section) so this always lands.
+- **grab hat**: creature wields a hook-on-stick that extends toward the visitor, snatches their headwear prop at peak reach, then retracts. the child's signature idea. universal tool — no per-creature limb work — and because every visitor wears something in the `.visitor__hat` group (see visitor section), it always lands regardless of which prop they got.
 - **drop from ceiling**: creature descends from above with weight (spider on thread, bat swooping, cat leaping down). lands in front of the visitor.
 
 **unlockable actions** (each also a scripted mini-scene):
@@ -205,7 +205,7 @@ visitors move between adjacent rooms on foot (same floor) or ride the track betw
 
 visitors are intentionally simple - stick-figure-level SVG outlines so the scare characters remain the visual focus.
 
-- simple side-view silhouettes (~40px tall). circle head with a **small hat** (universal — top hat or cap, gives grabHat a reliable target), rectangle body, two line-legs. minimal randomisation: skin tone fill, hat colour.
+- simple side-view silhouettes (~40px tall). circle head with a randomly picked hair style and a randomly picked headwear prop (top hat, cap, flower, bow, beanie) drawn inside the `.visitor__hat` group so grabHat always has a target. rectangle body, two line-legs. randomisation across hair, prop shape, prop colour, and skin tone gives crowds visible variety without stealing focus from the scare characters. prop mix is gender-balanced so no cohort skews loudly one way.
 - **thought bubbles** are the key visual element: fear icon in a red jagged bubble, love icon in a pink heart bubble. these are what the player reads to make decisions.
 - **states** (CSS class swaps, no complex animation):
   - `walking`: legs alternate (basic 2-frame walk cycle)
@@ -293,7 +293,7 @@ the child's hat-grab works on any creature (spider leg reaches out, gorilla arm,
 
 **on hold — remaining actions (creep, cackle/howl)**: the three shipped unlockable actions plus the three rewritten base actions already make the axis feel rich. more can land later if the content ladder needs extending.
 
-**future polish — randomised visitor props**: instead of a universal hat, each visitor wears one of a small set (hat, cap, flower, balloon, umbrella). grabHat snatches whatever they have — more variety and narrative charm. deferred because drawing a prop library is a separate chunk of work.
+**shipped — randomised visitor props & hair**: each visitor now picks a headwear prop (top hat, cap, flower, bow, beanie) plus a hair style independently. props sit inside `.visitor__hat` so grabHat snatches whatever the visitor happens to be wearing. gender mix across prop choices is balanced so crowds read as mixed without loud signalling.
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
 
