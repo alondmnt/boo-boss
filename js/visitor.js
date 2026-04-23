@@ -323,9 +323,11 @@ const Visitor = (() => {
 
   /**
    * Wander within the current room: walk to N random positions, then call onDone.
-   * Each step is a smooth CSS transition.
+   * Each step is a smooth CSS transition. If onStep is provided, it runs
+   * after each step completes; returning truthy stops the wander (caller
+   * took ownership of what happens next).
    */
-  function wanderInRoom(visitor, steps, onDone) {
+  function wanderInRoom(visitor, steps, onDone, onStep) {
     if (steps <= 0) { if (onDone) onDone(); return; }
 
     const pos = _randomRoomPos(visitor.currentRoom);
@@ -333,7 +335,8 @@ const Visitor = (() => {
 
     setState(visitor, 'walking');
     _walkTo(visitor, pos.x, pos.y, 600 + Math.random() * 400, () => {
-      wanderInRoom(visitor, steps - 1, onDone);
+      if (onStep && onStep()) return;
+      wanderInRoom(visitor, steps - 1, onDone, onStep);
     });
   }
 

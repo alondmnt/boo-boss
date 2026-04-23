@@ -183,16 +183,22 @@ const Wave = (() => {
       }
     }
 
-    // Step 1: wander within the current room (2-3 steps)
+    // Step 1: wander within the current room (2-3 steps). _tryEncounter
+    // runs after each step so a creature deployed mid-wander (or present on
+    // entry) fires within ~1 step instead of waiting for the whole block.
     const steps = 2 + Math.floor(Math.random() * 2);
-    Visitor.wanderInRoom(visitor, steps, () => {
-      if (_tryEncounter(visitor, gen)) return;
-      if (visitor._readyToLeave) {
-        _dwellThenWander(visitor, gen);
-      } else {
-        _moveToNextRoom(visitor, gen);
-      }
-    });
+    Visitor.wanderInRoom(visitor, steps,
+      () => {
+        if (_generation !== gen) return;
+        // No encounter across any step — move on.
+        if (visitor._readyToLeave) {
+          _dwellThenWander(visitor, gen);
+        } else {
+          _moveToNextRoom(visitor, gen);
+        }
+      },
+      () => _tryEncounter(visitor, gen)
+    );
   }
 
   /**
@@ -268,8 +274,15 @@ const Wave = (() => {
     }
     if (result.result === 'hugBlock') {
       // Ghost: hug blocked this encounter (rolled fresh on every visit).
+      // Short-circuit so subsequent wander steps don't re-roll the block.
+      // Visitor leaves the room — narratively, approached but gave up.
       Particles.scoreFloat(creature.el, '🛡️', 'particle--hug-float');
-      return false; // caller handles move-on
+      if (visitor._readyToLeave) {
+        _dwellThenWander(visitor, gen);
+      } else {
+        _moveToNextRoom(visitor, gen);
+      }
+      return true;
     }
     return false; // neutral
   }
