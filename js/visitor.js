@@ -71,20 +71,18 @@ const Visitor = (() => {
     svg += `<path d="M-2.5 -30 Q0 -28 2.5 -30" stroke="#333" stroke-width="0.6" fill="none"
                   class="visitor__smile" style="display:none"/>`;
 
-    // Fear bubble (left shoulder, green circle).
-    // paint-order + white stroke on the text gives the emoji a halo so
-    // it reads against any bubble colour — cheap, no SVG filter cost.
+    // Fear bubble (left shoulder, green circle). Fill is desaturated so the
+    // emoji reads against it natively — avoids stroke-on-text (broken in
+    // Firefox) and SVG filters (too costly per-visitor).
     svg += `<g class="visitor__bubble visitor__bubble--fear">`;
-    svg += `  <circle cx="-18" cy="-18" r="12" fill="#44cc66" stroke="#228844" stroke-width="1.5"/>`;
-    svg += `  <text x="-18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central"
-                   paint-order="stroke" stroke="#ffffff" stroke-width="2" stroke-linejoin="round">${CONFIG.creatureIcons[fear] || '?'}</text>`;
+    svg += `  <circle cx="-18" cy="-18" r="12" fill="#8fd9a2" stroke="#228844" stroke-width="1.5"/>`;
+    svg += `  <text x="-18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[fear] || '?'}</text>`;
     svg += `</g>`;
 
-    // Love bubble (right shoulder, pink circle)
+    // Love bubble (right shoulder, pink circle).
     svg += `<g class="visitor__bubble visitor__bubble--love">`;
-    svg += `  <circle cx="18" cy="-18" r="12" fill="#ff88bb" stroke="#cc4477" stroke-width="1.5"/>`;
-    svg += `  <text x="18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central"
-                   paint-order="stroke" stroke="#ffffff" stroke-width="2" stroke-linejoin="round">${CONFIG.creatureIcons[love] || '?'}</text>`;
+    svg += `  <circle cx="18" cy="-18" r="12" fill="#ffb8d4" stroke="#cc4477" stroke-width="1.5"/>`;
+    svg += `  <text x="18" y="-17" font-size="16" text-anchor="middle" dominant-baseline="central">${CONFIG.creatureIcons[love] || '?'}</text>`;
     svg += `</g>`;
 
     inner.innerHTML = svg;
