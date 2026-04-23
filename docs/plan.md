@@ -302,6 +302,12 @@ carved out from expansion 3 because it's the most distinctive idea there and int
 
 reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
 
+**track ordering (lower-impact variant)**: a simpler version of the same refactor is to keep the path straight but let the player pick the *order* of rooms (e.g. entrance → bedroom → bathroom → kitchen vs. the default). shipped as a persistent toggle (like the sound toggle), deferred to the next wave, stored in `GameState` + localStorage. locked rooms are handled by the existing "train passes through without stopping" behaviour, so each ordering is just a canonical 6-room array.
+
+- **impact**: moderate-low. visitors wander freely between adjacent rooms after disembarking, so ordering mostly shifts *initial* distribution; the effect dilutes within seconds. main wins are visual variety and a light preference lever (e.g. front-loading upstairs rooms).
+- **cost**: low-medium. parameterise `house.js` to take a room-order array, add a catalogue in CONFIG, wire the toggle.
+- **recommendation**: fold into the rollercoaster work rather than shipping as a separate feature. same `house.js` refactor, and the shape variations (loops, elevation) carry the mechanical teeth that pure reordering lacks. cognitive-load fixes (sticky last-used picks, faster picker, grouped deploys) outrank both on current ROI.
+
 ### expansion 3: "house upgrades" (~coins 120+) [ON HOLD]
 on hold: the game already has enough layers (creatures + monster types + actions + rooms, plus variety and full-cast coins). revisit only if later versions need new progression hooks.
 
@@ -327,6 +333,10 @@ expansion 3:           4 picks + [room themes & traps] (persistent layer)    [ON
 ```
 
 ## difficulty scaling [NEXT]
+
+### current state
+
+with all rooms open, higher waves, and the full creature × monster type × action matrix available, the game is already quite hard. the bottleneck isn't scare mechanics — it's **cognitive load and input cost**: reading fears/loves across many visitors spread over 6 rooms, then 4-stage picking (creature → monster → action → room) per deploy. the planned difficulty knobs below should be weighed against this; some may need to go the other way (e.g. quicker pickers, grouped deploys, sticky last-used picks) before adding more pressure.
 
 ### implemented
 
