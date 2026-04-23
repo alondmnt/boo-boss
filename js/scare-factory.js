@@ -75,7 +75,14 @@ const ScareFactory = (() => {
     }
     creature.lifetime = lifetime;
     creature.timer = setTimeout(() => {
-      _expire(creature, onExpire);
+      // Defer expiry while a scene (scare/hug) is playing to avoid yanking
+      // the creature mid-animation. endScene() flushes the pending thunk.
+      // Assumes one scene per creature at a time (see review point 4).
+      if (creature._sceneActive) {
+        creature._expirePending = () => _expire(creature, onExpire);
+      } else {
+        _expire(creature, onExpire);
+      }
     }, lifetime);
 
     // Show effect label above creature (only with Monster Lab)
@@ -118,6 +125,33 @@ const ScareFactory = (() => {
     Creatures.remove(creature);
     Audio.play('expire');
     if (onExpire) onExpire(creature);
+  }
+
+  /**
+   * Mark a creature as playing a scene (scare or hug). While active, a
+   * lifetime-timer firing sets a deferred expire thunk instead of expiring
+   * immediately. Callers must pair with endScene().
+   */
+  function beginScene(creature) {
+    if (!creature) return;
+    creature._sceneActive = true;
+  }
+
+  /**
+   * Clear the scene flag and flush any pending expire. If the creature is
+   * no longer in _deployed (the hug path cleared it in the caller's onDone),
+   * drop the pending thunk silently — no double-remove, no extra expire audio.
+   */
+  function endScene(creature) {
+    if (!creature) return;
+    creature._sceneActive = false;
+    const pending = creature._expirePending;
+    if (pending && _deployed[creature.roomId] === creature) {
+      creature._expirePending = null;
+      pending();
+    } else {
+      creature._expirePending = null;
+    }
   }
 
   /**
@@ -181,5 +215,5 @@ const ScareFactory = (() => {
     _onDeployChange();
   }
 
-  return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll, setChangeListener };
+  return { deploy, evaluate, isOccupied, getDeployed, clearRoom, clearAll, beginScene, endScene, setChangeListener };
 })();

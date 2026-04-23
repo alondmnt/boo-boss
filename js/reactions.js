@@ -15,8 +15,17 @@ const Reactions = (() => {
    * @param {function} [onDone] - called when animation sequence completes
    */
   function scared(visitor, creature, onDone) {
+    // Pause creature expiry for the duration of the scene, so a lifetime
+    // timer that fires mid-choreography doesn't remove the element from
+    // under the animation. endScene runs after the caller's onDone.
+    ScareFactory.beginScene(creature);
+    const finish = () => {
+      if (onDone) onDone();
+      ScareFactory.endScene(creature);
+    };
+
     if (GameState.get('directorsChair') && ActionScene.has(creature.action)) {
-      ActionScene.play(creature.action, visitor, creature, onDone);
+      ActionScene.play(creature.action, visitor, creature, finish);
       return;
     }
 
@@ -27,7 +36,7 @@ const Reactions = (() => {
     Visitor.setState(visitor, 'scared');
     setTimeout(() => {
       Visitor.setState(visitor, 'walking');
-      if (onDone) onDone();
+      finish();
     }, 800);
 
     Audio.play('scare');
@@ -43,6 +52,11 @@ const Reactions = (() => {
    * @param {function} [onDone] - called after creature removal (caller handles cleanup)
    */
   function hugged(visitor, creature, onDone) {
+    // Same scene guard as scared(): suppress mid-hug expiry. The caller's
+    // onDone clears the room and removes the creature, so endScene runs
+    // after — it sees the creature is no longer deployed and drops the
+    // pending thunk silently (no extra 'expire' audio, no double-remove).
+    ScareFactory.beginScene(creature);
     ActionScene.disarm(creature);
     Visitor.setState(visitor, 'hugging');
     Creatures.setPose(creature, 'hug');
@@ -53,6 +67,7 @@ const Reactions = (() => {
     setTimeout(() => {
       Visitor.setState(visitor, 'walking');
       if (onDone) onDone();
+      ScareFactory.endScene(creature);
     }, 1200);
   }
 
