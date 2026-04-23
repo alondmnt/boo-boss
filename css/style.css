@@ -219,7 +219,10 @@ body.crowd--many .creature--ghost .creature__hover {
 .scare-panel__slot--cooldown .scare-panel__cooldown { display: block; }
 .scare-panel__icon {
   font-size: 2rem; line-height: 1;
-  text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5);
+  /* Light halo lifts dark-silhouette emojis (bat, spider, top hat) off the
+     purple bg — matters most on Android/Noto, which lacks Apple's internal
+     highlights. Static subtree, so no per-frame cost. */
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
 }
 
 /* ===== Monster type sub-panel ===== */
@@ -251,6 +254,7 @@ body.crowd--many .creature--ghost .creature__hover {
 }
 .monster-panel__icon {
   font-size: 1.6rem; line-height: 1;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
 }
 
 /* ===== Action sub-panel (Director's Chair) ===== */
@@ -278,6 +282,7 @@ body.crowd--many .creature--ghost .creature__hover {
 }
 .action-panel__icon {
   font-size: 1.6rem; line-height: 1;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
 }
 
 /* ===== Progress bar ===== */
