@@ -442,6 +442,13 @@ body.crowd--many .creature--ghost .creature__hover {
   50% { transform: translateY(-10px); }
 }
 
+@keyframes ghost-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+}
+.splash__icon--wiggle { animation: ghost-wiggle 0.4s ease-in-out; }
+
 @keyframes visitor-walk-l {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }

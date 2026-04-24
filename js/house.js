@@ -939,10 +939,11 @@ const House = (() => {
   /** Return the root SVG element. */
   function getSvg() { return _svg; }
 
-  /** Animate a locked room becoming unlocked. */
+  /** Animate a locked room becoming unlocked. Idempotent — already-unlocked rooms are a no-op. */
   function unlockRoom(roomId) {
     const el = _roomEls[roomId];
     if (!el) return;
+    if (!el.classList.contains('house__room--locked')) return;
     el.classList.remove('house__room--locked');
     el.classList.add('house__room--unlocking');
 

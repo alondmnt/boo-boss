@@ -21,15 +21,27 @@ const Progress = (() => {
       }
     } catch { /* corrupt data — start fresh */ }
 
-    // Ghost key — ?ghostkey unlocks everything, ?ghostkey=N sets coins to N
+    // Sandy claws — ?sandyclaws preloads all tiers; =N sets the coin balance.
     const params = new URLSearchParams(location.search);
-    if (params.has('ghostkey')) {
-      const val = params.get('ghostkey');
-      coins = val ? Math.max(0, parseInt(val, 10) || 0) : 999;
-      unlocked = UNLOCK_TIERS.filter(t => t.coins <= coins).map(t => t.coins);
-      _save();
+    if (params.has('sandyclaws')) {
+      maxOut(params.get('sandyclaws'));
+      return;
     }
 
+    applyUnlocks();
+    renderPreview();
+    _updateCoinDisplay();
+  }
+
+  /**
+   * Preload all tiers up to the given coin balance.
+   * Undefined/empty input defaults to 999; invalid input caps at 0.
+   * Shared by the ?sandyclaws URL param and the splash-screen easter egg.
+   */
+  function maxOut(targetCoins) {
+    coins = targetCoins ? Math.max(0, parseInt(targetCoins, 10) || 0) : 999;
+    unlocked = UNLOCK_TIERS.filter(t => t.coins <= coins).map(t => t.coins);
+    _save();
     applyUnlocks();
     renderPreview();
     _updateCoinDisplay();
@@ -192,6 +204,6 @@ const Progress = (() => {
     return rank;
   }
 
-  return { load, addCoins, getCoins, resetAll, renderPreview, consumeShowcase,
+  return { load, maxOut, addCoins, getCoins, resetAll, renderPreview, consumeShowcase,
            newRun, getLeaderboard, submitScore };
 })();

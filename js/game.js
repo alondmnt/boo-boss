@@ -24,12 +24,49 @@ const Game = (() => {
 
     // Splash screen: tap to start (unlocks AudioContext)
     const splash = document.getElementById('splash');
-    function startHandler(e) {
-      e.preventDefault();
+    const ghostEl = splash.querySelector('.splash__icon');
+    let ghostTaps = 0;
+    let ghostTimer = null;
+
+    function doStart() {
       splash.removeEventListener('click', startHandler);
       splash.removeEventListener('touchend', startHandler);
+      ghostEl.removeEventListener('click', ghostHandler);
+      ghostEl.removeEventListener('touchend', ghostHandler);
+      if (ghostTimer) { clearTimeout(ghostTimer); ghostTimer = null; }
       _start();
     }
+
+    function startHandler(e) {
+      e.preventDefault();
+      doStart();
+    }
+
+    // Easter egg: three taps on the ghost icon within 2s preload all tiers.
+    // Ghost taps block splash propagation so the sequence can complete; a
+    // half-finished sequence (1 or 2 taps) auto-starts after the window.
+    function ghostHandler(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      ghostTaps++;
+      ghostEl.classList.remove('splash__icon--wiggle');
+      void ghostEl.offsetWidth;  // force reflow so the animation restarts
+      ghostEl.classList.add('splash__icon--wiggle');
+
+      if (ghostTaps >= 3) {
+        Progress.maxOut();
+        _syncRoomVisuals();
+        Train.extendTrack();
+        Picker.render();
+        doStart();
+        return;
+      }
+      if (ghostTimer) clearTimeout(ghostTimer);
+      ghostTimer = setTimeout(doStart, 2000);
+    }
+
+    ghostEl.addEventListener('click', ghostHandler);
+    ghostEl.addEventListener('touchend', ghostHandler);
     splash.addEventListener('click', startHandler);
     splash.addEventListener('touchend', startHandler);
 
