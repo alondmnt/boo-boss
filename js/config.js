@@ -183,15 +183,17 @@ const PIECES = {
       const L = CONFIG.house;
       const divX = L.wallT + L.roomW + L.wallT / 2;
       if (slotType === 'floorChange') {
-        // Steep drop: the divider curve sags further before rising
-        const midY = (prev.y + curr.y) / 2 + 18;
-        return ` Q${divX},${prev.y + 4} ${divX},${midY}`
-             + ` Q${divX},${curr.y - 4} ${curr.x},${curr.y}`;
+        // Climb over a peak above the upper room, then descend. Cubic Béziers
+        // so the peak has a smooth tangent instead of a pointy Q-corner.
+        const peakY = Math.min(prev.y, curr.y) - 22;
+        return ` C${(prev.x + divX) / 2},${prev.y - 16} ${divX},${peakY + 8} ${divX},${peakY}`
+             + ` C${divX},${peakY + 8} ${(divX + curr.x) / 2},${curr.y - 10} ${curr.x},${curr.y}`;
       }
-      // Same floor: exaggerated dip (climbs, dips, rises)
+      // Same floor: rise above baseline into a hump, then descend back.
       const midX = (prev.x + curr.x) / 2;
-      const baseY = Math.max(prev.y, curr.y);
-      return ` Q${midX},${baseY + 28} ${curr.x},${curr.y}`;
+      const peakY = Math.min(prev.y, curr.y) - 26;
+      return ` C${prev.x + 30},${prev.y - 12} ${midX - 24},${peakY} ${midX},${peakY}`
+           + ` C${midX + 24},${peakY} ${curr.x - 30},${curr.y - 12} ${curr.x},${curr.y}`;
     },
   },
   tunnel: {
@@ -208,18 +210,23 @@ const PIECES = {
       if (slotType === 'floorChange') {
         const L = CONFIG.house;
         const divX = L.wallT + L.roomW + L.wallT / 2;
-        const minY = Math.min(prev.y, curr.y) + 6;
-        const maxY = Math.max(prev.y, curr.y) - 6;
-        return `<rect class="piece--tunnel" x="${divX - 12}" y="${minY}"
-                      width="24" height="${maxY - minY}"
-                      fill="#04020a" stroke="#241434" stroke-width="1.2" rx="3"/>`;
+        const minY = Math.min(prev.y, curr.y) + 10;
+        const maxY = Math.max(prev.y, curr.y) - 10;
+        // Pill-shaped vertical tunnel along the divider, tall rounded corners
+        // read as a tunnel mouth at each end.
+        return `<rect class="piece--tunnel" x="${divX - 15}" y="${minY}"
+                      width="30" height="${Math.max(24, maxY - minY)}"
+                      rx="15" ry="15"
+                      fill="#05020c" stroke="#3a2040" stroke-width="1.5"/>`;
       }
-      const x1 = Math.min(prev.x, curr.x) + 18;
-      const x2 = Math.max(prev.x, curr.x) - 18;
+      // Same-floor: horizontal pill covering the middle ~70% of the segment.
+      const x1 = Math.min(prev.x, curr.x) + 22;
+      const x2 = Math.max(prev.x, curr.x) - 22;
       const midY = (prev.y + curr.y) / 2;
-      return `<rect class="piece--tunnel" x="${x1}" y="${midY - 8}"
-                    width="${x2 - x1}" height="24"
-                    fill="#04020a" stroke="#241434" stroke-width="1.2" rx="3"/>`;
+      return `<rect class="piece--tunnel" x="${x1}" y="${midY - 14}"
+                    width="${x2 - x1}" height="32"
+                    rx="16" ry="16"
+                    fill="#05020c" stroke="#3a2040" stroke-width="1.5"/>`;
     },
   },
   loop: {
