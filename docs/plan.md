@@ -283,7 +283,7 @@ the child's hat-grab works on any creature (spider leg reaches out, gorilla arm,
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play.
 
-### expansion 3: "the rollercoaster" (~coins 105+) [NEXT]
+### expansion 3: "the rollercoaster" (~coins 140+) [NEXT]
 
 **reframes the game into two halves: design the ride (between waves, builder mode) + operate the ride (during wave, existing scare game).** not a side-game or bonus level — the dark ride is already the front-of-house moment, so putting the player in charge of its shape binds the two halves tighter. you're now the ride designer as well as the scare operator.
 
@@ -355,12 +355,12 @@ staged sub-unlocks spread the sub-game across ~60 coins:
 
 | coins | unlock |
 |-------|--------|
-| 105 | track editor + room skipping + segment reorder + straight pieces |
-| 125 | hill, tunnel (floor-transition slots also open up here) |
-| 145 | loop, corkscrew |
-| 165 | train skins (3-4 cosmetic carts) |
+| 140 | track editor + room skipping + segment reorder + straight pieces |
+| 160 | hill, tunnel (floor-transition slots also open up here) |
+| 180 | loop, corkscrew |
+| 200 | train skins (3-4 cosmetic carts) |
 
-each tier triggers a fanfare + showcase, same pattern as every other unlock. places rollercoaster *right after* the director's chair (95) and the last monster types (65/75/85), keeping the content ladder continuous with no dead stretch.
+each tier triggers a fanfare + showcase, same pattern as every other unlock. lands right after the last action unlock (chase @ 130), extending the ladder with a new category rather than interleaving.
 
 #### module additions
 
@@ -394,7 +394,7 @@ strategic layer: do you theme rooms to match the creatures you deploy most, or s
 MVP (0-50):            [creature] + [room]                                  = 2 picks
 expansion 1 (55-85):   [creature] + [monster type] + [room]                = 3 picks [DONE]
 expansion 2 (95+):     [creature] + [monster type] + [action] + [room]     = 4 picks [DONE]
-expansion 3 (105+):    4 picks + [ride design] (between-wave editor)         [NEXT]
+expansion 3 (140+):    4 picks + [ride design] (between-wave editor)         [NEXT]
 expansion 4:           4 picks + [room themes & traps] (persistent layer)    [ON HOLD]
 ```
 
