@@ -38,21 +38,15 @@ const Train = (() => {
 
   /**
    * Generate one segment of the SVG path between two room centres.
-   * slotType classifies the segment so piece dispatch (future) can vary geometry.
+   * Dispatches to a piece's pathGenerator when the player has placed one
+   * on this segment (via GameState.setSegmentOverride); otherwise uses the
+   * default `straight` piece, which reproduces the game's original curve.
    */
-  function _segmentPath(prev, curr, slotType) {
-    const L = CONFIG.house;
-    const divX = L.wallT + L.roomW + L.wallT / 2;
-    const dip = 8;
-
-    if (slotType === 'floorChange') {
-      // Tight curve hugging the centre divider
-      return ` Q${divX},${prev.y} ${divX},${(prev.y + curr.y) / 2}`
-           + ` Q${divX},${curr.y} ${curr.x},${curr.y}`;
-    }
-    // sameFloorHorizontal: gentle dip
-    const midX = (prev.x + curr.x) / 2;
-    return ` Q${midX},${prev.y + dip} ${curr.x},${curr.y}`;
+  function _segmentPath(prev, curr, slotType, fromRoom, toRoom) {
+    const segId = GameState._segId(fromRoom, toRoom);
+    const key = GameState.getSegmentOverride(segId) || 'straight';
+    const piece = PIECES[key] || PIECES.straight;
+    return piece.pathGenerator(prev, curr, slotType);
   }
 
   /** Classify a segment by the vertical gap between its endpoints. */
@@ -81,7 +75,7 @@ const Train = (() => {
     for (let i = 1; i < centres.length; i++) {
       const prev = centres[i - 1];
       const curr = centres[i];
-      d += _segmentPath(prev, curr, _slotTypeFor(prev, curr));
+      d += _segmentPath(prev, curr, _slotTypeFor(prev, curr), route[i - 1], route[i]);
     }
 
     // Return path: corkscrew down the exterior right wall
@@ -408,5 +402,11 @@ const Train = (() => {
     if (_cartEl) _cartEl.style.display = 'none';
   }
 
-  return { init, animateEntry, animateCollection, animateExit, extendTrack, stop };
+  /** Silent re-render of the current track path. Used by the editor on piece change. */
+  function renderTrack() {
+    const { d } = _computeTrack();
+    _renderTrack(d);
+  }
+
+  return { init, animateEntry, animateCollection, animateExit, extendTrack, renderTrack, stop };
 })();

@@ -508,6 +508,12 @@ const Wave = (() => {
 
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
+
+    // "Build ride" button — shown once the track editor is unlocked.
+    const buildRow = GameState.get('trackEditor')
+      ? `<button class="wave-summary__build-btn" type="button">🎢 Build Ride</button>`
+      : '';
+
     if (content) {
       content.innerHTML = `
         <div class="wave-summary__title">Wave ${_waveNum} Complete</div>
@@ -520,9 +526,24 @@ const Wave = (() => {
         <hr class="wave-summary__divider">
         ${coinsRow}
         ${leaderboardRow}
+        ${buildRow}
       `;
     }
     if (overlay) overlay.classList.remove('overlay--hidden');
+
+    // Build button opens the editor without dismissing the summary.
+    if (content) {
+      const buildBtn = content.querySelector('.wave-summary__build-btn');
+      if (buildBtn) {
+        const openEditor = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof TrackEditor !== 'undefined') TrackEditor.show();
+        };
+        buildBtn.addEventListener('click', openEditor);
+        buildBtn.addEventListener('touchend', openEditor);
+      }
+    }
 
     Audio.play('waveEnd');
     if (s.hitBonus || s.noHugs || s.varietyCoins > 0) Audio.play('coin');

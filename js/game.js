@@ -15,8 +15,10 @@ const Game = (() => {
 
     Progress.load();
     _syncRoomVisuals();
+    _syncClosedRoomVisuals();
     Train.extendTrack();
     Picker.render();
+    TrackEditor.init();
 
     // Resume AudioContext on any interaction (recovers from device sleep)
     document.addEventListener('click', () => Audio.resume(), true);
@@ -112,6 +114,14 @@ const Game = (() => {
       if (baseRooms[id].locked && !def.locked) {
         House.unlockRoom(id);
       }
+    }
+  }
+
+  /** Sync closed-tonight visuals from persisted rollercoaster state. */
+  function _syncClosedRoomVisuals() {
+    const closed = GameState.getClosedRooms();
+    for (const id of Object.keys(CONFIG.rooms)) {
+      House.setRoomVisualClosed(id, closed.has(id));
     }
   }
 

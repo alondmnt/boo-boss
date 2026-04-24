@@ -136,6 +136,63 @@ const CONFIG = {
 
   /* ─── Creature lifetime ─── */
   creatureLifetimeMs: 15000,
+
+  /* ─── Rollercoaster (expansion 3) ─── */
+  rollercoaster: {
+    malfunctionChance: 0.2,
+    malfunctionRepairCost: 3,
+    minOpenRooms: 2,
+    pieceShowinessWeights: {
+      straight: 1, hill: 2, tunnel: 2, loop: 4, corkscrew: 5,
+    },
+    pieceSellbackPct: 0.5,
+  },
+};
+
+/**
+ * PIECES — track segment pieces. Each piece's pathGenerator returns the SVG
+ * path-segment string (continuation, no leading 'M') between two room centres.
+ * Segments are classified by slotType: sameFloorHorizontal, floorChange, returnExterior.
+ * The `straight` piece reproduces the game's default curve exactly.
+ */
+const PIECES = {
+  straight: {
+    key: 'straight',
+    label: 'straight',
+    icon: '—',
+    costCoins: 2,
+    slotTypes: ['sameFloorHorizontal', 'floorChange'],
+    pathGenerator: (prev, curr, slotType) => {
+      const L = CONFIG.house;
+      const divX = L.wallT + L.roomW + L.wallT / 2;
+      if (slotType === 'floorChange') {
+        return ` Q${divX},${prev.y} ${divX},${(prev.y + curr.y) / 2}`
+             + ` Q${divX},${curr.y} ${curr.x},${curr.y}`;
+      }
+      const midX = (prev.x + curr.x) / 2;
+      return ` Q${midX},${prev.y + 8} ${curr.x},${curr.y}`;
+    },
+  },
+};
+
+/**
+ * TRAIN_SKINS — cosmetic cart appearances. Each skin's cartSvg returns the
+ * inner SVG markup for a ~30×20 cart group. The `default` skin preserves the
+ * game's current cart so existing saves render unchanged.
+ */
+const TRAIN_SKINS = {
+  default: {
+    key: 'default',
+    label: 'classic',
+    icon: '🛤️',
+    cartSvg: () => `
+      <rect x="-14" y="-12" width="28" height="16" rx="3" fill="#2a1a3a" stroke="#5a3a6a" stroke-width="1.2"/>
+      <rect x="-10" y="-16" width="20" height="6" rx="2" fill="#3a2a4a" stroke="#5a3a6a" stroke-width="0.8"/>
+      <circle cx="-8" cy="6" r="3.5" fill="#444" stroke="#666" stroke-width="1"/>
+      <circle cx="8" cy="6" r="3.5" fill="#444" stroke="#666" stroke-width="1"/>
+      <circle cx="15" cy="-6" r="2" fill="#ffd700" opacity="0.8"/>
+    `,
+  },
 };
 
 const UNLOCK_TIERS = [
@@ -155,6 +212,10 @@ const UNLOCK_TIERS = [
   { coins: 105, key: 'swarm',          icon: '👥', label: 'Swarm action!' },
   { coins: 115, key: 'peekABoo',       icon: '🫣', label: 'Peek-a-boo action!' },
   { coins: 130, key: 'chase',          icon: '🏃', label: 'Chase action!' },
+  { coins: 140, key: 'trackEditor',     icon: '🎢', label: 'Ride designer unlocked!' },
+  { coins: 160, key: 'trackPiecesBasic',icon: '⛰️', label: 'Hill & tunnel pieces!' },
+  { coins: 180, key: 'trackPiecesShowy',icon: '🌀', label: 'Loop & corkscrew!' },
+  { coins: 200, key: 'trainSkins',      icon: '🚂', label: 'Train skins!' },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */
@@ -167,3 +228,5 @@ function _deepFreeze(obj) {
 }
 _deepFreeze(CONFIG);
 _deepFreeze(UNLOCK_TIERS);
+_deepFreeze(PIECES);
+_deepFreeze(TRAIN_SKINS);

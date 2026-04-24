@@ -974,5 +974,38 @@ const House = (() => {
     }, 600);
   }
 
-  return { init, getRoomEl, getRoomCentre, getRoomRect, getSvg, unlockRoom };
+  /**
+   * Toggle a room's "closed tonight" visual (editor-controlled skip state).
+   * Visually distinct from `locked` — this is a player choice, not a gate.
+   * Adds/removes a diagonal red CLOSED banner inside the room.
+   */
+  function setRoomVisualClosed(roomId, closed) {
+    const el = _roomEls[roomId];
+    if (!el) return;
+    let banner = el.querySelector('.house__closed-banner');
+    if (closed) {
+      el.classList.add('house__room--closed');
+      if (!banner) {
+        const r = _roomCoords[roomId];
+        if (!r) return;
+        banner = document.createElementNS(NS, 'g');
+        banner.classList.add('house__closed-banner');
+        banner.innerHTML = `
+          <rect x="${r.x + 8}" y="${r.cy - 9}" width="${r.w - 16}" height="18"
+                fill="#8B1A1A" stroke="#3a0000" stroke-width="1" opacity="0.94"
+                transform="rotate(-6 ${r.cx} ${r.cy})"/>
+          <text x="${r.cx}" y="${r.cy + 4}" text-anchor="middle"
+                fill="#fff" font-size="11" font-weight="bold" letter-spacing="1"
+                font-family="'Arial Black', sans-serif"
+                transform="rotate(-6 ${r.cx} ${r.cy})">CLOSED</text>
+        `;
+        el.appendChild(banner);
+      }
+    } else {
+      el.classList.remove('house__room--closed');
+      if (banner) banner.remove();
+    }
+  }
+
+  return { init, getRoomEl, getRoomCentre, getRoomRect, getSvg, unlockRoom, setRoomVisualClosed };
 })();

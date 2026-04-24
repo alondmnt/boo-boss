@@ -8,6 +8,14 @@ const GameState = (() => {
   const _booleans = {};
   const _objects = {};
 
+  // Rollercoaster (expansion 3) — per-player track customisation.
+  // `_segmentOverrides`: missing key ⇒ default procedural curve (NOT "straight piece").
+  // A key mapping to 'straight' or another piece ⇒ that piece's generator runs.
+  const _segmentOverrides = {};
+  const _closedRooms = new Set();
+  const _malfunctions = {};
+  let _trainSkin = 'default';
+
   /** Add an item to an array store, skipping duplicates. */
   function _addUnique(key, item) {
     const arr = _arrays[key] || [];
@@ -43,6 +51,11 @@ const GameState = (() => {
     swarm:          () => { _addUnique('actions', 'swarm'); },
     peekABoo:       () => { _addUnique('actions', 'peekABoo'); },
     chase:          () => { _addUnique('actions', 'chase'); },
+
+    trackEditor:       () => { _booleans.trackEditor = true; },
+    trackPiecesBasic:  () => { _booleans.trackPiecesBasic = true; },
+    trackPiecesShowy:  () => { _booleans.trackPiecesShowy = true; },
+    trainSkins:        () => { _booleans.trainSkins = true; },
   };
 
   /**
@@ -83,11 +96,84 @@ const GameState = (() => {
 
   /**
    * Track stops — only unlocked rooms where visitors can disembark.
+   * Closed-tonight rooms (editor toggle) are also filtered out.
    * Used by Wave for visitor distribution.
    */
   function getTrackStops() {
     const rooms = get('rooms');
-    return CONFIG.fullTrackRoute.filter(r => rooms[r] && !rooms[r].locked);
+    return CONFIG.fullTrackRoute.filter(r =>
+      rooms[r] && !rooms[r].locked && !_closedRooms.has(r)
+    );
+  }
+
+  /* ─── Rollercoaster accessors ─── */
+
+  /** Segment ID format: "fromRoom→toRoom" (arrow char). */
+  function _segId(fromRoom, toRoom) { return `${fromRoom}→${toRoom}`; }
+
+  function getSegmentOverride(segId) {
+    return _segmentOverrides[segId] || null;
+  }
+
+  /** Set a piece key for a segment. Pass null to clear (revert to default curve). */
+  function setSegmentOverride(segId, pieceKey) {
+    if (pieceKey == null) delete _segmentOverrides[segId];
+    else _segmentOverrides[segId] = pieceKey;
+  }
+
+  function getAllSegmentOverrides() { return { ..._segmentOverrides }; }
+
+  function getClosedRooms() { return new Set(_closedRooms); }
+
+  function isRoomClosed(roomId) { return _closedRooms.has(roomId); }
+
+  /** Toggle a room's closed-tonight state. Returns the new state. */
+  function toggleRoomClosed(roomId) {
+    if (_closedRooms.has(roomId)) _closedRooms.delete(roomId);
+    else _closedRooms.add(roomId);
+    return _closedRooms.has(roomId);
+  }
+
+  function getTrainSkin() { return _trainSkin; }
+  function setTrainSkin(key) { _trainSkin = key || 'default'; }
+
+  function getMalfunctions() { return { ..._malfunctions }; }
+  function isSegmentBroken(segId) { return !!_malfunctions[segId]; }
+  function setMalfunction(segId, broken) {
+    if (broken) _malfunctions[segId] = true;
+    else delete _malfunctions[segId];
+  }
+
+  /** Rehydrate rollercoaster state from a persisted snapshot. */
+  function loadRollercoasterState(snapshot) {
+    if (!snapshot) return;
+    for (const k of Object.keys(_segmentOverrides)) delete _segmentOverrides[k];
+    if (snapshot.segmentOverrides) {
+      for (const [k, v] of Object.entries(snapshot.segmentOverrides)) {
+        _segmentOverrides[k] = v;
+      }
+    }
+    _closedRooms.clear();
+    if (Array.isArray(snapshot.closedRooms)) {
+      for (const r of snapshot.closedRooms) _closedRooms.add(r);
+    }
+    for (const k of Object.keys(_malfunctions)) delete _malfunctions[k];
+    if (snapshot.malfunctions) {
+      for (const [k, v] of Object.entries(snapshot.malfunctions)) {
+        if (v) _malfunctions[k] = true;
+      }
+    }
+    _trainSkin = snapshot.trainSkin || 'default';
+  }
+
+  /** Snapshot for persistence. */
+  function dumpRollercoasterState() {
+    return {
+      segmentOverrides: { ..._segmentOverrides },
+      closedRooms: [..._closedRooms],
+      malfunctions: { ..._malfunctions },
+      trainSkin: _trainSkin,
+    };
   }
 
   /** Apply a single tier's effects via TIER_ACTIONS or generic array merge. */
@@ -111,7 +197,19 @@ const GameState = (() => {
     for (const k of Object.keys(_arrays)) delete _arrays[k];
     for (const k of Object.keys(_booleans)) delete _booleans[k];
     for (const k of Object.keys(_objects)) delete _objects[k];
+    for (const k of Object.keys(_segmentOverrides)) delete _segmentOverrides[k];
+    _closedRooms.clear();
+    for (const k of Object.keys(_malfunctions)) delete _malfunctions[k];
+    _trainSkin = 'default';
   }
 
-  return { get, getTrackRoute, getTrackStops, applyTier, reset };
+  return {
+    get, getTrackRoute, getTrackStops, applyTier, reset,
+    getSegmentOverride, setSegmentOverride, getAllSegmentOverrides,
+    getClosedRooms, isRoomClosed, toggleRoomClosed,
+    getTrainSkin, setTrainSkin,
+    getMalfunctions, isSegmentBroken, setMalfunction,
+    loadRollercoasterState, dumpRollercoasterState,
+    _segId,
+  };
 })();

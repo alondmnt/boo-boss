@@ -12,12 +12,20 @@ const Progress = (() => {
 
   /** Load saved state from localStorage and apply unlocks. */
   function load() {
+    let rollercoasterSnapshot = null;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
         coins = data.coins || 0;
         unlocked = data.unlocked || [];
+        // Rollercoaster state — absent in pre-expansion saves, loads as empty
+        rollercoasterSnapshot = {
+          segmentOverrides: data.segmentOverrides || {},
+          closedRooms: data.closedRooms || [],
+          malfunctions: data.malfunctions || {},
+          trainSkin: data.trainSkin || 'default',
+        };
       }
     } catch { /* corrupt data — start fresh */ }
 
@@ -29,6 +37,7 @@ const Progress = (() => {
     }
 
     applyUnlocks();
+    if (rollercoasterSnapshot) GameState.loadRollercoasterState(rollercoasterSnapshot);
     renderPreview();
     _updateCoinDisplay();
   }
@@ -50,7 +59,14 @@ const Progress = (() => {
   /** Persist current state to localStorage. */
   function _save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ coins, unlocked }));
+      const rc = GameState.dumpRollercoasterState();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        coins, unlocked,
+        segmentOverrides: rc.segmentOverrides,
+        closedRooms: rc.closedRooms,
+        malfunctions: rc.malfunctions,
+        trainSkin: rc.trainSkin,
+      }));
     } catch { /* storage full — silent fail */ }
   }
 
@@ -62,21 +78,27 @@ const Progress = (() => {
     }
   }
 
-  /** Add coins, persist, check for new tier unlocks. */
+  /**
+   * Add coins, persist, check for new tier unlocks.
+   * Supports negative `n` (e.g. repair cost) with a zero-floor guard; negative
+   * calls skip the tier-unlock loop since you can't unlock by deducting.
+   */
   function addCoins(n) {
     const prevCoins = coins;
-    coins += n;
+    coins = Math.max(0, coins + n);
     _save();
 
-    // Check each tier — may cross multiple at once
-    for (const tier of UNLOCK_TIERS) {
-      if (unlocked.includes(tier.coins)) continue;
-      if (coins >= tier.coins && prevCoins < tier.coins) {
-        unlocked.push(tier.coins);
-        _save();
-        applyUnlocks();
-        _showcaseTier = tier;
-        showFanfare(tier);
+    if (n > 0) {
+      // Check each tier — may cross multiple at once
+      for (const tier of UNLOCK_TIERS) {
+        if (unlocked.includes(tier.coins)) continue;
+        if (coins >= tier.coins && prevCoins < tier.coins) {
+          unlocked.push(tier.coins);
+          _save();
+          applyUnlocks();
+          _showcaseTier = tier;
+          showFanfare(tier);
+        }
       }
     }
     renderPreview();
@@ -205,5 +227,5 @@ const Progress = (() => {
   }
 
   return { load, maxOut, addCoins, getCoins, resetAll, renderPreview, consumeShowcase,
-           newRun, getLeaderboard, submitScore };
+           newRun, getLeaderboard, submitScore, save: _save };
 })();

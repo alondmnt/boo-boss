@@ -400,6 +400,135 @@ body.crowd--many .creature--ghost .creature__hover {
 .wave-summary__tap {
   margin-top: 0.8em; color: #8a78b0; font-size: 0.9rem;
 }
+.wave-summary__build-btn {
+  margin-top: 1em;
+  padding: 0.6em 1.4em;
+  background: linear-gradient(180deg, #6b3fc7 0%, #4a267a 100%);
+  color: #fff;
+  border: 1.5px solid #9a6fd8;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(154, 111, 216, 0.4);
+}
+.wave-summary__build-btn:active { transform: translateY(1px); }
+
+/* ===== Track editor (expansion 3) ===== */
+.track-editor {
+  background: transparent;
+  pointer-events: none;
+  z-index: 170;
+}
+.track-editor__chrome {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  background: rgba(10, 5, 20, 0.88);
+  border-bottom: 1px solid rgba(154, 111, 216, 0.3);
+  color: #e0d0ff;
+  font-family: Georgia, serif;
+  pointer-events: auto;
+}
+.track-editor__title { font-size: 1.1rem; }
+.track-editor__close {
+  background: none; border: none;
+  color: #e0d0ff; font-size: 1.3rem;
+  cursor: pointer; padding: 4px 10px;
+  line-height: 1;
+}
+.track-editor__hint {
+  position: fixed; bottom: 20px; left: 0; right: 0;
+  text-align: center;
+  padding: 10px 14px;
+  margin: 0 auto; max-width: 320px;
+  background: rgba(10, 5, 20, 0.78);
+  color: #bba8d8;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  pointer-events: auto;
+}
+.track-editor__hint--warning { color: #ffb4a8; background: rgba(80, 10, 10, 0.8); }
+.track-editor__popup-host {
+  position: fixed; inset: 44px 0 60px 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+
+/* ===== Editor popups (piece / room picker) ===== */
+.editor-popup {
+  background: rgba(20, 10, 30, 0.96);
+  border: 2px solid #7a52c0;
+  border-radius: 10px;
+  padding: 16px 18px;
+  color: #e0d0ff;
+  max-width: 320px;
+  pointer-events: auto;
+  box-shadow: 0 0 24px rgba(122, 82, 192, 0.4);
+}
+.editor-popup__title {
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+  text-align: center;
+  margin-bottom: 0.7em;
+  color: #e0d0ff;
+}
+.editor-popup__row {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+}
+.editor-popup__option {
+  background: rgba(40, 20, 60, 0.8);
+  border: 1.5px solid rgba(154, 111, 216, 0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 82px;
+  color: #e0d0ff;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.editor-popup__option:active { transform: translateY(1px); }
+.editor-popup__option--selected {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+.editor-popup__icon { font-size: 1.4rem; line-height: 1; }
+.editor-popup__label { font-size: 0.82rem; }
+.editor-popup__empty {
+  text-align: center; padding: 0.8em 0;
+  color: #8a78b0; font-size: 0.9rem;
+}
+
+/* ===== Editor SVG layer (segment tap targets) ===== */
+.house__editor-layer { pointer-events: none; }
+.house__editor-layer--active { pointer-events: auto; }
+.house__editor-segment { cursor: pointer; }
+.house__editor-segment circle {
+  fill: rgba(122, 82, 192, 0.88);
+  stroke: #fff;
+  stroke-width: 1.5;
+  transition: fill 0.15s;
+}
+.house__editor-segment:active circle { fill: rgba(154, 111, 216, 1); }
+.house__editor-segment-label {
+  fill: #fff;
+  font-size: 12px;
+  font-family: Georgia, serif;
+  pointer-events: none;
+}
+
+/* Room highlighted as editor-tap-target */
+.house__room--editor-target { cursor: pointer; }
+.house__room--editor-target .house__room-bg {
+  stroke: #ffd700 !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4));
+}
+
+/* Closed-tonight room visual (player choice, not a lock) */
+.house__room--closed .house__room-bg { opacity: 0.35; }
+.house__closed-banner { pointer-events: none; }
 
 /* ===== Leaderboard ===== */
 .leaderboard { margin: 0.8em 0; }
