@@ -15,6 +15,9 @@ const GameState = (() => {
   const _closedRooms = new Set();
   const _malfunctions = {};
   let _trainSkin = 'default';
+  // Skins the player has bought (default always included). Buying is one-shot;
+  // switching between owned skins is free.
+  const _ownedSkins = new Set(['default']);
 
   /** Add an item to an array store, skipping duplicates. */
   function _addUnique(key, item) {
@@ -137,6 +140,10 @@ const GameState = (() => {
   function getTrainSkin() { return _trainSkin; }
   function setTrainSkin(key) { _trainSkin = key || 'default'; }
 
+  function hasOwnedSkin(key) { return _ownedSkins.has(key); }
+  function markSkinOwned(key) { _ownedSkins.add(key); }
+  function getOwnedSkins() { return new Set(_ownedSkins); }
+
   function getMalfunctions() { return { ..._malfunctions }; }
   function isSegmentBroken(segId) { return !!_malfunctions[segId]; }
   function setMalfunction(segId, broken) {
@@ -164,6 +171,14 @@ const GameState = (() => {
       }
     }
     _trainSkin = snapshot.trainSkin || 'default';
+    _ownedSkins.clear();
+    _ownedSkins.add('default');
+    if (Array.isArray(snapshot.ownedSkins)) {
+      for (const s of snapshot.ownedSkins) _ownedSkins.add(s);
+    }
+    // If we loaded a current skin, mark it owned even if the snapshot's
+    // ownedSkins list is stale (from before ownership tracking).
+    _ownedSkins.add(_trainSkin);
   }
 
   /** Snapshot for persistence. */
@@ -173,6 +188,7 @@ const GameState = (() => {
       closedRooms: [..._closedRooms],
       malfunctions: { ..._malfunctions },
       trainSkin: _trainSkin,
+      ownedSkins: [..._ownedSkins],
     };
   }
 
@@ -201,13 +217,15 @@ const GameState = (() => {
     _closedRooms.clear();
     for (const k of Object.keys(_malfunctions)) delete _malfunctions[k];
     _trainSkin = 'default';
+    _ownedSkins.clear();
+    _ownedSkins.add('default');
   }
 
   return {
     get, getTrackRoute, getTrackStops, applyTier, reset,
     getSegmentOverride, setSegmentOverride, getAllSegmentOverrides,
     getClosedRooms, isRoomClosed, toggleRoomClosed,
-    getTrainSkin, setTrainSkin,
+    getTrainSkin, setTrainSkin, hasOwnedSkin, markSkinOwned, getOwnedSkins,
     getMalfunctions, isSegmentBroken, setMalfunction,
     loadRollercoasterState, dumpRollercoasterState,
     _segId,

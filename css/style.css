@@ -497,6 +497,14 @@ body.crowd--many .creature--ghost .creature__hover {
 }
 .editor-popup__icon { font-size: 1.4rem; line-height: 1; }
 .editor-popup__label { font-size: 0.82rem; }
+.editor-popup__cost {
+  font-size: 0.72rem;
+  color: #ffd700;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+.editor-popup__option--selected .editor-popup__cost { color: #ffd700; font-weight: 600; }
+.editor-popup__option--disabled .editor-popup__cost { color: #ffb4a8; }
 .editor-popup__empty {
   text-align: center; padding: 0.8em 0;
   color: #8a78b0; font-size: 0.9rem;

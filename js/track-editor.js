@@ -234,24 +234,42 @@ const TrackEditor = (() => {
     row.className = 'editor-popup__row';
 
     const available = _availablePieces();
+    const oldPiece = currentKey ? PIECES[currentKey] : null;
+    const refund = oldPiece
+      ? Math.floor(oldPiece.costCoins * CONFIG.rollercoaster.pieceSellbackPct)
+      : 0;
+    const coins = Progress.getCoins();
+
     let rendered = 0;
     for (const pieceKey of available) {
       const piece = PIECES[pieceKey];
       if (!piece || !piece.slotTypes.includes(slotType)) continue;
       rendered++;
 
+      // A straight piece on a segment with no override is visually identical
+      // to the default — treat it as the "current" state so the player isn't
+      // taxed for confirming the default.
+      const isCurrent = currentKey === pieceKey
+                     || (currentKey == null && pieceKey === 'straight');
+      const netCost = isCurrent ? 0 : piece.costCoins - refund;
+      const canAfford = netCost <= 0 || coins >= netCost;
+
       const btn = document.createElement('button');
       btn.className = 'editor-popup__option';
-      if (currentKey === pieceKey) btn.classList.add('editor-popup__option--selected');
+      if (isCurrent) btn.classList.add('editor-popup__option--selected');
+      if (!isCurrent && !canAfford) btn.classList.add('editor-popup__option--disabled');
       btn.type = 'button';
       btn.innerHTML = `
         <div class="editor-popup__icon">${piece.icon}</div>
         <div class="editor-popup__label">${piece.label}</div>
+        <div class="editor-popup__cost">${_costLabel(isCurrent, netCost)}</div>
       `;
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        _placePiece(segId, pieceKey);
+        if (isCurrent) { _closePopup(); return; }
+        if (!canAfford) return;
+        _placePiece(segId, pieceKey, netCost);
       });
       row.appendChild(btn);
     }
@@ -373,6 +391,7 @@ const TrackEditor = (() => {
   function _openSkinPopup() {
     _closePopup();
     const current = GameState.getTrainSkin();
+    const coins = Progress.getCoins();
 
     const pop = document.createElement('div');
     pop.className = 'editor-popup editor-popup--skin';
@@ -387,18 +406,33 @@ const TrackEditor = (() => {
 
     for (const key of Object.keys(TRAIN_SKINS)) {
       const skin = TRAIN_SKINS[key];
+      const isCurrent = current === key;
+      const owned = GameState.hasOwnedSkin(key);
+      const cost = owned ? 0 : (skin.costCoins || 0);
+      const canAfford = cost === 0 || coins >= cost;
+
       const btn = document.createElement('button');
       btn.className = 'editor-popup__option';
-      if (current === key) btn.classList.add('editor-popup__option--selected');
+      if (isCurrent) btn.classList.add('editor-popup__option--selected');
+      if (!isCurrent && !canAfford) btn.classList.add('editor-popup__option--disabled');
       btn.type = 'button';
+
+      // Cost label: ✓ if currently active, blank if owned+switchable, cost if buying.
+      let costLabel = '';
+      if (isCurrent) costLabel = '✓';
+      else if (cost > 0) costLabel = `-${cost}🪙`;
+
       btn.innerHTML = `
         <div class="editor-popup__icon">${skin.icon}</div>
         <div class="editor-popup__label">${skin.label}</div>
+        <div class="editor-popup__cost">${costLabel}</div>
       `;
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        _applySkin(key);
+        if (isCurrent) { _closePopup(); return; }
+        if (!canAfford) return;
+        _applySkin(key, cost);
       });
       row.appendChild(btn);
     }
@@ -408,7 +442,12 @@ const TrackEditor = (() => {
     _currentPopup = pop;
   }
 
-  function _applySkin(skinKey) {
+  function _applySkin(skinKey, cost) {
+    if (cost > 0) {
+      if (Progress.getCoins() < cost) return;
+      Progress.addCoins(-cost);
+    }
+    GameState.markSkinOwned(skinKey);
     GameState.setTrainSkin(skinKey);
     Train.setCartSkin(skinKey);
     Progress.save();
@@ -417,8 +456,11 @@ const TrackEditor = (() => {
 
   /* ─── State mutations ─── */
 
-  function _placePiece(segId, pieceKey) {
-    GameState.setSegmentOverride(segId, pieceKey);
+  function _placePiece(segId, pieceKey, netCost) {
+    if (netCost > 0 && Progress.getCoins() < netCost) return;
+    if (netCost !== 0) Progress.addCoins(-netCost);
+    // Store straight as null so "no override" stays the default representation.
+    GameState.setSegmentOverride(segId, pieceKey === 'straight' ? null : pieceKey);
     Progress.save();
     Train.renderTrack();
     _closePopup();
@@ -475,6 +517,14 @@ const TrackEditor = (() => {
 
   function _prettyRoom(id) {
     return CONFIG.rooms[id] ? CONFIG.rooms[id].label : id;
+  }
+
+  /** Format the cost line under a piece option: ✓ for current, charge or refund otherwise. */
+  function _costLabel(isCurrent, netCost) {
+    if (isCurrent) return '✓';
+    if (netCost === 0) return 'free';
+    if (netCost > 0) return `-${netCost}🪙`;
+    return `+${-netCost}🪙`;
   }
 
   function _resetHint() {

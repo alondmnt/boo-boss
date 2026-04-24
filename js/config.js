@@ -280,6 +280,7 @@ const TRAIN_SKINS = {
     key: 'default',
     label: 'classic',
     icon: '🛤️',
+    costCoins: 0,
     cartSvg: () => `
       <rect x="-14" y="-12" width="28" height="16" rx="3" fill="#2a1a3a" stroke="#5a3a6a" stroke-width="1.2"/>
       <rect x="-10" y="-16" width="20" height="6" rx="2" fill="#3a2a4a" stroke="#5a3a6a" stroke-width="0.8"/>
@@ -292,6 +293,7 @@ const TRAIN_SKINS = {
     key: 'wooden',
     label: 'mine cart',
     icon: '🛒',
+    costCoins: 20,
     cartSvg: () => `
       <rect x="-14" y="-10" width="28" height="14" rx="1" fill="#6b3a18" stroke="#3a1a08" stroke-width="1.2"/>
       <line x1="-14" y1="-5" x2="14" y2="-5" stroke="#3a1a08" stroke-width="0.6"/>
@@ -309,6 +311,7 @@ const TRAIN_SKINS = {
     key: 'coffin',
     label: 'coffin cart',
     icon: '⚰️',
+    costCoins: 20,
     cartSvg: () => `
       <path d="M-14,-8 L-10,-14 L10,-14 L14,-8 L14,4 L-14,4 Z"
             fill="#2a140a" stroke="#0a0402" stroke-width="1.2"/>
@@ -323,6 +326,7 @@ const TRAIN_SKINS = {
     key: 'pumpkin',
     label: 'pumpkin',
     icon: '🎃',
+    costCoins: 20,
     cartSvg: () => `
       <ellipse cx="0" cy="-3" rx="14" ry="10" fill="#e07a1a" stroke="#a0520a" stroke-width="1.2"/>
       <path d="M-9,-12 Q-10,-3 -9,5" stroke="#a0520a" stroke-width="0.7" fill="none"/>
