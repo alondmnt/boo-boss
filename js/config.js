@@ -126,7 +126,7 @@ const CONFIG = {
     waveBonusThreshold: 0.8,
     waveBonus: 50,
     noHugBonus: 30,
-    varietyPerUnit: 1,
+    varietyFullCastPct: 0.20,  // full-cast bonus per axis, as fraction of wave scare score
     creatureFullCastMin: 5,
   },
 

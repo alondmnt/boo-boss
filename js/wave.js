@@ -371,9 +371,9 @@ const Wave = (() => {
    * Pure function - no DOM or side effects.
    *
    * Variety axes: types (gated on monsterLab), creatures (gated on roster ≥
-   * creatureFullCastMin), actions (gated on directorsChair). Each used unit
-   * scores varietyPerUnit. One +1 coin is awarded per active axis that
-   * reaches full cast in the wave (independent across axes).
+   * creatureFullCastMin), actions (gated on directorsChair). Full cast on an
+   * axis awards varietyFullCastPct × wave scare score (and +1 coin). Partial
+   * cast scores nothing — the bonus is all-or-nothing per axis.
    */
   function _calcScore(visitors, waveScore, hugCount, deployments, typesUsed, creaturesUsed, actionsUsed) {
     const totalVisitors = visitors.length;
@@ -385,15 +385,16 @@ const Wave = (() => {
     const noHugs = hugCount === 0 && deployments.length > 0;
     const noHugPoints = noHugs ? CONFIG.scoring.noHugBonus : 0;
 
-    const perUnit = CONFIG.scoring.varietyPerUnit;
+    const fullCastPct = CONFIG.scoring.varietyFullCastPct;
     const _axis = (active, unlockedCount, usedSet) => {
       const usedCount = usedSet.size;
+      const fullCast = active && unlockedCount > 0 && usedCount >= unlockedCount;
       return {
         active,
         unlocked: unlockedCount,
         usedCount,
-        points: active ? usedCount * perUnit : 0,
-        fullCast: active && unlockedCount > 0 && usedCount >= unlockedCount,
+        points: fullCast ? Math.round(waveScore * fullCastPct) : 0,
+        fullCast,
       };
     };
 
@@ -460,17 +461,21 @@ const Wave = (() => {
       </div>`;
     }
 
-    /* variety rows — one per active axis */
+    /* variety rows — one per active axis. Points only appear on full cast now,
+     * so partial-cast rows omit the +0 to avoid implying a bonus. */
     const _varietyRow = (axis, used, iconMap, label) => {
       if (!axis.active) return '';
       const icons = [...used].map(k =>
         `<span class="wave-summary__type-icon">${iconMap[k] || k}</span>`
       ).join('');
       const tag = axis.fullCast ? ' <span class="wave-summary__variety">FULL CAST! 🪙</span>' : '';
+      const pointsSpan = axis.fullCast
+        ? `<span class="wave-summary__points">+${axis.points}</span>`
+        : '';
       return `<div class="wave-summary__row">
         ${icons}
         <span class="wave-summary__label">${axis.usedCount}/${axis.unlocked} ${label}</span>${tag}
-        <span class="wave-summary__points">+${axis.points}</span>
+        ${pointsSpan}
       </div>`;
     };
 

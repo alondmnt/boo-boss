@@ -75,7 +75,7 @@ the house SVG is drawn at its full eventual size (2 rooms × 3 floors) from the 
 - scare: +10 base, x1.5 for 2nd scare on same visitor, x2 for 3rd+
 - wave bonus: +50 if you scared 80%+ of visitors
 - no-hug bonus: +30 if you deployed at all and no visitor got hugged
-- variety: +1 per unique unit used, across three axes — creatures (gate: roster ≥ 5), monster types (gate: monster lab), actions (gate: director's chair). subordinate to scare points by design; a small nudge toward using the whole roster, not an incentive to abandon the actual scaring.
+- variety: full cast on an axis awards +20% of wave scare score (and +1 coin). three axes — creatures (gate: roster ≥ 5), monster types (gate: monster lab), actions (gate: director's chair) — so up to +60% at all three. all-or-nothing per axis; partial cast scores nothing. remains subordinate to scares by design (multiplicative on scaring, not additive): a bad-scoring wave can't out-variety its way to a high score.
 - coins: 1 coin per wave + 1 for wave bonus + 1 per currently-active variety axis that reaches full cast in the wave (independent across axes)
 
 ## MVP entities
