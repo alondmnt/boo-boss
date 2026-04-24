@@ -11,6 +11,12 @@ const Picker = (() => {
   let _selectedType = null;
   let _selectedMonster = null;
   let _selectedAction = null;
+  // Sticky across deploys: the last monster/action actually deployed. Pre-fills
+  // the picker on the next creature tap so repeat deploys collapse to
+  // creature-tap → room-tap. Cleared implicitly if the value falls out of the
+  // unlocked roster (validated at pre-fill time).
+  let _lastMonster = null;
+  let _lastAction = null;
   let _roomClickHandlers = [];
   let _onDeploy = null;
   const _onCooldown = new Set();
@@ -98,6 +104,18 @@ const Picker = (() => {
         .forEach(s => s.classList.remove('scare-panel__slot--selected'));
     }
     slot.classList.add('scare-panel__slot--selected');
+
+    // Sticky pre-fill: inherit the last deployed monster/action if still
+    // unlocked. Only fires on fresh sessions (when _selected* are null);
+    // mid-session swaps are preserved by the existing flow.
+    if (_selectedMonster === null && GameState.get('monsterLab')
+        && _lastMonster && GameState.get('monsterTypes').includes(_lastMonster)) {
+      _selectedMonster = _lastMonster;
+    }
+    if (_selectedAction === null && GameState.get('directorsChair')
+        && _lastAction && GameState.get('actions').includes(_lastAction)) {
+      _selectedAction = _lastAction;
+    }
 
     _renderSubPanels();
     _advanceIfComplete();
@@ -280,6 +298,10 @@ const Picker = (() => {
     _onCooldown.add(creatureType);
     const monsterType = _selectedMonster;
     const action = _selectedAction;
+    // Persist for the next deploy's sticky pre-fill. Cancel paths (tap same
+    // creature, tap occupied room) reach cleanup() without updating these.
+    if (monsterType) _lastMonster = monsterType;
+    if (action) _lastAction = action;
     cleanup();
 
     if (_onDeploy) _onDeploy(creatureType, roomId, monsterType, action);
