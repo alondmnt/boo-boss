@@ -329,8 +329,63 @@ const TrackEditor = (() => {
     }));
 
     pop.appendChild(row);
+
+    // Visit-order row: show current position + earlier/later controls.
+    const route = GameState.getTrackRoute();
+    const pos = GameState.getRoomRouteIndex(roomId);
+    const routeInfo = document.createElement('div');
+    routeInfo.className = 'editor-popup__body';
+    routeInfo.textContent = `visit order: ${pos + 1} of ${route.length}`;
+    pop.appendChild(routeInfo);
+
+    const reorderRow = document.createElement('div');
+    reorderRow.className = 'editor-popup__row';
+
+    const earlierBtn = document.createElement('button');
+    earlierBtn.className = 'editor-popup__option';
+    if (pos <= 0) earlierBtn.classList.add('editor-popup__option--disabled');
+    earlierBtn.type = 'button';
+    earlierBtn.innerHTML = `
+      <div class="editor-popup__icon">⬅️</div>
+      <div class="editor-popup__label">earlier</div>
+    `;
+    earlierBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (pos <= 0) return;
+      _moveRoomInOrder(roomId, -1);
+    });
+    reorderRow.appendChild(earlierBtn);
+
+    const laterBtn = document.createElement('button');
+    laterBtn.className = 'editor-popup__option';
+    if (pos >= route.length - 1) laterBtn.classList.add('editor-popup__option--disabled');
+    laterBtn.type = 'button';
+    laterBtn.innerHTML = `
+      <div class="editor-popup__icon">➡️</div>
+      <div class="editor-popup__label">later</div>
+    `;
+    laterBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (pos >= route.length - 1) return;
+      _moveRoomInOrder(roomId, 1);
+    });
+    reorderRow.appendChild(laterBtn);
+
+    pop.appendChild(reorderRow);
+
     _popupHost.appendChild(pop);
     _currentPopup = pop;
+  }
+
+  function _moveRoomInOrder(roomId, direction) {
+    const moved = GameState.swapRoomInRoute(roomId, direction);
+    if (!moved) return;
+    Progress.save();
+    Train.renderTrack();
+    _closePopup();
+    _refreshSegmentTargets();
   }
 
   function _openRepairPopup(fromRoom, toRoom) {

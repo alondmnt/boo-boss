@@ -18,6 +18,9 @@ const GameState = (() => {
   // Skins the player has bought (default always included). Buying is one-shot;
   // switching between owned skins is free.
   const _ownedSkins = new Set(['default']);
+  // Player-customised visit sequence. null ⇒ use CONFIG.fullTrackRoute as-is.
+  // When non-null, it's a permutation of CONFIG.fullTrackRoute.
+  let _customRoute = null;
 
   /** Add an item to an array store, skipping duplicates. */
   function _addUnique(key, item) {
@@ -91,10 +94,37 @@ const GameState = (() => {
 
   /**
    * Full track route — the train always traverses all rooms (including locked).
-   * Used by Train for the track path.
+   * Returns a player-customised permutation when one exists, else the CONFIG default.
    */
   function getTrackRoute() {
-    return CONFIG.fullTrackRoute;
+    return _customRoute || CONFIG.fullTrackRoute;
+  }
+
+  /** Replace the custom route wholesale. Pass null to revert to CONFIG default. */
+  function setCustomRoute(route) {
+    if (!route || !Array.isArray(route)) { _customRoute = null; return; }
+    _customRoute = route.slice();
+  }
+
+  /**
+   * Swap a room with its neighbour in the visit sequence.
+   * direction: -1 moves it earlier, +1 moves it later.
+   * Returns true if the swap happened, false if it was out of bounds.
+   */
+  function swapRoomInRoute(roomId, direction) {
+    const route = (_customRoute || CONFIG.fullTrackRoute).slice();
+    const idx = route.indexOf(roomId);
+    if (idx === -1) return false;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= route.length) return false;
+    [route[idx], route[newIdx]] = [route[newIdx], route[idx]];
+    _customRoute = route;
+    return true;
+  }
+
+  /** Current position of a room in the visit sequence (0-indexed). */
+  function getRoomRouteIndex(roomId) {
+    return getTrackRoute().indexOf(roomId);
   }
 
   /**
@@ -179,6 +209,15 @@ const GameState = (() => {
     // If we loaded a current skin, mark it owned even if the snapshot's
     // ownedSkins list is stale (from before ownership tracking).
     _ownedSkins.add(_trainSkin);
+    // Only accept a custom route if it's a full permutation of CONFIG.fullTrackRoute
+    // (defends against corrupted/outdated saves).
+    if (Array.isArray(snapshot.customRoute) &&
+        snapshot.customRoute.length === CONFIG.fullTrackRoute.length &&
+        snapshot.customRoute.every(r => CONFIG.fullTrackRoute.includes(r))) {
+      _customRoute = snapshot.customRoute.slice();
+    } else {
+      _customRoute = null;
+    }
   }
 
   /** Snapshot for persistence. */
@@ -189,6 +228,7 @@ const GameState = (() => {
       malfunctions: { ..._malfunctions },
       trainSkin: _trainSkin,
       ownedSkins: [..._ownedSkins],
+      customRoute: _customRoute ? _customRoute.slice() : null,
     };
   }
 
@@ -219,6 +259,7 @@ const GameState = (() => {
     _trainSkin = 'default';
     _ownedSkins.clear();
     _ownedSkins.add('default');
+    _customRoute = null;
   }
 
   return {
@@ -227,6 +268,7 @@ const GameState = (() => {
     getClosedRooms, isRoomClosed, toggleRoomClosed,
     getTrainSkin, setTrainSkin, hasOwnedSkin, markSkinOwned, getOwnedSkins,
     getMalfunctions, isSegmentBroken, setMalfunction,
+    setCustomRoute, swapRoomInRoute, getRoomRouteIndex,
     loadRollercoasterState, dumpRollercoasterState,
     _segId,
   };
