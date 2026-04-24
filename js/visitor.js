@@ -443,7 +443,8 @@ const Visitor = (() => {
   }
 
   /**
-   * Pick a random adjacent unlocked room for the visitor to wander to.
+   * Pick a random adjacent room for the visitor to wander to.
+   * Skips locked rooms AND rooms the player has toggled closed-tonight in the editor.
    * Avoids immediate backtrack when possible.
    */
   function pickNextRoom(visitor) {
@@ -451,10 +452,12 @@ const Visitor = (() => {
     if (!adj) return visitor.currentRoom;
 
     const rooms = GameState.get('rooms');
-    const unlocked = adj.filter(r => rooms[r] && !rooms[r].locked);
-    if (!unlocked.length) return visitor.currentRoom;
+    const reachable = adj.filter(r =>
+      rooms[r] && !rooms[r].locked && !GameState.isRoomClosed(r)
+    );
+    if (!reachable.length) return visitor.currentRoom;
 
-    return unlocked[Math.floor(Math.random() * unlocked.length)];
+    return reachable[Math.floor(Math.random() * reachable.length)];
   }
 
   /**
