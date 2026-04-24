@@ -70,6 +70,10 @@ const TrackEditor = (() => {
     const summary = document.getElementById('wave-summary');
     if (summary) summary.classList.add('overlay--hidden');
 
+    // Drop any lingering picker handlers — Picker.cleanup otherwise only runs
+    // on summary dismiss, so builder mode could inherit stale room handlers.
+    if (typeof Picker !== 'undefined' && Picker.cleanup) Picker.cleanup();
+
     _overlay.classList.remove('overlay--hidden');
     _resetHint();
 
@@ -114,10 +118,15 @@ const TrackEditor = (() => {
   function _renderSegmentTargets() {
     const route = GameState.getTrackRoute();
     if (route.length < 2) return;
+    const rooms = GameState.get('rooms');
 
     for (let i = 1; i < route.length; i++) {
       const fromRoom = route[i - 1];
       const toRoom = route[i];
+      // Skip segments touching a locked room — the player can't edit track
+      // into a room they haven't unlocked yet.
+      if ((rooms[fromRoom] && rooms[fromRoom].locked) ||
+          (rooms[toRoom] && rooms[toRoom].locked)) continue;
       const prev = House.getRoomCentre(fromRoom);
       const curr = House.getRoomCentre(toRoom);
       if (!prev || !curr) continue;
