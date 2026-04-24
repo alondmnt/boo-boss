@@ -138,14 +138,17 @@ const TrackEditor = (() => {
 
       const segId = GameState._segId(fromRoom, toRoom);
       const currentKey = GameState.getSegmentOverride(segId);
+      const broken = GameState.isSegmentBroken(segId);
       const piece = currentKey && PIECES[currentKey];
-      const icon = piece ? piece.icon : '✎';
+      const icon = broken ? '🔨' : (piece ? piece.icon : '✎');
 
       const label = document.createElementNS(NS, 'text');
       label.setAttribute('x', mx);
       label.setAttribute('y', my + 4);
       label.setAttribute('text-anchor', 'middle');
-      label.setAttribute('class', 'house__editor-segment-label');
+      label.setAttribute('class', broken
+        ? 'house__editor-segment-label house__editor-segment-label--broken'
+        : 'house__editor-segment-label');
       label.textContent = icon;
       g.appendChild(label);
 
@@ -200,6 +203,13 @@ const TrackEditor = (() => {
   function _openSegmentPopup(fromRoom, toRoom) {
     _closePopup();
     const segId = GameState._segId(fromRoom, toRoom);
+
+    // If this segment is broken, show the repair flow instead of the piece picker.
+    if (GameState.isSegmentBroken(segId)) {
+      _openRepairPopup(fromRoom, toRoom);
+      return;
+    }
+
     const currentKey = GameState.getSegmentOverride(segId);
     const slotType = _slotTypeFor(fromRoom, toRoom);
 
@@ -294,6 +304,61 @@ const TrackEditor = (() => {
     pop.appendChild(row);
     _popupHost.appendChild(pop);
     _currentPopup = pop;
+  }
+
+  function _openRepairPopup(fromRoom, toRoom) {
+    _closePopup();
+    const segId = GameState._segId(fromRoom, toRoom);
+    const cost = CONFIG.rollercoaster.malfunctionRepairCost;
+    const have = Progress.getCoins();
+    const key = GameState.getSegmentOverride(segId);
+    const piece = key && PIECES[key];
+
+    const pop = document.createElement('div');
+    pop.className = 'editor-popup editor-popup--repair';
+
+    const title = document.createElement('div');
+    title.className = 'editor-popup__title';
+    title.textContent = `${piece ? piece.label + ' — ' : ''}broken!`;
+    pop.appendChild(title);
+
+    const body = document.createElement('div');
+    body.className = 'editor-popup__body';
+    body.textContent = `Fix for ${cost}🪙 (you have ${have}).`;
+    pop.appendChild(body);
+
+    const row = document.createElement('div');
+    row.className = 'editor-popup__row';
+
+    const fixBtn = document.createElement('button');
+    fixBtn.className = 'editor-popup__option';
+    if (have < cost) fixBtn.classList.add('editor-popup__option--disabled');
+    fixBtn.type = 'button';
+    fixBtn.innerHTML = `
+      <div class="editor-popup__icon">🔨</div>
+      <div class="editor-popup__label">fix (${cost}🪙)</div>
+    `;
+    fixBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (have < cost) return;
+      _repairSegment(segId);
+    });
+    row.appendChild(fixBtn);
+    pop.appendChild(row);
+    _popupHost.appendChild(pop);
+    _currentPopup = pop;
+  }
+
+  function _repairSegment(segId) {
+    const cost = CONFIG.rollercoaster.malfunctionRepairCost;
+    if (Progress.getCoins() < cost) return;
+    Progress.addCoins(-cost);
+    GameState.setMalfunction(segId, false);
+    Progress.save();
+    Train.renderTrack();
+    _closePopup();
+    _refreshSegmentTargets();
   }
 
   function _openSkinPopup() {

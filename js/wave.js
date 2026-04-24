@@ -551,6 +551,10 @@ const Wave = (() => {
     // Award coins (triggers unlock check)
     Progress.addCoins(s.coinsEarned);
 
+    // Piece malfunction roll — runs after coin award so the tier-unlock check
+    // happens on a clean state. Only breaks non-default installed pieces.
+    _rollMalfunction();
+
     // Dismiss on tap
     function dismiss(e) {
       if (e) e.preventDefault();
@@ -580,6 +584,40 @@ const Wave = (() => {
   /** Pick a random element from an array. */
   function _randomFrom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /**
+   * Roll the end-of-wave malfunction chance against installed non-default
+   * pieces. Weighted by showiness (corkscrews break more than straights).
+   * Fancier pieces are more likely so ambitious builds get the more visible
+   * maintenance cycle, matching the "fancier machinery breaks more" feel.
+   */
+  function _rollMalfunction() {
+    const rc = CONFIG.rollercoaster;
+    if (!rc || Math.random() >= rc.malfunctionChance) return;
+    const route = GameState.getTrackRoute();
+    const candidates = [];
+    const weights = [];
+    for (let i = 1; i < route.length; i++) {
+      const segId = GameState._segId(route[i - 1], route[i]);
+      const key = GameState.getSegmentOverride(segId);
+      if (!key) continue;
+      if (GameState.isSegmentBroken(segId)) continue;
+      candidates.push(segId);
+      weights.push(rc.pieceShowinessWeights[key] || 1);
+    }
+    if (!candidates.length) return;
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < candidates.length; i++) {
+      r -= weights[i];
+      if (r <= 0) {
+        GameState.setMalfunction(candidates[i], true);
+        Progress.save();
+        if (typeof Train !== 'undefined' && Train.renderTrack) Train.renderTrack();
+        break;
+      }
+    }
   }
 
   /** Register wave completion handler. */

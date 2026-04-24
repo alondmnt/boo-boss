@@ -217,18 +217,40 @@ const Train = (() => {
     for (let i = 1; i < route.length; i++) {
       const fromRoom = route[i - 1];
       const toRoom = route[i];
-      const key = GameState.getSegmentOverride(GameState._segId(fromRoom, toRoom));
-      if (!key) continue;
-      const piece = PIECES[key];
-      if (!piece || !piece.auxSvg) continue;
+      const segId = GameState._segId(fromRoom, toRoom);
+      const key = GameState.getSegmentOverride(segId);
       const prev = House.getRoomCentre(fromRoom);
       const curr = House.getRoomCentre(toRoom);
       if (!prev || !curr) continue;
-      const g = document.createElementNS(NS, 'g');
-      g.classList.add('piece-aux');
-      g.setAttribute('data-piece', key);
-      g.innerHTML = piece.auxSvg(prev, curr, _slotTypeFor(prev, curr));
-      _trackLayer.appendChild(g);
+
+      if (key) {
+        const piece = PIECES[key];
+        if (piece && piece.auxSvg) {
+          const g = document.createElementNS(NS, 'g');
+          g.classList.add('piece-aux');
+          g.setAttribute('data-piece', key);
+          g.innerHTML = piece.auxSvg(prev, curr, _slotTypeFor(prev, curr));
+          _trackLayer.appendChild(g);
+        }
+      }
+
+      // Malfunction visual: zig-zag crack + blinking sparks at segment midpoint.
+      if (GameState.isSegmentBroken(segId)) {
+        const mx = (prev.x + curr.x) / 2;
+        const my = (prev.y + curr.y) / 2;
+        const g = document.createElementNS(NS, 'g');
+        g.classList.add('piece-broken');
+        g.setAttribute('data-segment', segId);
+        g.innerHTML = `
+          <path d="M${mx - 10},${my - 5} L${mx - 5},${my + 3} L${mx - 1},${my - 4} L${mx + 3},${my + 3} L${mx + 8},${my - 2} L${mx + 12},${my + 2}"
+                stroke="#e04a1a" stroke-width="1.6" fill="none" opacity="0.95"
+                stroke-linecap="round"/>
+          <circle class="piece-broken__spark" cx="${mx - 2}" cy="${my - 2}" r="1.8" fill="#ffd640"/>
+          <circle class="piece-broken__spark piece-broken__spark--2" cx="${mx + 4}" cy="${my + 1}" r="1.4" fill="#ffa020"/>
+          <circle class="piece-broken__spark piece-broken__spark--3" cx="${mx - 5}" cy="${my + 2}" r="1.2" fill="#ff6020"/>
+        `;
+        _trackLayer.appendChild(g);
+      }
     }
   }
 

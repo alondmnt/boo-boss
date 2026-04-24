@@ -536,6 +536,29 @@ body.crowd--many .creature--ghost .creature__hover {
 .piece--tunnel { filter: drop-shadow(0 0 4px rgba(0,0,0,0.85)); }
 .piece-aux { pointer-events: none; }
 
+/* Piece malfunction: sparks blink, crack stays static */
+.piece-broken { pointer-events: none; }
+@keyframes piece-sparks {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+.piece-broken__spark { animation: piece-sparks 0.7s ease-in-out infinite; }
+.piece-broken__spark--2 { animation-delay: 0.23s; }
+.piece-broken__spark--3 { animation-delay: 0.46s; }
+
+/* Editor segment label reddens when broken */
+.house__editor-segment-label--broken {
+  fill: #ffb4a8;
+  font-size: 14px;
+}
+.editor-popup__option--disabled { opacity: 0.5; cursor: not-allowed; }
+.editor-popup__body {
+  text-align: center;
+  margin-bottom: 0.8em;
+  color: #bba8d8;
+  font-size: 0.9rem;
+}
+
 /* ===== Leaderboard ===== */
 .leaderboard { margin: 0.8em 0; }
 .leaderboard__row {
