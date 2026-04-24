@@ -336,7 +336,9 @@ expansion 3:           4 picks + [room themes & traps] (persistent layer)    [ON
 
 ### current state
 
-with all rooms open, higher waves, and the full creature × monster type × action matrix available, the game is already quite hard. the bottleneck isn't scare mechanics — it's **cognitive load and input cost**: reading fears/loves across many visitors spread over 6 rooms, then 4-stage picking (creature → monster → action → room) per deploy. the planned difficulty knobs below should be weighed against this; some may need to go the other way (e.g. quicker pickers, grouped deploys, sticky last-used picks) before adding more pressure.
+with all rooms open, higher waves, and the full creature × monster type × action matrix available, the game is already quite hard. the bottleneck isn't scare mechanics — it's **cognitive load and input cost**: reading fears/loves across many visitors spread over 6 rooms, then 4-stage picking (creature → monster → action → room) per deploy. the two halves should be treated separately: **reading** (scan fears/loves across many visitors) is the intended difficulty and we want it to stay; **picking** (stage count per deploy) is input friction and worth trimming. the fixes below target picking only. biased sampling should continue to push diversification, so smoother picking shouldn't collapse into autopilot.
+
+**considered and deferred — room-match highlight**: once a creature is picked, glow rooms containing a visitor who fears it and dim those who love it. cuts reading load directly. deferred because it removes the reading puzzle that *is* the intended difficulty; revisit if input-side fixes under-correct.
 
 ### implemented
 
