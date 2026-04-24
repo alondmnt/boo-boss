@@ -509,6 +509,11 @@ const Wave = (() => {
     const overlay = document.getElementById('wave-summary');
     const content = overlay ? overlay.querySelector('.wave-summary__content') : null;
 
+    // Award coins BEFORE rendering the summary so any tier crossed by this
+    // wave's earnings is reflected in the content (specifically the build
+    // button, which is gated on the trackEditor unlock flag).
+    Progress.addCoins(s.coinsEarned);
+
     // "Build ride" button — shown once the track editor is unlocked.
     const buildRow = GameState.get('trackEditor')
       ? `<button class="wave-summary__build-btn" type="button">🎢 Build Ride</button>`
@@ -548,11 +553,7 @@ const Wave = (() => {
     Audio.play('waveEnd');
     if (s.hitBonus || s.noHugs || s.varietyCoins > 0) Audio.play('coin');
 
-    // Award coins (triggers unlock check)
-    Progress.addCoins(s.coinsEarned);
-
-    // Piece malfunction roll — runs after coin award so the tier-unlock check
-    // happens on a clean state. Only breaks non-default installed pieces.
+    // Piece malfunction roll — only breaks non-default installed pieces.
     _rollMalfunction();
 
     // Dismiss on tap
