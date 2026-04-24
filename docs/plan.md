@@ -283,14 +283,97 @@ the child's hat-grab works on any creature (spider leg reaches out, gorilla arm,
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play.
 
-### track customisation — rollercoaster [STANDALONE]
-carved out from expansion 3 because it's the most distinctive idea there and interacts with existing axes rather than adding new ones.
+### expansion 3: "the rollercoaster" (~coins 105+) [NEXT]
 
-reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
+**reframes the game into two halves: design the ride (between waves, builder mode) + operate the ride (during wave, existing scare game).** not a side-game or bonus level — the dark ride is already the front-of-house moment, so putting the player in charge of its shape binds the two halves tighter. you're now the ride designer as well as the scare operator.
 
-**track ordering (lower-impact variant)**: keep the path straight but let the player pick the *order* of rooms. impact is moderate-low — visitors wander freely after disembarking, so ordering mostly shifts initial distribution and the effect dilutes within seconds. recommendation: fold into the rollercoaster work rather than shipping separately — same `house.js` refactor, and the shape variations carry the mechanical teeth pure reordering lacks.
+#### design principle: visible drama over subtle effects
 
-### expansion 3: "house upgrades" (~coins 120+) [ON HOLD]
+the first instinct was to make track shapes modify scare effectiveness ("disoriented mid-loop", "exhilarated on drops"). cut. kids don't parse subtle multipliers, and invisible mechanics die in playtesting. pieces are **purely cosmetic in their effect on the scare loop** — loops add dramatic pauses, tunnels plunge the cart into darkness, corkscrews spiral. the spectacle is the point; no hidden math on scare effectiveness. the ongoing pull back into builder mode comes from **piece malfunctions** (see below), not from mechanical piece effects.
+
+#### room skipping — the one real tactical lever
+
+each room has an "on the ride / closed tonight" toggle in the editor. closing a room:
+- **skips it on the track** (no disembark there)
+- **blocks foot traffic into it** (visibly closed, not passively ignored)
+- **is visually distinct from a locked room** — velvet rope or "closed" banner, not boarded planks — so kids don't confuse "can't unlock yet" with "chose to close"
+
+**why kids will feel this**:
+- **concentration play**: skip 4 rooms, funnel all visitors through 2. your 2-3 characters hit way more visitors per cooldown; combos (x1.5, x2) stack harder
+- **scoring surface cost**: fewer rooms = fewer total scare opportunities. natural counterweight to the combo gain
+- **biased-sampling amplifier**: everyone in 2 rooms means one bad pick gets hugged by all. concentration is high-variance — felt immediately
+- **beginner aid**: 6 rooms is too many to guard early on. "close some" is a kid-understandable retreat
+
+constraints: **min 2 rooms open** (entry-side + exit-side). engine refuses to start a wave otherwise. locked rooms can't be toggled. skipping is **free** — routing, not buying. closed rooms can host showy pieces (a closed kitchen becomes a corkscrew-only spectacle room) without wasting scare potential.
+
+#### track pieces
+
+each segment between two rooms is a customisable slot, typed by context (horizontal F1, floor-change F1→F2, return-exterior). the editor only offers pieces that fit the slot — **invalid states are impossible by construction**, no runtime auto-bridging needed.
+
+| piece | visible animation | coin cost |
+|-------|-------------------|-----------|
+| straight | baseline, short ride | 2 |
+| hill | slow climb, fast drop with shake | 5 |
+| tunnel | cart vanishes into darkness for ~1s | 5 |
+| loop | cart pauses upside-down at the top for a beat | 12 |
+| corkscrew | cart spirals along the segment | 15 |
+
+each piece is a scripted SVG/CSS mini-choreography — same shape as actions (setup → payoff). **sell-back at 50%** so experimentation isn't punished.
+
+#### train skins — cosmetic only
+
+3-4 cart skins: wooden mine cart, coffin-cart, pumpkin carriage, ghost-train skull engine. purely visual. considered cart capacity as a non-cosmetic lever but dropped — capacity ripples into spawn/biased-sampling/wave-end logic, adds risk without kid-visible payoff. 20 coins per skin.
+
+#### the editor (UX)
+
+**opt-in, not mandatory.** the wave summary page gains a "build" button alongside "next wave" — tap to enter builder mode, or skip straight through if you don't want to fiddle. no tax on players who just want to keep scaring.
+
+builder mode is a full-screen overlay on the house cutaway. track segments and rooms become tap targets. **click-segment → popup** shows pieces that fit the slot with costs → confirm. click-room → closed/open toggle. click-cart → skin picker. exit returns to the summary. modifications are **permanent across waves** (persists in `hauntedHouse_progress`) but **only editable between waves** — same rule as everything else in the game.
+
+#### interaction + visibility (pre-existing fixes surfaced by this expansion)
+
+track pieces will occupy more of the room area (loops and corkscrews especially), so two assumptions that already pinch lightly now have to be fixed properly:
+
+- **click-through on the track**: currently `.train__rail` and `.train__cart` have no `pointer-events: none` (compare `.visitor`, which does) — so rails silently block monster deploys on any cell the track crosses. fix: `pointer-events: none` on the track layer and rails. the cart stays non-interactive during play; in builder mode the skin picker can be reached via a dedicated cart-edit button rather than a direct cart click, keeping the play-mode click budget clean.
+- **no obstruction of deploy targets**: track routing must stay clear of the room's central deploy area. piece path generators should bias toward room edges (top or bottom gutter) rather than cutting through centres, and z-order keeps characters/visitors above rails. for pieces that *are* intrinsically central (corkscrew in a spectacle room), the room is already closed — no deploy target to obstruct.
+
+both are cheap: one CSS change plus discipline in the path generators. worth shipping the click-through fix ahead of the editor rollout so current play benefits too.
+
+#### piece malfunctions — the replay hook
+
+pieces are cosmetic, so the editor needs an intrinsic reason to keep revisiting. that's maintenance. installed pieces occasionally break and the kid, running the attraction, wants to fix them.
+
+- **trigger**: each wave, ~20% chance that one installed piece malfunctions. weighted by showiness (corkscrew > loop > tunnel/hill > straight), both for theme (fancier machinery breaks more) and to soften the cost of ambitious builds rather than punishing them
+- **visible cue**: broken piece animates sparks/smoke during the ride and shows a small crack overlay on the static track. persists across waves until fixed
+- **fix flow**: in builder mode, broken pieces are flagged with a hammer icon. tap → 2-3 coin repair cost → restored. no cascading failures, no timers
+- **no neglect penalty**: broken pieces still function. motivation is aesthetic ("my ride looks bad"), not mechanical. keeps the loop positive — kids choose to fix because they want to, not because they're being taxed
+- feeds the attraction-manager fantasy without adding picker complexity or real-time input during waves
+
+#### unlock ladder
+
+staged sub-unlocks spread the sub-game across ~60 coins:
+
+| coins | unlock |
+|-------|--------|
+| 105 | track editor + room skipping + segment reorder + straight pieces |
+| 125 | hill, tunnel (floor-transition slots also open up here) |
+| 145 | loop, corkscrew |
+| 165 | train skins (3-4 cosmetic carts) |
+
+each tier triggers a fanfare + showcase, same pattern as every other unlock. places rollercoaster *right after* the director's chair (95) and the last monster types (65/75/85), keeping the content ladder continuous with no dead stretch.
+
+#### module additions
+
+builds on the data-driven track already in place: `train.js::_computeTrack` reads `GameState.getTrackRoute()` and generates the SVG path procedurally, so new pieces become new path-generator functions keyed by piece type. needed:
+
+- **new**: `track-editor.js` — between-wave editor UI, segment hit-testing, piece/skin/skip popups
+- **extend** `config.js`: piece defs (cost, slot compatibility, path generator reference), train skin defs
+- **extend** `game-state.js`: per-segment piece *override* (null = keep existing procedural generator; the default track isn't "all straight", it's the current curves with centre-divider floor transitions and corkscrew return — override only kicks in when the player places a piece), per-room skip state, current train skin, per-piece malfunction flags
+- **extend** `progress.js`: persist the above in `hauntedHouse_progress`; existing saves load with all fields null/empty (zero migration — default state = current behaviour)
+- **extend** `train.js`: switch `_computeTrack` from fixed generator to per-segment dispatch when an override exists, falling back to the current curve logic when it doesn't; swap cart SVG on skin change; honour skip state when computing stops; render malfunction sparks on broken pieces
+- **extend** `wave.js`: roll the per-wave malfunction check at wave end, apply to a weighted-random installed piece
+
+### expansion 4: "house upgrades" [ON HOLD]
 on hold: the game already has enough layers (creatures + monster types + actions + rooms, plus variety and full-cast coins). revisit only if later versions need new progression hooks.
 
 persistent upgrades, bought with coins, persist between waves.
@@ -311,7 +394,8 @@ strategic layer: do you theme rooms to match the creatures you deploy most, or s
 MVP (0-50):            [creature] + [room]                                  = 2 picks
 expansion 1 (55-85):   [creature] + [monster type] + [room]                = 3 picks [DONE]
 expansion 2 (95+):     [creature] + [monster type] + [action] + [room]     = 4 picks [DONE]
-expansion 3:           4 picks + [room themes & traps] (persistent layer)    [ON HOLD]
+expansion 3 (105+):    4 picks + [ride design] (between-wave editor)         [NEXT]
+expansion 4:           4 picks + [room themes & traps] (persistent layer)    [ON HOLD]
 ```
 
 ## difficulty scaling [NEXT]
