@@ -12,6 +12,7 @@ const TrackEditor = (() => {
   const NS = 'http://www.w3.org/2000/svg';
   let _overlay = null;
   let _closeBtn = null;
+  let _cartBtn = null;
   let _popupHost = null;
   let _hintEl = null;
   let _editorLayer = null;
@@ -25,6 +26,7 @@ const TrackEditor = (() => {
     _overlay = document.getElementById('track-editor');
     if (!_overlay) return;
     _closeBtn = _overlay.querySelector('.track-editor__close');
+    _cartBtn = _overlay.querySelector('.track-editor__cart-btn');
     _popupHost = _overlay.querySelector('.track-editor__popup-host');
     _hintEl = _overlay.querySelector('.track-editor__hint');
 
@@ -32,6 +34,12 @@ const TrackEditor = (() => {
       const close = (e) => { e.preventDefault(); e.stopPropagation(); hide(); };
       _closeBtn.addEventListener('click', close);
       _closeBtn.addEventListener('touchend', close);
+    }
+
+    if (_cartBtn) {
+      const onCart = (e) => { e.preventDefault(); e.stopPropagation(); _openSkinPopup(); };
+      _cartBtn.addEventListener('click', onCart);
+      _cartBtn.addEventListener('touchend', onCart);
     }
 
     if (_popupHost) {
@@ -64,6 +72,10 @@ const TrackEditor = (() => {
 
     _overlay.classList.remove('overlay--hidden');
     _resetHint();
+
+    if (_cartBtn) {
+      _cartBtn.style.display = GameState.get('trainSkins') ? '' : 'none';
+    }
 
     const svg = House.getSvg();
     _editorLayer = svg ? svg.querySelector('.house__editor-layer') : null;
@@ -282,6 +294,51 @@ const TrackEditor = (() => {
     pop.appendChild(row);
     _popupHost.appendChild(pop);
     _currentPopup = pop;
+  }
+
+  function _openSkinPopup() {
+    _closePopup();
+    const current = GameState.getTrainSkin();
+
+    const pop = document.createElement('div');
+    pop.className = 'editor-popup editor-popup--skin';
+
+    const title = document.createElement('div');
+    title.className = 'editor-popup__title';
+    title.textContent = 'Choose cart';
+    pop.appendChild(title);
+
+    const row = document.createElement('div');
+    row.className = 'editor-popup__row';
+
+    for (const key of Object.keys(TRAIN_SKINS)) {
+      const skin = TRAIN_SKINS[key];
+      const btn = document.createElement('button');
+      btn.className = 'editor-popup__option';
+      if (current === key) btn.classList.add('editor-popup__option--selected');
+      btn.type = 'button';
+      btn.innerHTML = `
+        <div class="editor-popup__icon">${skin.icon}</div>
+        <div class="editor-popup__label">${skin.label}</div>
+      `;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        _applySkin(key);
+      });
+      row.appendChild(btn);
+    }
+
+    pop.appendChild(row);
+    _popupHost.appendChild(pop);
+    _currentPopup = pop;
+  }
+
+  function _applySkin(skinKey) {
+    GameState.setTrainSkin(skinKey);
+    Train.setCartSkin(skinKey);
+    Progress.save();
+    _closePopup();
   }
 
   /* ─── State mutations ─── */

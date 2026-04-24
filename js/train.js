@@ -17,23 +17,21 @@ const Train = (() => {
   let _pathSampleStep = 2;   // units between consecutive samples
   let _pathTotalLen = 0;
 
-  /** Create the cart SVG group (~30×20). */
-  function _createCart() {
+  /** Create the cart SVG group (~30×20) using the chosen skin. */
+  function _createCart(skinKey) {
+    const skin = TRAIN_SKINS[skinKey] || TRAIN_SKINS.default;
     const g = document.createElementNS(NS, 'g');
     g.classList.add('train__cart');
-    g.innerHTML = `
-      <!-- cart body -->
-      <rect x="-14" y="-12" width="28" height="16" rx="3" fill="#2a1a3a" stroke="#5a3a6a" stroke-width="1.2"/>
-      <!-- seat back -->
-      <rect x="-10" y="-16" width="20" height="6" rx="2" fill="#3a2a4a" stroke="#5a3a6a" stroke-width="0.8"/>
-      <!-- wheels -->
-      <circle cx="-8" cy="6" r="3.5" fill="#444" stroke="#666" stroke-width="1"/>
-      <circle cx="8" cy="6" r="3.5" fill="#444" stroke="#666" stroke-width="1"/>
-      <!-- headlamp -->
-      <circle cx="15" cy="-6" r="2" fill="#ffd700" opacity="0.8"/>
-    `;
+    g.innerHTML = skin.cartSvg();
     g.style.display = 'none';
     return g;
+  }
+
+  /** Swap the cart's SVG in place (preserves position/transform). */
+  function setCartSkin(skinKey) {
+    if (!_cartEl) return;
+    const skin = TRAIN_SKINS[skinKey] || TRAIN_SKINS.default;
+    _cartEl.innerHTML = skin.cartSvg();
   }
 
   /**
@@ -265,7 +263,7 @@ const Train = (() => {
   function init(svg) {
     _svg = svg;
     _trackLayer = svg.querySelector('.house__track-layer');
-    _cartEl = _createCart();
+    _cartEl = _createCart(GameState.getTrainSkin());
 
     const { d, route } = _computeTrack();
     _renderTrack(d);
@@ -434,5 +432,5 @@ const Train = (() => {
     _renderTrack(d);
   }
 
-  return { init, animateEntry, animateCollection, animateExit, extendTrack, renderTrack, stop };
+  return { init, animateEntry, animateCollection, animateExit, extendTrack, renderTrack, setCartSkin, stop };
 })();

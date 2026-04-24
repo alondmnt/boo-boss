@@ -432,12 +432,14 @@ body.crowd--many .creature--ghost .creature__hover {
   pointer-events: auto;
 }
 .track-editor__title { font-size: 1.1rem; }
-.track-editor__close {
+.track-editor__actions { display: flex; align-items: center; gap: 4px; }
+.track-editor__close, .track-editor__cart-btn {
   background: none; border: none;
   color: #e0d0ff; font-size: 1.3rem;
   cursor: pointer; padding: 4px 10px;
   line-height: 1;
 }
+.track-editor__cart-btn { font-size: 1.2rem; }
 .track-editor__hint {
   position: fixed; bottom: 20px; left: 0; right: 0;
   text-align: center;
