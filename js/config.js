@@ -222,6 +222,52 @@ const PIECES = {
                     fill="#04020a" stroke="#241434" stroke-width="1.2" rx="3"/>`;
     },
   },
+  loop: {
+    key: 'loop',
+    label: 'loop',
+    icon: '🔁',
+    costCoins: 12,
+    // Horizontal only — loops on floor transitions would collide with room walls.
+    slotTypes: ['sameFloorHorizontal'],
+    pathGenerator: (prev, curr, slotType) => {
+      // Approach with a mild dip into the loop, spin 360° clockwise above the
+      // baseline, then exit to the next room centre. SVG arc with matching
+      // endpoints (~2px apart) and sweep=1/large-arc=1 traces a near-full circle.
+      const r = 16;
+      const midX = (prev.x + curr.x) / 2;
+      const baseY = (prev.y + curr.y) / 2;
+      return ` Q${(prev.x + midX) / 2},${prev.y + 4} ${midX - 1},${baseY}`
+           + ` A${r},${r} 0 1 1 ${midX + 1},${baseY}`
+           + ` Q${(midX + curr.x) / 2},${curr.y + 4} ${curr.x},${curr.y}`;
+    },
+  },
+  corkscrew: {
+    key: 'corkscrew',
+    label: 'corkscrew',
+    icon: '🌀',
+    costCoins: 15,
+    // Horizontal only — same rationale as loop.
+    slotTypes: ['sameFloorHorizontal'],
+    pathGenerator: (prev, curr, slotType) => {
+      // Three S-curve bulges alternating up/down, reusing the shape of the
+      // existing exterior return corkscrew (see _computeTrack:77-101).
+      const turns = 3;
+      const amp = 12;
+      const midY = (prev.y + curr.y) / 2;
+      const totalX = curr.x - prev.x;
+      const step = totalX / (turns * 2);
+      let d = '';
+      let x = prev.x;
+      for (let i = 0; i < turns; i++) {
+        d += ` C${x + step * 0.6},${midY - amp} ${x + step * 0.6},${midY - amp} ${x + step},${midY}`;
+        x += step;
+        d += ` C${x + step * 0.6},${midY + amp} ${x + step * 0.6},${midY + amp} ${x + step},${midY}`;
+        x += step;
+      }
+      d += ` L${curr.x},${curr.y}`;
+      return d;
+    },
+  },
 };
 
 /**
