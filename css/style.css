@@ -109,6 +109,7 @@ html, body {
 .house__room--unlocking .house__planks { opacity: 0; transition: opacity 0.4s; }
 
 /* ===== Train & track ===== */
+.house__track-layer { pointer-events: none; }
 .train__rail { stroke-linecap: round; }
 .train__cart { transition: none; will-change: transform; }
 
