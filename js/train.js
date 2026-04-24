@@ -37,6 +37,30 @@ const Train = (() => {
   }
 
   /**
+   * Generate one segment of the SVG path between two room centres.
+   * slotType classifies the segment so piece dispatch (future) can vary geometry.
+   */
+  function _segmentPath(prev, curr, slotType) {
+    const L = CONFIG.house;
+    const divX = L.wallT + L.roomW + L.wallT / 2;
+    const dip = 8;
+
+    if (slotType === 'floorChange') {
+      // Tight curve hugging the centre divider
+      return ` Q${divX},${prev.y} ${divX},${(prev.y + curr.y) / 2}`
+           + ` Q${divX},${curr.y} ${curr.x},${curr.y}`;
+    }
+    // sameFloorHorizontal: gentle dip
+    const midX = (prev.x + curr.x) / 2;
+    return ` Q${midX},${prev.y + dip} ${curr.x},${curr.y}`;
+  }
+
+  /** Classify a segment by the vertical gap between its endpoints. */
+  function _slotTypeFor(prev, curr) {
+    return Math.abs(prev.y - curr.y) > 10 ? 'floorChange' : 'sameFloorHorizontal';
+  }
+
+  /**
    * Compute the SVG path through the current track route.
    * The track winds like a dark ride — gentle dips through rooms,
    * tight arcs for floor transitions. Return path spirals down
@@ -50,28 +74,14 @@ const Train = (() => {
     const svgW = 2 * L.roomW + 3 * L.wallT;
     const centres = route.map(r => House.getRoomCentre(r));
 
-    // Centre divider X
-    const divX = L.wallT + L.roomW + L.wallT / 2;
-    const dip = 8;
-
     // Entry: gentle curve in from left
     const entryY = centres[0].y;
-    let d = `M${-20},${entryY} Q${centres[0].x * 0.4},${entryY + dip} ${centres[0].x},${centres[0].y}`;
+    let d = `M${-20},${entryY} Q${centres[0].x * 0.4},${entryY + 8} ${centres[0].x},${centres[0].y}`;
 
     for (let i = 1; i < centres.length; i++) {
       const prev = centres[i - 1];
       const curr = centres[i];
-      const floorChange = Math.abs(prev.y - curr.y) > 10;
-
-      if (!floorChange) {
-        // Same floor: gentle dip
-        const midX = (prev.x + curr.x) / 2;
-        d += ` Q${midX},${prev.y + dip} ${curr.x},${curr.y}`;
-      } else {
-        // Floor transition: tight curve hugging the divider
-        d += ` Q${divX},${prev.y} ${divX},${(prev.y + curr.y) / 2}`;
-        d += ` Q${divX},${curr.y} ${curr.x},${curr.y}`;
-      }
+      d += _segmentPath(prev, curr, _slotTypeFor(prev, curr));
     }
 
     // Return path: corkscrew down the exterior right wall
