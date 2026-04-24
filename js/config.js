@@ -173,6 +173,55 @@ const PIECES = {
       return ` Q${midX},${prev.y + 8} ${curr.x},${curr.y}`;
     },
   },
+  hill: {
+    key: 'hill',
+    label: 'hill',
+    icon: '⛰️',
+    costCoins: 5,
+    slotTypes: ['sameFloorHorizontal', 'floorChange'],
+    pathGenerator: (prev, curr, slotType) => {
+      const L = CONFIG.house;
+      const divX = L.wallT + L.roomW + L.wallT / 2;
+      if (slotType === 'floorChange') {
+        // Steep drop: the divider curve sags further before rising
+        const midY = (prev.y + curr.y) / 2 + 18;
+        return ` Q${divX},${prev.y + 4} ${divX},${midY}`
+             + ` Q${divX},${curr.y - 4} ${curr.x},${curr.y}`;
+      }
+      // Same floor: exaggerated dip (climbs, dips, rises)
+      const midX = (prev.x + curr.x) / 2;
+      const baseY = Math.max(prev.y, curr.y);
+      return ` Q${midX},${baseY + 28} ${curr.x},${curr.y}`;
+    },
+  },
+  tunnel: {
+    key: 'tunnel',
+    label: 'tunnel',
+    icon: '🕳️',
+    costCoins: 5,
+    slotTypes: ['sameFloorHorizontal', 'floorChange'],
+    // Path matches the straight curve — the cart traverses normally. The
+    // visible effect comes from an aux dark rect rendered above the cart.
+    pathGenerator: (prev, curr, slotType) =>
+      PIECES.straight.pathGenerator(prev, curr, slotType),
+    auxSvg: (prev, curr, slotType) => {
+      if (slotType === 'floorChange') {
+        const L = CONFIG.house;
+        const divX = L.wallT + L.roomW + L.wallT / 2;
+        const minY = Math.min(prev.y, curr.y) + 6;
+        const maxY = Math.max(prev.y, curr.y) - 6;
+        return `<rect class="piece--tunnel" x="${divX - 12}" y="${minY}"
+                      width="24" height="${maxY - minY}"
+                      fill="#04020a" stroke="#241434" stroke-width="1.2" rx="3"/>`;
+      }
+      const x1 = Math.min(prev.x, curr.x) + 18;
+      const x2 = Math.max(prev.x, curr.x) - 18;
+      const midY = (prev.y + curr.y) / 2;
+      return `<rect class="piece--tunnel" x="${x1}" y="${midY - 8}"
+                    width="${x2 - x1}" height="24"
+                    fill="#04020a" stroke="#241434" stroke-width="1.2" rx="3"/>`;
+    },
+  },
 };
 
 /**

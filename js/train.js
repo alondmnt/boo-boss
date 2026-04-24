@@ -206,6 +206,32 @@ const Train = (() => {
 
     // Add cart to track layer
     _trackLayer.appendChild(_cartEl);
+
+    // Piece aux overlays (e.g. tunnel dark rects) — rendered ABOVE the cart so
+    // a cart passing through a tunnel visibly disappears behind the overlay.
+    _renderPieceAux();
+  }
+
+  /** Append any aux SVG (overlays, not in the path) contributed by installed pieces. */
+  function _renderPieceAux() {
+    const route = GameState.getTrackRoute();
+    if (route.length < 2) return;
+    for (let i = 1; i < route.length; i++) {
+      const fromRoom = route[i - 1];
+      const toRoom = route[i];
+      const key = GameState.getSegmentOverride(GameState._segId(fromRoom, toRoom));
+      if (!key) continue;
+      const piece = PIECES[key];
+      if (!piece || !piece.auxSvg) continue;
+      const prev = House.getRoomCentre(fromRoom);
+      const curr = House.getRoomCentre(toRoom);
+      if (!prev || !curr) continue;
+      const g = document.createElementNS(NS, 'g');
+      g.classList.add('piece-aux');
+      g.setAttribute('data-piece', key);
+      g.innerHTML = piece.auxSvg(prev, curr, _slotTypeFor(prev, curr));
+      _trackLayer.appendChild(g);
+    }
   }
 
   /** Compute distance along path for each room stop. */
