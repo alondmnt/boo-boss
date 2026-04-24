@@ -171,16 +171,6 @@ the SVG factory takes `(creature, monsterType, action)` and composites them:
 
 visitor fears and loves are keyed to **creature type** (people are scared of spiders, not of "zombie spiders" specifically). monster type and action affect **scare effectiveness** (multipliers) but don't change the fear/love match.
 
-#### progressive unlock of axes
-
-```
-MVP (0-50):        [creature] + [room]                            = 2 picks
-expansion 1 (55-85):  [creature] + [monster type] + [room]          = 3 picks
-expansion 2 (90+):    [creature] + [monster type] + [action] + [room] = 4 picks
-```
-
-in the MVP, creatures have a default monster type and default action baked in. the player just picks creature + room. when axis 2 unlocks, the existing creatures gain selectable monster types. when axis 3 unlocks, actions become selectable too.
-
 ### rooms (3 open at start, 6 total across expansions)
 
 2 rooms × 3 floors Victorian house. the full structure is drawn from the start; locked rooms are dark with boarded doorways. the train track winds through all unlocked rooms - when a room unlocks, new track sections connect it to the route.
@@ -285,28 +275,20 @@ interleaves creatures with rooms and upgrades so each unlock type feels fresh. e
 ### expansion 2: "the director's chair" (~coins 95+) [IMPLEMENTED]
 **unlocks axis 3: actions.** deployment becomes 4-pick: creature -> monster type -> action -> room.
 
-design intent: actions are **scripted mini-scenes** — each action replaces the default scare animation with a distinctive choreography (setup → pause → payoff). the gag/timing is the mechanic; players pick an action for its *style* of scare. earlier v0.3.0 work-in-progress treated actions as decorative transforms layered on top of the default scare, which felt invisible against the dominant scare-pose change; that approach was reverted in favour of this scripted-scene model.
-
-shipped in **v0.3.0**: director's chair unlock at 95 coins; 4-stage picker (creature + monster + action + room); the 3 base actions (jumpOut, grabHat, dropFromCeiling) rewritten as scripted mini-scenes; universal hat added to visitors so grabHat always has a target; 3 new unlockable actions — swarm (105), peek-a-boo (115), chase (130).
+design intent: actions are **scripted mini-scenes** — each replaces the default scare animation with a distinctive choreography (setup → pause → payoff). the gag/timing is the mechanic; players pick an action for its *style* of scare. a decorative-transform-on-top approach was tried and rejected — it felt invisible against the dominant scare-pose change.
 
 the child's hat-grab works on any creature (spider leg reaches out, gorilla arm, bat wing, etc.).
 
-**on hold — remaining actions (creep, cackle/howl)**: the three shipped unlockable actions plus the three rewritten base actions already make the axis feel rich. more can land later if the content ladder needs extending.
+**on hold — remaining actions (creep, cackle/howl)**: the shipped unlockable actions plus the three rewritten base actions already make the axis feel rich. more can land later if the content ladder needs extending.
 
-**shipped — randomised visitor props & hair**: each visitor now picks a headwear prop (top hat, cap, flower, bow, beanie) plus a hair style independently. props sit inside `.visitor__hat` so grabHat snatches whatever the visitor happens to be wearing. gender mix across prop choices is balanced so crowds read as mixed without loud signalling.
-
-triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play, and the pair-combo system removed in commit 08e44e8 isn't worth rebuilding.
+triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play.
 
 ### track customisation — rollercoaster [STANDALONE]
 carved out from expansion 3 because it's the most distinctive idea there and interacts with existing axes rather than adding new ones.
 
 reshape the train path — add loops, corkscrews, elevation drops, crossovers. the dark ride becomes a thrill ride. loops and fast sections create new deployment timing (loops pair with dropFromCeiling / wall-cling actions; fast sections with quick scares). visitors also become harder to scare mid-loop (disoriented or exhilarated), so track shapes interact with creature/monster/action choices.
 
-**track ordering (lower-impact variant)**: a simpler version of the same refactor is to keep the path straight but let the player pick the *order* of rooms (e.g. entrance → bedroom → bathroom → kitchen vs. the default). shipped as a persistent toggle (like the sound toggle), deferred to the next wave, stored in `GameState` + localStorage. locked rooms are handled by the existing "train passes through without stopping" behaviour, so each ordering is just a canonical 6-room array.
-
-- **impact**: moderate-low. visitors wander freely between adjacent rooms after disembarking, so ordering mostly shifts *initial* distribution; the effect dilutes within seconds. main wins are visual variety and a light preference lever (e.g. front-loading upstairs rooms).
-- **cost**: low-medium. parameterise `house.js` to take a room-order array, add a catalogue in CONFIG, wire the toggle.
-- **recommendation**: fold into the rollercoaster work rather than shipping as a separate feature. same `house.js` refactor, and the shape variations (loops, elevation) carry the mechanical teeth that pure reordering lacks. cognitive-load fixes (sticky last-used picks, faster picker, grouped deploys) outrank both on current ROI.
+**track ordering (lower-impact variant)**: keep the path straight but let the player pick the *order* of rooms. impact is moderate-low — visitors wander freely after disembarking, so ordering mostly shifts initial distribution and the effect dilutes within seconds. recommendation: fold into the rollercoaster work rather than shipping separately — same `house.js` refactor, and the shape variations carry the mechanical teeth pure reordering lacks.
 
 ### expansion 3: "house upgrades" (~coins 120+) [ON HOLD]
 on hold: the game already has enough layers (creatures + monster types + actions + rooms, plus variety and full-cast coins). revisit only if later versions need new progression hooks.
@@ -361,33 +343,3 @@ with all rooms open, higher waves, and the full creature × monster type × acti
   - "dark": fear/love bubbles hidden for the first 3 seconds
 - **group dynamics**: when a visitor gets scared, adjacent visitors who share the same fear flinch (+5 points). rewards spatial planning.
 
-## verification
-
-- open `index.html` in browser, tap splash screen to start
-- train arrives carrying 3 visitors with thought bubbles (fear/love icons visible)
-- train winds through entrance hall -> bedroom -> kitchen. visitors hop off at different rooms.
-- tap spider in creature panel -> tap kitchen -> spider materialises with animation + sound
-- visitor walks into kitchen: if fears spider -> scared reaction + score. if loves spider -> hug + hearts + spider removed
-- spider panel icon shows cooldown timer, re-enables after 15s
-- complete wave -> all visitors board exit train -> score summary -> coin awarded -> unlock check
-- at 5 coins: owl creature unlocks with fanfare
-- at 10 coins: attic unlocks, track extends to include it
-- reset button restarts current wave. long-press resets all progress
-- sound toggle mutes/unmutes all audio
-- test on mobile (touch) and desktop (click)
-
-## commit plan
-
-1. `feat: scaffold project with index.html and module structure` - index.html with SVG container, script tags, basic CSS reset. empty IIFE shells for all 16 modules.
-2. `feat: add config, game-state, and progress modules` - CONFIG with creature/monster/action rosters, room defs, wave progression, scoring. GameState overlay. Progress with localStorage and unlock tier system.
-3. `feat: add house cutaway SVG generation and train track` - House module generating 2×3 Victorian cutaway with locked/unlocked rooms. Train module with track path through unlocked rooms, cart animation.
-4. `feat: add visitor SVG factory and movement` - Visitor module with simple sketched figures, walk animation, thought bubbles (fear/love icons), room-to-room movement.
-5. `feat: add creature SVG factories` - Creatures module with detailed SVG bodies for spider, gorilla, bat, cat. idle pose, scare pose, hug pose for each.
-6. `feat: add monster type overlays and scare factory` - MonsterTypes module (zombie, witch, skeleton overlays). ScareFactory compositing creature + monster type. Actions module with jump-out, grab-hat, drop-from-ceiling. MVP uses defaults (no player choice for axes 2-3 yet).
-7. `feat: add scare evaluation and reaction animations` - Reactions + Particles modules. scared/hug/neutral state handling, CSS keyframes, spooky burst and heart particles.
-8. `feat: add audio synthesis` - Audio module with synthesised sounds per creature, plus hug, deploy, wave start/end, coin, fanfare.
-9. `feat: add picker UI for creature selection and room targeting` - Picker module with creature panel, cooldown display, tap-creature-then-tap-room flow.
-10. `feat: add wave state machine with train integration` - Wave module managing train arrival, visitor disembarkation at rooms, active visitor tracking, exit train, wave completion.
-11. `feat: add game state machine and splash screen` - Game module tying everything together. splash -> playing -> game over. generation counter.
-12. `feat: add unlock tiers and fanfare` - wire up UNLOCK_TIERS (owl, attic, snake, faster cooldowns, rat, endless mode) with fanfare and track extension animation.
-13. `feat: add CSS styling and animations` - complete stylesheet: Victorian house theme, train/track, visitor walk cycle, creature idle/scare/hug keyframes, panel styling, responsive mobile layout.
