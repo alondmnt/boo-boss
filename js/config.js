@@ -207,26 +207,17 @@ const PIECES = {
     pathGenerator: (prev, curr, slotType) =>
       PIECES.straight.pathGenerator(prev, curr, slotType),
     auxSvg: (prev, curr, slotType) => {
-      if (slotType === 'floorChange') {
-        const L = CONFIG.house;
-        const divX = L.wallT + L.roomW + L.wallT / 2;
-        const minY = Math.min(prev.y, curr.y) + 10;
-        const maxY = Math.max(prev.y, curr.y) - 10;
-        // Pill-shaped vertical tunnel along the divider, tall rounded corners
-        // read as a tunnel mouth at each end.
-        return `<rect class="piece--tunnel" x="${divX - 15}" y="${minY}"
-                      width="30" height="${Math.max(24, maxY - minY)}"
-                      rx="15" ry="15"
-                      fill="#05020c" stroke="#3a2040" stroke-width="1.5"/>`;
-      }
-      // Same-floor: horizontal pill covering the middle ~70% of the segment.
-      const x1 = Math.min(prev.x, curr.x) + 22;
-      const x2 = Math.max(prev.x, curr.x) - 22;
-      const midY = (prev.y + curr.y) / 2;
-      return `<rect class="piece--tunnel" x="${x1}" y="${midY - 14}"
-                    width="${x2 - x1}" height="32"
-                    rx="16" ry="16"
-                    fill="#05020c" stroke="#3a2040" stroke-width="1.5"/>`;
+      // The tunnel hugs the underlying track curve (it doesn't change
+      // geometry — only visibility), rendered as a thick semi-transparent
+      // stroke that bends with the path. stroke-dasharray creates periodic
+      // gaps (slits) so the cart is briefly visible as it passes through.
+      const innerPath = `M${prev.x},${prev.y}` + PIECES.straight.pathGenerator(prev, curr, slotType);
+      return `<path class="piece--tunnel" d="${innerPath}"
+                    fill="none"
+                    stroke="#1a0a26" stroke-width="20"
+                    stroke-linecap="round"
+                    stroke-dasharray="22 7"
+                    opacity="0.78"/>`;
     },
   },
   loop: {

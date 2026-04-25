@@ -540,8 +540,9 @@ body.crowd--many .creature--ghost .creature__hover {
 .house__room--closed .house__room-bg { opacity: 0.35; }
 .house__closed-banner { pointer-events: none; }
 
-/* Tunnel piece — dark overlay that covers the cart as it passes through */
-.piece--tunnel { filter: drop-shadow(0 0 4px rgba(0,0,0,0.85)); }
+/* Tunnel piece — semi-transparent dark stroke following the track curve.
+   Soft drop-shadow gives a hint of depth without hard edges. */
+.piece--tunnel { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }
 .piece-aux { pointer-events: none; }
 
 /* Piece malfunction: sparks blink, crack stays static */
