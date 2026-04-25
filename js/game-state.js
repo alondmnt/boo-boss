@@ -214,6 +214,12 @@ const GameState = (() => {
       _ownedSkins.add('mine');
     }
     if (_trainSkin === 'wooden') _trainSkin = 'mine';
+    // 'shoe' (old leather boot) replaced by 'sneaker'.
+    if (_ownedSkins.has('shoe')) {
+      _ownedSkins.delete('shoe');
+      _ownedSkins.add('sneaker');
+    }
+    if (_trainSkin === 'shoe') _trainSkin = 'sneaker';
     // If we loaded a current skin, mark it owned even if the snapshot's
     // ownedSkins list is stale (from before ownership tracking).
     _ownedSkins.add(_trainSkin);
