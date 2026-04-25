@@ -154,20 +154,28 @@ const Train = (() => {
   }
 
   /**
-   * Build the cart's transform at distance d: position + a wheels-down
-   * orientation. Carts have gravity-fixed art (wheels, headlights), so a
-   * leftward tangent should mirror the cart horizontally rather than rotate
-   * it 180° upside-down. Tilt for ramps is bounded to ±90° from upright.
+   * Build the cart's transform at distance d for the given orientation policy.
    *
-   *   dx ≥ 0 → rotate by atan2(dy, dx)
-   *   dx < 0 → mirror in x, rotate by atan2(dy, -dx) in the mirrored frame
+   *   'upright' (default): wheels-down hybrid. Carts have gravity-fixed art,
+   *      so leftward tangents mirror the cart in x rather than inverting it.
+   *      Tilt for ramps is bounded to ±90° from upright.
+   *      dx ≥ 0 → rotate by atan2(dy, dx)
+   *      dx < 0 → mirror in x, rotate by atan2(dy, -dx) in the mirrored frame
+   *
+   *   'tangent': full path-tangent rotation (cart inverts on the inside of
+   *      loops and follows the curve on the corkscrew return). Used for
+   *      pieces where rolling all the way around is in character.
    */
-  function _cartTransform(d) {
+  function _cartTransform(d, orientation) {
     const pt = _sampleAt(d);
     const ahead  = _sampleAt(d + _TANGENT_WIN);
     const behind = _sampleAt(d - _TANGENT_WIN);
     const dx = ahead.x - behind.x;
     const dy = ahead.y - behind.y;
+    if (orientation === 'tangent') {
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      return `translate(${pt.x},${pt.y}) rotate(${angle})`;
+    }
     if (dx >= 0) {
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
       return `translate(${pt.x},${pt.y}) rotate(${angle})`;
@@ -178,15 +186,36 @@ const Train = (() => {
 
   /**
    * Level (no-rotation) cart transform for paused-at-stop frames. Preserves
-   * the mirror so the cart keeps facing its travel direction while parked,
-   * instead of snapping to face right on leftward stops.
+   * the upright mirror so the cart keeps facing its travel direction while
+   * parked. 'tangent' regions don't carry a mirror, so just translate.
    */
-  function _cartTransformLevel(d) {
+  function _cartTransformLevel(d, orientation) {
     const pt = _sampleAt(d);
+    if (orientation === 'tangent') return `translate(${pt.x},${pt.y})`;
     const ahead  = _sampleAt(d + _TANGENT_WIN);
     const behind = _sampleAt(d - _TANGENT_WIN);
     if (ahead.x - behind.x >= 0) return `translate(${pt.x},${pt.y})`;
     return `translate(${pt.x},${pt.y}) scale(-1,1)`;
+  }
+
+  /**
+   * Per-region orientation policy. Region k is the path stretch where
+   * `nextStopIdx === k` during animation:
+   *   region 0           — entry curve (before the first stop)
+   *   region 1..N-1      — segment route[k-1] → route[k]
+   *   region N           — corkscrew return after the last stop
+   * Returns an array of length route.length + 1.
+   */
+  function _computeOrientations(route) {
+    const orientations = ['upright']; // entry curve
+    for (let i = 1; i < route.length; i++) {
+      const segId = GameState._segId(route[i - 1], route[i]);
+      const key = GameState.getSegmentOverride(segId) || 'straight';
+      const piece = PIECES[key] || PIECES.straight;
+      orientations.push(piece.cartOrientation || 'upright');
+    }
+    orientations.push('tangent'); // corkscrew return — dx oscillates around wallX
+    return orientations;
   }
 
   /** Render track rails and crossties onto the track layer. */
@@ -343,6 +372,7 @@ const Train = (() => {
 
     const { route } = _computeTrack();
     const stops = _computeStopDistances(route);
+    const orientations = _computeOrientations(route);
     const totalLen = _pathTotalLen;
     const speed = totalLen / CONFIG.trainSpeedMs;
     let currentDist = 0;
@@ -375,8 +405,8 @@ const Train = (() => {
         return;
       }
 
-      // Position and orient cart along the path tangent
-      _cartEl.setAttribute('transform', _cartTransform(currentDist));
+      // Position and orient cart per the current region's orientation policy
+      _cartEl.setAttribute('transform', _cartTransform(currentDist, orientations[nextStopIdx]));
 
       // Check for room stops
       if (nextStopIdx < stops.length && currentDist >= stops[nextStopIdx].distance) {
@@ -384,8 +414,8 @@ const Train = (() => {
         nextStopIdx++;
         paused = true;
         pauseStart = timestamp;
-        // Sit level while paused — drop the tangent tilt but keep the mirror.
-        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist));
+        // Sit level — use the orientation of the segment we just finished.
+        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist, orientations[nextStopIdx - 1]));
         if (onRoomReached) onRoomReached(stop.roomId, nextStopIdx - 1);
       }
 
@@ -407,6 +437,7 @@ const Train = (() => {
 
     const { route } = _computeTrack();
     const stops = _computeStopDistances(route);
+    const orientations = _computeOrientations(route);
     const totalLen = _pathTotalLen;
     const speed = totalLen / (CONFIG.trainSpeedMs * 0.7); // faster collection run
     let nextStopIdx = 0;
@@ -440,7 +471,7 @@ const Train = (() => {
         return;
       }
 
-      _cartEl.setAttribute('transform', _cartTransform(currentDist));
+      _cartEl.setAttribute('transform', _cartTransform(currentDist, orientations[nextStopIdx]));
 
       // Check for room stops
       if (nextStopIdx < stops.length && currentDist >= stops[nextStopIdx].distance) {
@@ -448,8 +479,8 @@ const Train = (() => {
         nextStopIdx++;
         paused = true;
         pauseStart = timestamp;
-        // Sit level while paused — drop the tangent tilt but keep the mirror.
-        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist));
+        // Sit level — use the orientation of the segment we just finished.
+        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist, orientations[nextStopIdx - 1]));
         if (onRoomReached) onRoomReached(stop.roomId);
       }
 

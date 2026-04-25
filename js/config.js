@@ -227,6 +227,9 @@ const PIECES = {
     costCoins: 12,
     // Horizontal only — loops on floor transitions would collide with room walls.
     slotTypes: ['sameFloorHorizontal'],
+    // Loops are the one piece where inverting is in character — opt out of the
+    // wheels-down hybrid and let the cart rotate fully along the path tangent.
+    cartOrientation: 'tangent',
     pathGenerator: (prev, curr, slotType) => {
       // The loop must run in the direction that matches the cart's incoming
       // velocity, otherwise the entry tangent reverses ~180° on impact.
