@@ -237,17 +237,26 @@ const PIECES = {
     // Horizontal only — loops on floor transitions would collide with room walls.
     slotTypes: ['sameFloorHorizontal'],
     pathGenerator: (prev, curr, slotType) => {
-      // For a left-to-right cart, a natural loop runs CCW visually: up the
-      // right side, over the top moving left, down the left side. We enter on
-      // the RIGHT of the loop's bottom (midX+1), so the entry tangent points
-      // up-right matching the cart's +x velocity, and exit on the LEFT
-      // (midX-1) where the tangent points right-down into the exit curve.
-      // sweep-flag=0 selects the CCW direction along the upper-circle long arc.
+      // The loop must run in the direction that matches the cart's incoming
+      // velocity, otherwise the entry tangent reverses ~180° on impact.
+      // fullTrackRoute snakes through the house, so segments alternate
+      // direction: floors 1 and 3 run left-to-right, floor 2 runs right-to-left.
+      //
+      // Rightward cart (+x): natural direction is CCW visually — enter on the
+      //   RIGHT of the loop's bottom, exit on the LEFT. (sweep-flag=0)
+      // Leftward cart (-x): mirror — enter on the LEFT, exit on the RIGHT,
+      //   loop runs CW. (sweep-flag=1)
+      // In both cases we use the upper-circle long arc so the loop sits above
+      // the baseline.
       const r = 16;
       const midX = (prev.x + curr.x) / 2;
       const baseY = (prev.y + curr.y) / 2;
-      return ` Q${(prev.x + midX) / 2},${prev.y + 4} ${midX + 1},${baseY}`
-           + ` A${r},${r} 0 1 0 ${midX - 1},${baseY}`
+      const goingRight = curr.x > prev.x;
+      const entryX = goingRight ? midX + 1 : midX - 1;
+      const exitX  = goingRight ? midX - 1 : midX + 1;
+      const sweep  = goingRight ? 0 : 1;
+      return ` Q${(prev.x + midX) / 2},${prev.y + 4} ${entryX},${baseY}`
+           + ` A${r},${r} 0 1 ${sweep} ${exitX},${baseY}`
            + ` Q${(midX + curr.x) / 2},${curr.y + 4} ${curr.x},${curr.y}`;
     },
   },
