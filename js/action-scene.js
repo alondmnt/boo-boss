@@ -146,6 +146,46 @@ const ActionScene = (() => {
   }
 
   /**
+   * Add a small stop-sign overlay above the creature's head — the held-sign
+   * pose for the room-block action. Attached at the creature's top level (like
+   * _addFloorShadow) so it survives pose transitions during scare payoff,
+   * positioned via the headTop anchor. Idempotent.
+   */
+  function _addBlockSign(creature) {
+    if (!_live(creature)) return null;
+    _removeBlockSign(creature);
+
+    const anchors = Creatures.getAnchors(creature.type);
+    const { x, y } = anchors.headTop;
+    const s = anchors.scale || 1;
+
+    // Octagon centred at (0, -3) inside the local g. Radius 2.5 reads as a
+    // sign at the small creature scale without crowding the silhouette.
+    const radius = 2.5;
+    const pts = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (Math.PI / 4) * i + (Math.PI / 8);
+      pts.push(`${(radius * Math.cos(a)).toFixed(2)},${(-3 + radius * Math.sin(a)).toFixed(2)}`);
+    }
+
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('creature__block-sign');
+    g.setAttribute('transform', `translate(${x + 3}, ${y - 2}) scale(${s})`);
+    g.innerHTML = `
+      <line x1="0" y1="0" x2="0" y2="-1" stroke="#3a2010" stroke-width="0.7"/>
+      <polygon points="${pts.join(' ')}" fill="#c0392b" stroke="#5a1410" stroke-width="0.5"/>
+    `;
+    creature.el.appendChild(g);
+    return g;
+  }
+
+  function _removeBlockSign(creature) {
+    if (!creature || !creature.el) return;
+    const sign = creature.el.querySelector('.creature__block-sign');
+    if (sign && sign.parentNode) sign.parentNode.removeChild(sign);
+  }
+
+  /**
    * Finish the scare: particles, audio, visitor scared state, then onDone.
    * Optional isStale lets the hold-end setTimeout bail on abort so the
    * trailing pose reset doesn't stomp a hug pose that started mid-scare;
@@ -717,7 +757,30 @@ const ActionScene = (() => {
     swarm:           {                           payoff: _swarm },
     peekABoo:        { arm: _peekABooArm,        payoff: _peekABooPayoff },
     chase:           {                           payoff: _chase },
+    block:           { arm: _blockArm,           payoff: _blockPayoff },
   };
+
+  /**
+   * block — arm: pin the stop-sign overlay onto the creature's pose.
+   * No animated arm window; the sign is the visual signal that the room is
+   * being blocked, and the room overlay carries the gameplay signal. The
+   * actual block timer is owned by ScareFactory at deploy time.
+   */
+  function _blockArm(creature) {
+    if (!_live(creature)) return 0;
+    _addBlockSign(creature);
+    return 0;
+  }
+
+  /**
+   * block — payoff: keep the sign visible while running the default scare
+   * payoff. The block effect itself is independent of the encounter.
+   */
+  function _blockPayoff(visitor, creature, onDone) {
+    if (!_live(creature)) { if (onDone) onDone(); return; }
+    const isStale = _makeIsStale(creature);
+    _payoffScare(visitor, creature, onDone, 380, isStale);
+  }
 
   /** Does this action have a registered scene? */
   function has(action) {

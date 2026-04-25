@@ -37,7 +37,7 @@ const CONFIG = {
   /* ─── Actions (player-selectable once Director's Chair is unlocked) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
   actionIcons: {
-    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥', peekABoo: '🫣', chase: '🏃',
+    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥', peekABoo: '🫣', chase: '🏃', block: '🛑',
   },
   defaultAction: {
     spider: 'dropFromCeiling', gorilla: 'jumpOut', bat: 'dropFromCeiling',
@@ -48,6 +48,10 @@ const CONFIG = {
   actionEffects: {
     grabHat:         { type: 'extendStay',  value: 1, label: '+1 🎩' },
     dropFromCeiling: { type: 'splashScare', value: 1, label: 'splash 💥' },
+    // Base block duration in ms; per-monster lifetimeBonus scales it at runtime
+    // (witch +25% → 7500ms, skeleton −25% → 4500ms). Label is icon-only so it
+    // doesn't rot if the base value is retuned.
+    block:           { type: 'blockMs',     value: 6000, label: '🛑' },
   },
 
   /* ─── Rooms ─── */
@@ -511,6 +515,7 @@ const UNLOCK_TIERS = [
   { coins: 105, key: 'swarm',          icon: '👥', label: 'Swarm action!' },
   { coins: 115, key: 'peekABoo',       icon: '🫣', label: 'Peek-a-boo action!' },
   { coins: 130, key: 'chase',          icon: '🏃', label: 'Chase action!' },
+  { coins: 135, key: 'roomBlock',      icon: '🛑', label: 'Room block action!' },
   { coins: 140, key: 'trackEditor',     icon: '🎢', label: 'Ride designer unlocked!' },
   { coins: 160, key: 'trackPiecesBasic',icon: '⛰️', label: 'Hill & tunnel pieces!' },
   { coins: 180, key: 'trackPiecesShowy',icon: '🌀', label: 'Loop & corkscrew!' },

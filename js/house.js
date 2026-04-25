@@ -1007,5 +1007,44 @@ const House = (() => {
     }
   }
 
-  return { init, getRoomEl, getRoomCentre, getRoomRect, getSvg, unlockRoom, setRoomVisualClosed };
+  /**
+   * Toggle a room's mid-wave block visual (sign-holding creature inside).
+   * Adds a small octagonal stop-sign overlay near the top of the room.
+   * Distinct from setRoomVisualClosed — both can apply, neither interferes.
+   */
+  function setRoomVisualBlocked(roomId, blocked) {
+    const el = _roomEls[roomId];
+    if (!el) return;
+    let sign = el.querySelector('.house__block-sign');
+    if (blocked) {
+      el.classList.add('house__room--blocked');
+      if (!sign) {
+        const r = _roomCoords[roomId];
+        if (!r) return;
+        const cx = r.cx;
+        const cy = r.y + 14;
+        const radius = 8;
+        // Octagon vertices around (cx, cy), flat-top via π/8 phase offset
+        const pts = [];
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI / 4) * i + (Math.PI / 8);
+          pts.push(`${(cx + radius * Math.cos(angle)).toFixed(2)},${(cy + radius * Math.sin(angle)).toFixed(2)}`);
+        }
+        sign = document.createElementNS(NS, 'g');
+        sign.classList.add('house__block-sign');
+        sign.innerHTML = `
+          <polygon points="${pts.join(' ')}" fill="#c0392b" stroke="#5a1410" stroke-width="1.2"/>
+          <text x="${cx}" y="${cy + 2}" text-anchor="middle"
+                fill="#fff" font-size="4.5" font-weight="bold" letter-spacing="0.3"
+                font-family="'Arial Black', sans-serif">STOP</text>
+        `;
+        el.appendChild(sign);
+      }
+    } else {
+      el.classList.remove('house__room--blocked');
+      if (sign) sign.remove();
+    }
+  }
+
+  return { init, getRoomEl, getRoomCentre, getRoomRect, getSvg, unlockRoom, setRoomVisualClosed, setRoomVisualBlocked };
 })();

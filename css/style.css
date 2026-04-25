@@ -540,6 +540,15 @@ body.crowd--many .creature--ghost .creature__hover {
 .house__room--closed .house__room-bg { opacity: 0.35; }
 .house__closed-banner { pointer-events: none; }
 
+/* Mid-wave room block (sign-holding creature inside) */
+.house__room--blocked .house__room-bg { opacity: 0.7; }
+.house__block-sign { pointer-events: none; }
+.house__block-sign polygon { animation: block-sign-pulse 0.9s ease-in-out infinite; }
+@keyframes block-sign-pulse {
+  0%, 100% { opacity: 0.95; }
+  50%      { opacity: 0.65; }
+}
+
 /* Tunnel piece — semi-transparent dark stroke following the track curve.
    Soft drop-shadow gives a hint of depth without hard edges. */
 .piece--tunnel { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }

@@ -13,6 +13,10 @@ const GameState = (() => {
   // A key mapping to 'straight' or another piece ⇒ that piece's generator runs.
   const _segmentOverrides = {};
   const _closedRooms = new Set();
+  // Transient mid-wave room blocks (sign-holding creatures). Distinct from
+  // _closedRooms (which is the player's persistent night-closure choice).
+  // Not persisted; always empty on load.
+  const _blockedRooms = new Set();
   const _malfunctions = {};
   let _trainSkin = 'default';
   // Skins the player has bought (default always included). Buying is one-shot;
@@ -57,6 +61,7 @@ const GameState = (() => {
     swarm:          () => { _addUnique('actions', 'swarm'); },
     peekABoo:       () => { _addUnique('actions', 'peekABoo'); },
     chase:          () => { _addUnique('actions', 'chase'); },
+    roomBlock:      () => { _addUnique('actions', 'block'); },
 
     trackEditor:       () => { _booleans.trackEditor = true; },
     trackPiecesBasic:  () => { _booleans.trackPiecesBasic = true; },
@@ -167,6 +172,20 @@ const GameState = (() => {
     return _closedRooms.has(roomId);
   }
 
+  /* ─── Mid-wave room blocks (sign-holding creatures) ─── */
+
+  function isRoomBlocked(roomId) { return _blockedRooms.has(roomId); }
+  function blockRoom(roomId) { _blockedRooms.add(roomId); }
+  function unblockRoom(roomId) { _blockedRooms.delete(roomId); }
+
+  /** Clear all active blocks at wave end. Returns the array of cleared roomIds
+   *  so callers can iterate to remove visual overlays without re-deriving. */
+  function clearAllBlockedRooms() {
+    const cleared = [..._blockedRooms];
+    _blockedRooms.clear();
+    return cleared;
+  }
+
   function getTrainSkin() { return _trainSkin; }
   function setTrainSkin(key) { _trainSkin = key || 'default'; }
 
@@ -269,6 +288,7 @@ const GameState = (() => {
     for (const k of Object.keys(_objects)) delete _objects[k];
     for (const k of Object.keys(_segmentOverrides)) delete _segmentOverrides[k];
     _closedRooms.clear();
+    _blockedRooms.clear();
     for (const k of Object.keys(_malfunctions)) delete _malfunctions[k];
     _trainSkin = 'default';
     _ownedSkins.clear();
@@ -280,6 +300,7 @@ const GameState = (() => {
     get, getTrackRoute, getTrackStops, applyTier, reset,
     getSegmentOverride, setSegmentOverride, getAllSegmentOverrides,
     getClosedRooms, isRoomClosed, toggleRoomClosed,
+    isRoomBlocked, blockRoom, unblockRoom, clearAllBlockedRooms,
     getTrainSkin, setTrainSkin, hasOwnedSkin, markSkinOwned, getOwnedSkins,
     getMalfunctions, isSegmentBroken, setMalfunction,
     setCustomRoute, swapRoomInRoute, getRoomRouteIndex,

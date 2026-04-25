@@ -444,8 +444,10 @@ const Visitor = (() => {
 
   /**
    * Pick a random adjacent room for the visitor to wander to.
-   * Skips locked rooms AND rooms the player has toggled closed-tonight in the editor.
-   * Avoids immediate backtrack when possible.
+   * Skips locked rooms, rooms the player has toggled closed-tonight, and
+   * rooms with an active mid-wave block (sign-holding creature).
+   * Returns the visitor's current room when nothing is reachable, which the
+   * wave loop interprets as a stuck tick.
    */
   function pickNextRoom(visitor) {
     const adj = GameState.get('adjacency')[visitor.currentRoom];
@@ -453,7 +455,7 @@ const Visitor = (() => {
 
     const rooms = GameState.get('rooms');
     const reachable = adj.filter(r =>
-      rooms[r] && !rooms[r].locked && !GameState.isRoomClosed(r)
+      rooms[r] && !rooms[r].locked && !GameState.isRoomClosed(r) && !GameState.isRoomBlocked(r)
     );
     if (!reachable.length) return visitor.currentRoom;
 

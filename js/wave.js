@@ -287,10 +287,31 @@ const Wave = (() => {
     return false; // neutral
   }
 
+  /**
+   * Bump the visitor's stuck-tick counter when no other room is reachable.
+   * After 3 consecutive stuck ticks, mark the visitor ready to leave so an
+   * over-blocked layout can't hang the wave indefinitely. Aggressive
+   * over-blocking truncates visitor patience — by design.
+   */
+  function _checkStuck(visitor, nextRoom, gen) {
+    if (nextRoom === visitor.currentRoom) {
+      visitor._stuckTicks = (visitor._stuckTicks || 0) + 1;
+      if (visitor._stuckTicks >= 3 && !visitor._readyToLeave) {
+        visitor._readyToLeave = true;
+        _exitedCount++;
+        _updateVisitorCount();
+        if (_exitedCount >= _visitors.length) _beginCollection(gen);
+      }
+    } else {
+      visitor._stuckTicks = 0;
+    }
+  }
+
   /** Scared visitor bolts to an adjacent room, then resumes wandering. */
   function _fleeFromScare(visitor, gen) {
     if (_generation !== gen) return;
     const nextRoom = Visitor.pickNextRoom(visitor);
+    _checkStuck(visitor, nextRoom, gen);
     Visitor.moveToRoom(visitor, nextRoom, () => {
       if (_generation !== gen) return;
       visitor.roomsVisited++;
@@ -303,6 +324,7 @@ const Wave = (() => {
   function _moveToNextRoom(visitor, gen) {
     if (_generation !== gen) return;
     const nextRoom = Visitor.pickNextRoom(visitor);
+    _checkStuck(visitor, nextRoom, gen);
     Visitor.moveToRoom(visitor, nextRoom, () => {
       if (_generation !== gen) return;
       visitor.roomsVisited++;
@@ -335,6 +357,14 @@ const Wave = (() => {
   function _beginCollection(gen) {
     if (_generation !== gen) return;
     _state = 'trainDeparting';
+
+    // Clear any active blocks — block visuals shouldn't persist into the
+    // collection / inter-wave UI. Pending block timeouts on still-live
+    // creatures fire harmlessly later (every cleanup path is idempotent).
+    const cleared = GameState.clearAllBlockedRooms();
+    for (const roomId of cleared) {
+      House.setRoomVisualBlocked(roomId, false);
+    }
 
     Train.animateCollection(
       // onRoomReached: board visitors in this room
