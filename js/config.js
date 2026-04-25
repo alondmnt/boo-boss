@@ -300,6 +300,39 @@ const TRAIN_SKINS = {
     `,
   },
   // ── Spooky ─────────────────────────────────────────────
+  mine: {
+    key: 'mine',
+    label: 'mine cart',
+    icon: '⛏️',
+    costCoins: 20,
+    cartSvg: () => `
+      <!-- Iron-banded wood box, weathered -->
+      <rect x="-14" y="-10" width="28" height="14" rx="1" fill="#5a2e14" stroke="#1a0a04" stroke-width="1.2"/>
+      <!-- Plank seams -->
+      <line x1="-14" y1="-5" x2="14" y2="-5" stroke="#2a1408" stroke-width="0.6"/>
+      <line x1="-14" y1="0" x2="14" y2="0" stroke="#2a1408" stroke-width="0.6"/>
+      <!-- Splintered top edge (one broken plank) -->
+      <path d="M-14,-10 L-9,-10 L-7,-12 L-3,-10 L0,-11 L4,-10 L14,-10"
+            fill="none" stroke="#8a5a28" stroke-width="1.5" stroke-linejoin="miter"/>
+      <!-- Iron bands -->
+      <rect x="-14" y="-9" width="28" height="1.5" fill="#3a3a3a"/>
+      <rect x="-14" y="2" width="28" height="1.5" fill="#3a3a3a"/>
+      <!-- Rust patches -->
+      <circle cx="-7" cy="-3" r="1.4" fill="#7a3010" opacity="0.5"/>
+      <circle cx="6" cy="-1" r="1.1" fill="#7a3010" opacity="0.5"/>
+      <!-- Gaslight lantern hanging in front -->
+      <line x1="13" y1="-10" x2="15" y2="-7" stroke="#2a2a2a" stroke-width="0.6"/>
+      <rect x="13.5" y="-7" width="3" height="4" fill="#1a0a04" stroke="#3a2a14" stroke-width="0.5"/>
+      <rect x="14" y="-6.5" width="2" height="3" fill="#fff8b0" opacity="0.85"/>
+      <!-- Wheels: heavy iron -->
+      <circle cx="-8" cy="6" r="4" fill="#2a2a2a" stroke="#888" stroke-width="1.2"/>
+      <circle cx="8" cy="6" r="4" fill="#2a2a2a" stroke="#888" stroke-width="1.2"/>
+      <line x1="-8" y1="3" x2="-8" y2="9" stroke="#aaa" stroke-width="0.6"/>
+      <line x1="-11" y1="6" x2="-5" y2="6" stroke="#aaa" stroke-width="0.6"/>
+      <line x1="8" y1="3" x2="8" y2="9" stroke="#aaa" stroke-width="0.6"/>
+      <line x1="5" y1="6" x2="11" y2="6" stroke="#aaa" stroke-width="0.6"/>
+    `,
+  },
   coffin: {
     key: 'coffin',
     label: 'coffin',
