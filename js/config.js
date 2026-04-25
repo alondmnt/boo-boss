@@ -237,14 +237,17 @@ const PIECES = {
     // Horizontal only — loops on floor transitions would collide with room walls.
     slotTypes: ['sameFloorHorizontal'],
     pathGenerator: (prev, curr, slotType) => {
-      // Approach with a mild dip into the loop, spin 360° clockwise above the
-      // baseline, then exit to the next room centre. SVG arc with matching
-      // endpoints (~2px apart) and sweep=1/large-arc=1 traces a near-full circle.
+      // For a left-to-right cart, a natural loop runs CCW visually: up the
+      // right side, over the top moving left, down the left side. We enter on
+      // the RIGHT of the loop's bottom (midX+1), so the entry tangent points
+      // up-right matching the cart's +x velocity, and exit on the LEFT
+      // (midX-1) where the tangent points right-down into the exit curve.
+      // sweep-flag=0 selects the CCW direction along the upper-circle long arc.
       const r = 16;
       const midX = (prev.x + curr.x) / 2;
       const baseY = (prev.y + curr.y) / 2;
-      return ` Q${(prev.x + midX) / 2},${prev.y + 4} ${midX - 1},${baseY}`
-           + ` A${r},${r} 0 1 1 ${midX + 1},${baseY}`
+      return ` Q${(prev.x + midX) / 2},${prev.y + 4} ${midX + 1},${baseY}`
+           + ` A${r},${r} 0 1 0 ${midX - 1},${baseY}`
            + ` Q${(midX + curr.x) / 2},${curr.y + 4} ${curr.x},${curr.y}`;
     },
   },
