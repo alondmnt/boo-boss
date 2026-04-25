@@ -206,6 +206,13 @@ const GameState = (() => {
     if (Array.isArray(snapshot.ownedSkins)) {
       for (const s of snapshot.ownedSkins) _ownedSkins.add(s);
     }
+    // Legacy 'wooden' skin was retired in favour of themed funny carts;
+    // map to 'shopping' so anyone who paid for it keeps a usable skin.
+    if (_ownedSkins.has('wooden')) {
+      _ownedSkins.delete('wooden');
+      _ownedSkins.add('shopping');
+    }
+    if (_trainSkin === 'wooden') _trainSkin = 'shopping';
     // If we loaded a current skin, mark it owned even if the snapshot's
     // ownedSkins list is stale (from before ownership tracking).
     _ownedSkins.add(_trainSkin);

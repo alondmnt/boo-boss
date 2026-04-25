@@ -299,27 +299,10 @@ const TRAIN_SKINS = {
       <circle cx="15" cy="-6" r="2" fill="#ffd700" opacity="0.8"/>
     `,
   },
-  wooden: {
-    key: 'wooden',
-    label: 'mine cart',
-    icon: '🛒',
-    costCoins: 20,
-    cartSvg: () => `
-      <rect x="-14" y="-10" width="28" height="14" rx="1" fill="#6b3a18" stroke="#3a1a08" stroke-width="1.2"/>
-      <line x1="-14" y1="-5" x2="14" y2="-5" stroke="#3a1a08" stroke-width="0.6"/>
-      <line x1="-14" y1="0" x2="14" y2="0" stroke="#3a1a08" stroke-width="0.6"/>
-      <rect x="-14" y="-11" width="28" height="2" fill="#8a5a28"/>
-      <circle cx="-8" cy="6" r="4" fill="#555" stroke="#999" stroke-width="1.2"/>
-      <circle cx="8" cy="6" r="4" fill="#555" stroke="#999" stroke-width="1.2"/>
-      <line x1="-8" y1="3" x2="-8" y2="9" stroke="#aaa" stroke-width="0.6"/>
-      <line x1="-11" y1="6" x2="-5" y2="6" stroke="#aaa" stroke-width="0.6"/>
-      <line x1="8" y1="3" x2="8" y2="9" stroke="#aaa" stroke-width="0.6"/>
-      <line x1="5" y1="6" x2="11" y2="6" stroke="#aaa" stroke-width="0.6"/>
-    `,
-  },
+  // ── Spooky ─────────────────────────────────────────────
   coffin: {
     key: 'coffin',
-    label: 'coffin cart',
+    label: 'coffin',
     icon: '⚰️',
     costCoins: 20,
     cartSvg: () => `
@@ -350,6 +333,90 @@ const TRAIN_SKINS = {
       <path d="M-4,0 Q0,3 4,0" fill="none" stroke="#2a0a0a" stroke-width="1.2"/>
       <circle cx="-8" cy="6" r="3.5" fill="#333" stroke="#666" stroke-width="1"/>
       <circle cx="8" cy="6" r="3.5" fill="#333" stroke="#666" stroke-width="1"/>
+    `,
+  },
+
+  // ── Funny ──────────────────────────────────────────────
+  shopping: {
+    key: 'shopping',
+    label: 'shopping cart',
+    icon: '🛒',
+    costCoins: 20,
+    cartSvg: () => `
+      <!-- Wire basket: trapezoid, wider at top -->
+      <path d="M-12,-12 L13,-12 L11,0 L-9,0 Z"
+            fill="rgba(220,225,235,0.15)" stroke="#aab0bc" stroke-width="1"/>
+      <!-- Vertical wires -->
+      <line x1="-7" y1="-12" x2="-6" y2="0" stroke="#aab0bc" stroke-width="0.6"/>
+      <line x1="-2" y1="-12" x2="-2" y2="0" stroke="#aab0bc" stroke-width="0.6"/>
+      <line x1="3" y1="-12" x2="2" y2="0" stroke="#aab0bc" stroke-width="0.6"/>
+      <line x1="8" y1="-12" x2="6" y2="0" stroke="#aab0bc" stroke-width="0.6"/>
+      <!-- Horizontal wires -->
+      <line x1="-11" y1="-8" x2="12" y2="-8" stroke="#aab0bc" stroke-width="0.6"/>
+      <line x1="-10" y1="-4" x2="11" y2="-4" stroke="#aab0bc" stroke-width="0.6"/>
+      <!-- Push handle: arc behind -->
+      <path d="M-12,-12 L-15,-15 L-13,-16" fill="none" stroke="#666" stroke-width="1.4"/>
+      <!-- Wheels: 4 small castors -->
+      <circle cx="-9" cy="3" r="2.2" fill="#444" stroke="#888" stroke-width="0.6"/>
+      <circle cx="-3" cy="3" r="2.2" fill="#444" stroke="#888" stroke-width="0.6"/>
+      <circle cx="3" cy="3" r="2.2" fill="#444" stroke="#888" stroke-width="0.6"/>
+      <circle cx="9" cy="3" r="2.2" fill="#444" stroke="#888" stroke-width="0.6"/>
+    `,
+  },
+  shoe: {
+    key: 'shoe',
+    label: 'old shoe',
+    icon: '👢',
+    costCoins: 20,
+    cartSvg: () => `
+      <!-- Boot body: stylised old leather boot, cap at the toe (right) -->
+      <path d="M-14,4 L-14,-8 Q-12,-13 -4,-13 L7,-13 Q14,-13 14,-4 L14,4 Z"
+            fill="#5a3018" stroke="#2a1408" stroke-width="1.1"/>
+      <!-- Toe cap separator -->
+      <path d="M7,-13 Q9,-11 9,-4" fill="none" stroke="#2a1408" stroke-width="0.8"/>
+      <!-- Leather creases -->
+      <path d="M-11,-6 Q-8,-4 -4,-6" fill="none" stroke="#2a1408" stroke-width="0.5" opacity="0.6"/>
+      <path d="M-11,0 Q-8,2 -4,0" fill="none" stroke="#2a1408" stroke-width="0.5" opacity="0.6"/>
+      <!-- Laces -->
+      <line x1="-10" y1="-9" x2="-2" y2="-9" stroke="#d8c898" stroke-width="0.7"/>
+      <line x1="-9" y1="-7" x2="-3" y2="-7" stroke="#d8c898" stroke-width="0.7"/>
+      <line x1="-8" y1="-5" x2="-4" y2="-5" stroke="#d8c898" stroke-width="0.7"/>
+      <!-- Tiny window (the visitors live in here) -->
+      <rect x="0" y="-8" width="5" height="5" fill="#f8d860" stroke="#3a2010" stroke-width="0.5"/>
+      <line x1="2.5" y1="-8" x2="2.5" y2="-3" stroke="#3a2010" stroke-width="0.4"/>
+      <!-- Wheels: chunky, like cobbler's nails -->
+      <circle cx="-9" cy="6" r="3.5" fill="#1a0a04" stroke="#5a3018" stroke-width="1"/>
+      <circle cx="9" cy="6" r="3.5" fill="#1a0a04" stroke="#5a3018" stroke-width="1"/>
+    `,
+  },
+  tram: {
+    key: 'tram',
+    label: 'Melbourne tram',
+    icon: '🚋',
+    costCoins: 20,
+    cartSvg: () => `
+      <!-- Trolley pole + overhead contact -->
+      <line x1="2" y1="-12" x2="6" y2="-18" stroke="#444" stroke-width="0.8"/>
+      <circle cx="6" cy="-18" r="0.9" fill="#666"/>
+      <!-- Body: classic W-class green with cream window band -->
+      <rect x="-15" y="-12" width="30" height="14" rx="1.5"
+            fill="#1f5b3c" stroke="#0d2e1a" stroke-width="1"/>
+      <!-- Cream upper band (windows zone) -->
+      <rect x="-14" y="-11" width="28" height="6" fill="#f5e8c0"/>
+      <!-- Window dividers -->
+      <line x1="-9" y1="-11" x2="-9" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
+      <line x1="-3" y1="-11" x2="-3" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
+      <line x1="3" y1="-11" x2="3" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
+      <line x1="9" y1="-11" x2="9" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
+      <!-- Bottom green panel detail -->
+      <line x1="-14" y1="-1" x2="14" y2="-1" stroke="#0d2e1a" stroke-width="0.5"/>
+      <!-- Route number plate -->
+      <rect x="-3" y="-3" width="6" height="3" fill="#f5e8c0" stroke="#0d2e1a" stroke-width="0.4"/>
+      <!-- Headlamp -->
+      <circle cx="13.2" cy="-8" r="1.1" fill="#fff8b0" opacity="0.95"/>
+      <!-- Wheels -->
+      <circle cx="-9" cy="4" r="3" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
+      <circle cx="9" cy="4" r="3" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
     `,
   },
 };
