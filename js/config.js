@@ -415,38 +415,42 @@ const TRAIN_SKINS = {
       <line x1="-2" y1="5.5" x2="-2" y2="6.3" stroke="#888" stroke-width="0.4"/>
       <line x1="3" y1="5.5" x2="3" y2="6.3" stroke="#888" stroke-width="0.4"/>
       <line x1="8" y1="5.5" x2="8" y2="6.3" stroke="#888" stroke-width="0.4"/>
-      <!-- Low-profile upper: heel collar barely above the lace zone, classic
-           Campus-style silhouette. Small heel tab pokes up at the back. -->
+      <!-- Wedge upper: highest at the back collar, top edge slopes smoothly
+           down to a low blunt toe. No flat lace shelf — the laces and tongue
+           sit on the slanted surface, like the Campus side profile. -->
       <path d="M-13,2
                L-13,-3
-               Q-14,-5 -12,-6
-               Q-12.5,-7.5 -10,-7.5
-               L-7,-7.5
-               Q-5,-7.5 -4,-6.5
-               L8,-6.5
-               Q11,-6.5 12,-4.5
-               Q14,-1 13,2
+               Q-14,-5 -12,-7
+               Q-10,-8 -8,-8
+               L-6,-8
+               Q1,-7.5 10,-5
+               Q13,-3 13,2
                Z"
             fill="#c8252a" stroke="#7a1010" stroke-width="0.9"/>
-      <!-- Tongue: rises up out of the lace zone, slightly above the collar peak -->
-      <path d="M-1,-6.5 L-1,-9.5 Q-1,-10.5 0.5,-10.5 L4.5,-10.5 Q6,-10.5 6,-9.5 L6,-6.5 Z"
+      <!-- Tongue: rises out of the slanted upper, top above the collar peak.
+           Bottom edge tilts to follow the wedge so the tongue sits flush. -->
+      <path d="M-1,-7.5
+               L-1,-10.5
+               Q-1,-11.5 0.5,-11.5
+               L4.5,-11.5
+               Q6,-11.5 6,-10.5
+               L6,-6
+               Z"
             fill="#fafafa" stroke="#888" stroke-width="0.5"/>
-      <!-- Laces: 4 horizontal stripes spanning the tongue -->
-      <line x1="-0.5" y1="-9.5" x2="5.5" y2="-9.5" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-8.7" x2="5.5" y2="-8.7" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-7.9" x2="5.5" y2="-7.9" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-7.1" x2="5.5" y2="-7.1" stroke="#fafafa" stroke-width="0.5"/>
-      <!-- Eyelets (only the visible side shows) -->
-      <circle cx="-1" cy="-9.2" r="0.35" fill="#1a1a1a"/>
-      <circle cx="-1" cy="-7.6" r="0.35" fill="#1a1a1a"/>
-      <circle cx="6" cy="-9.2" r="0.35" fill="#1a1a1a"/>
-      <circle cx="6" cy="-7.6" r="0.35" fill="#1a1a1a"/>
-      <!-- Three diagonal Adidas-style stripes on the side panel -->
-      <line x1="6" y1="2" x2="3" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="4" y1="2" x2="1" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="2" y1="2" x2="-1" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-      <!-- Heel tab (the small loop sticking back at the very top of the heel) -->
-      <path d="M-13.4,-5.5 L-12.8,-7 L-12,-6.8" fill="none" stroke="#7a1010" stroke-width="0.5"/>
+      <!-- Laces (4 stripes, slightly slanted to follow the tongue's tilt) -->
+      <line x1="-0.5" y1="-10.3" x2="5.5" y2="-9.8" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-9.4" x2="5.5" y2="-8.9" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-8.5" x2="5.5" y2="-8" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-7.6" x2="5.5" y2="-7.1" stroke="#fafafa" stroke-width="0.5"/>
+      <!-- Eyelets -->
+      <circle cx="-1" cy="-10" r="0.35" fill="#1a1a1a"/>
+      <circle cx="-1" cy="-8.3" r="0.35" fill="#1a1a1a"/>
+      <circle cx="6" cy="-9.5" r="0.35" fill="#1a1a1a"/>
+      <circle cx="6" cy="-7.8" r="0.35" fill="#1a1a1a"/>
+      <!-- Three diagonal Adidas-style stripes — slanted to follow the wedge -->
+      <line x1="6" y1="2" x2="4" y2="-4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="4" y1="2" x2="2" y2="-4.5" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <line x1="2" y1="2" x2="0" y2="-5" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
     `,
   },
   tram: {
