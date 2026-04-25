@@ -428,28 +428,35 @@ const TRAIN_SKINS = {
     icon: '🚋',
     costCoins: 20,
     cartSvg: () => `
-      <!-- Trolley pole + overhead contact -->
-      <line x1="2" y1="-12" x2="6" y2="-18" stroke="#444" stroke-width="0.8"/>
-      <circle cx="6" cy="-18" r="0.9" fill="#666"/>
-      <!-- Body: classic W-class green with cream window band -->
-      <rect x="-15" y="-12" width="30" height="14" rx="1.5"
-            fill="#1f5b3c" stroke="#0d2e1a" stroke-width="1"/>
-      <!-- Cream upper band (windows zone) -->
-      <rect x="-14" y="-11" width="28" height="6" fill="#f5e8c0"/>
-      <!-- Window dividers -->
-      <line x1="-9" y1="-11" x2="-9" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
-      <line x1="-3" y1="-11" x2="-3" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
-      <line x1="3" y1="-11" x2="3" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
-      <line x1="9" y1="-11" x2="9" y2="-5" stroke="#1f5b3c" stroke-width="0.6"/>
-      <!-- Bottom green panel detail -->
-      <line x1="-14" y1="-1" x2="14" y2="-1" stroke="#0d2e1a" stroke-width="0.5"/>
-      <!-- Route number plate -->
-      <rect x="-3" y="-3" width="6" height="3" fill="#f5e8c0" stroke="#0d2e1a" stroke-width="0.4"/>
-      <!-- Headlamp -->
-      <circle cx="13.2" cy="-8" r="1.1" fill="#fff8b0" opacity="0.95"/>
-      <!-- Wheels -->
-      <circle cx="-9" cy="4" r="3" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
-      <circle cx="9" cy="4" r="3" fill="#1a1a1a" stroke="#555" stroke-width="0.8"/>
+      <!-- Pantograph (scissor diamond + contact bar) -->
+      <path d="M0,-13 L-3,-16 L0,-18 L3,-16 Z" fill="none" stroke="#3a3a3a" stroke-width="0.8"/>
+      <line x1="-3.5" y1="-18.5" x2="3.5" y2="-18.5" stroke="#3a3a3a" stroke-width="0.7"/>
+      <!-- Rounded cream roof — the W-class's iconic curved top -->
+      <path d="M-15,-10 Q-15,-14 -10,-14 L10,-14 Q15,-14 15,-10 Z"
+            fill="#f5d878" stroke="#5a4218" stroke-width="0.7"/>
+      <!-- Route-number plate on the roof front -->
+      <rect x="8.5" y="-13.5" width="5" height="3" fill="#1a1a1a" stroke="#f5d878" stroke-width="0.3"/>
+      <!-- Cream window band -->
+      <rect x="-15" y="-10" width="30" height="5.5" fill="#f5e8b8" stroke="#5a4218" stroke-width="0.6"/>
+      <!-- Window pillars (green dividers) -->
+      <line x1="-9" y1="-10" x2="-9" y2="-4.5" stroke="#1f6b3c" stroke-width="0.7"/>
+      <line x1="-3" y1="-10" x2="-3" y2="-4.5" stroke="#1f6b3c" stroke-width="0.7"/>
+      <line x1="3" y1="-10" x2="3" y2="-4.5" stroke="#1f6b3c" stroke-width="0.7"/>
+      <line x1="9" y1="-10" x2="9" y2="-4.5" stroke="#1f6b3c" stroke-width="0.7"/>
+      <!-- Green lower body -->
+      <rect x="-15" y="-4.5" width="30" height="7" fill="#1f6b3c" stroke="#0d2e1a" stroke-width="0.7"/>
+      <!-- Door panels at each end (cream insets on the green) -->
+      <rect x="-13.5" y="-4.5" width="3.5" height="7" fill="#f5e8b8" opacity="0.55" stroke="#5a4218" stroke-width="0.4"/>
+      <rect x="10" y="-4.5" width="3.5" height="7" fill="#f5e8b8" opacity="0.55" stroke="#5a4218" stroke-width="0.4"/>
+      <!-- Headlight (front, low on the green nose) -->
+      <circle cx="14" cy="0.5" r="1.1" fill="#fff8a0" opacity="0.95"/>
+      <!-- Marker lights (small red side lights) -->
+      <circle cx="-14" cy="-2" r="0.5" fill="#a01010" opacity="0.85"/>
+      <!-- Wheels (rendered before skirt so the skirt hides their tops) -->
+      <circle cx="-9" cy="5" r="2.7" fill="#1a1a1a" stroke="#777" stroke-width="0.7"/>
+      <circle cx="9" cy="5" r="2.7" fill="#1a1a1a" stroke="#777" stroke-width="0.7"/>
+      <!-- Black coupler / skirt covering the wheel tops -->
+      <rect x="-15" y="2.5" width="30" height="2" fill="#0a0a0a"/>
     `,
   },
 };
