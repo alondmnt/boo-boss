@@ -402,47 +402,51 @@ const TRAIN_SKINS = {
     icon: '👟',
     costCoins: 20,
     cartSvg: () => `
-      <!-- Wheels (rendered first; sole covers their upper half like a roller skate) -->
+      <!-- Wheels (sole covers their upper half) -->
       <circle cx="-9" cy="7" r="2.6" fill="#1a1a1a" stroke="#666" stroke-width="0.6"/>
       <circle cx="9" cy="7" r="2.6" fill="#1a1a1a" stroke="#666" stroke-width="0.6"/>
-      <!-- White rubber sole with slight toe-spring -->
-      <path d="M-13,2.5 Q-14,5 -12,6.5 L9,6.5 Q12,6.3 13,5 L13.5,2.5 Z"
-            fill="#f5f5f5" stroke="#888" stroke-width="0.6"/>
-      <!-- Midsole pinstripe (where rubber meets the upper) -->
-      <rect x="-13" y="1" width="26.5" height="1.6" fill="#fafafa" stroke="#aaa" stroke-width="0.4"/>
+      <!-- White rubber sole — thin, low-profile -->
+      <path d="M-13,3 Q-14,5 -12,6.5 L11,6.5 Q14,5 13,3 Z"
+            fill="#f5f5f5" stroke="#888" stroke-width="0.5"/>
+      <!-- Midsole pinstripe -->
+      <rect x="-13" y="2" width="26" height="1.2" fill="#fafafa" stroke="#aaa" stroke-width="0.4"/>
       <!-- Tread marks -->
       <line x1="-7" y1="5.5" x2="-7" y2="6.3" stroke="#888" stroke-width="0.4"/>
       <line x1="-2" y1="5.5" x2="-2" y2="6.3" stroke="#888" stroke-width="0.4"/>
       <line x1="3" y1="5.5" x2="3" y2="6.3" stroke="#888" stroke-width="0.4"/>
       <line x1="8" y1="5.5" x2="8" y2="6.3" stroke="#888" stroke-width="0.4"/>
-      <!-- Asymmetric upper: tall heel collar at the back (left), low rounded toe at the front (right).
-           Outline traces: heel-back rises → collar peak → drops to lace zone → flat across laces → curves down through toe → rounds toe → returns to sole. -->
-      <path d="M-13,1
+      <!-- Low-profile upper: heel collar barely above the lace zone, classic
+           Campus-style silhouette. Small heel tab pokes up at the back. -->
+      <path d="M-13,2
                L-13,-3
-               Q-13,-9 -10,-10
-               Q-7,-11 -5,-10
-               Q-3,-9 -3,-7
-               L4,-7
-               Q9,-7 12,-4
-               Q14,-1 13,1
+               Q-14,-5 -12,-6
+               Q-12.5,-7.5 -10,-7.5
+               L-7,-7.5
+               Q-5,-7.5 -4,-6.5
+               L8,-6.5
+               Q11,-6.5 12,-4.5
+               Q14,-1 13,2
                Z"
             fill="#c8252a" stroke="#7a1010" stroke-width="0.9"/>
-      <!-- Heel collar inner padding (white arc inside the ankle opening) -->
-      <path d="M-11,-4 Q-11,-8 -8,-9.2" fill="none" stroke="#fafafa" stroke-width="1" stroke-linecap="round"/>
-      <!-- Tongue: white flap rising from the lace zone, nestled below the collar peak -->
-      <path d="M-2,-7 L-2,-9 Q-2,-10 0,-10 L4,-10 Q5,-10 5,-9 L5,-7 Z"
+      <!-- Tongue: rises up out of the lace zone, slightly above the collar peak -->
+      <path d="M-1,-6.5 L-1,-9.5 Q-1,-10.5 0.5,-10.5 L4.5,-10.5 Q6,-10.5 6,-9.5 L6,-6.5 Z"
             fill="#fafafa" stroke="#888" stroke-width="0.5"/>
-      <!-- Laces: three horizontal stripes across the tongue -->
-      <line x1="-1.5" y1="-9" x2="4.5" y2="-9" stroke="#fafafa" stroke-width="0.6" stroke-linecap="round"/>
-      <line x1="-1.5" y1="-8" x2="4.5" y2="-8" stroke="#fafafa" stroke-width="0.6" stroke-linecap="round"/>
-      <line x1="-1.5" y1="-7" x2="4.5" y2="-7" stroke="#fafafa" stroke-width="0.6" stroke-linecap="round"/>
-      <!-- Eyelets (visible side only) -->
-      <circle cx="-2" cy="-9" r="0.4" fill="#1a1a1a"/>
-      <circle cx="-2" cy="-7.5" r="0.4" fill="#1a1a1a"/>
-      <circle cx="5" cy="-9" r="0.4" fill="#1a1a1a"/>
-      <circle cx="5" cy="-7.5" r="0.4" fill="#1a1a1a"/>
-      <!-- Swoosh: sweeping curve from heel-low to toe-top -->
-      <path d="M-10,-1 Q-2,-6 11,-3" fill="none" stroke="#fafafa" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- Laces: 4 horizontal stripes spanning the tongue -->
+      <line x1="-0.5" y1="-9.5" x2="5.5" y2="-9.5" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-8.7" x2="5.5" y2="-8.7" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-7.9" x2="5.5" y2="-7.9" stroke="#fafafa" stroke-width="0.5"/>
+      <line x1="-0.5" y1="-7.1" x2="5.5" y2="-7.1" stroke="#fafafa" stroke-width="0.5"/>
+      <!-- Eyelets (only the visible side shows) -->
+      <circle cx="-1" cy="-9.2" r="0.35" fill="#1a1a1a"/>
+      <circle cx="-1" cy="-7.6" r="0.35" fill="#1a1a1a"/>
+      <circle cx="6" cy="-9.2" r="0.35" fill="#1a1a1a"/>
+      <circle cx="6" cy="-7.6" r="0.35" fill="#1a1a1a"/>
+      <!-- Three diagonal Adidas-style stripes on the side panel -->
+      <line x1="6" y1="2" x2="3" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="4" y1="2" x2="1" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="2" y1="2" x2="-1" y2="-3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- Heel tab (the small loop sticking back at the very top of the heel) -->
+      <path d="M-13.4,-5.5 L-12.8,-7 L-12,-6.8" fill="none" stroke="#7a1010" stroke-width="0.5"/>
     `,
   },
   tram: {

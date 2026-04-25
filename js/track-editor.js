@@ -477,9 +477,9 @@ const TrackEditor = (() => {
       if (isCurrent) costLabel = '✓';
       else if (cost > 0) costLabel = `-${cost}🪙`;
 
+      btn.title = skin.label;
       btn.innerHTML = `
         <div class="editor-popup__icon">${skin.icon}</div>
-        <div class="editor-popup__label">${skin.label}</div>
         <div class="editor-popup__cost">${costLabel}</div>
       `;
       btn.addEventListener('click', (e) => {
