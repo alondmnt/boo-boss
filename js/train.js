@@ -125,6 +125,11 @@ const Train = (() => {
     _pathTotalLen = totalLen;
   }
 
+  // Tangent smoothing window (path units): the cart's facing is taken from
+  // _sampleAt(d+w) - _sampleAt(d-w) so tight curvature doesn't jitter the
+  // rotation between adjacent 2-unit samples.
+  const _TANGENT_WIN = 4;
+
   /**
    * Linearly interpolate the sampled path at distance d.
    * Returns a plain {x, y} object (same shape as SVGPoint, easier to pool).
@@ -146,6 +151,42 @@ const Train = (() => {
       x: _pathSamples[a]     + (_pathSamples[b]     - _pathSamples[a])     * t,
       y: _pathSamples[a + 1] + (_pathSamples[b + 1] - _pathSamples[a + 1]) * t,
     };
+  }
+
+  /**
+   * Build the cart's transform at distance d: position + a wheels-down
+   * orientation. Carts have gravity-fixed art (wheels, headlights), so a
+   * leftward tangent should mirror the cart horizontally rather than rotate
+   * it 180° upside-down. Tilt for ramps is bounded to ±90° from upright.
+   *
+   *   dx ≥ 0 → rotate by atan2(dy, dx)
+   *   dx < 0 → mirror in x, rotate by atan2(dy, -dx) in the mirrored frame
+   */
+  function _cartTransform(d) {
+    const pt = _sampleAt(d);
+    const ahead  = _sampleAt(d + _TANGENT_WIN);
+    const behind = _sampleAt(d - _TANGENT_WIN);
+    const dx = ahead.x - behind.x;
+    const dy = ahead.y - behind.y;
+    if (dx >= 0) {
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      return `translate(${pt.x},${pt.y}) rotate(${angle})`;
+    }
+    const angle = Math.atan2(dy, -dx) * 180 / Math.PI;
+    return `translate(${pt.x},${pt.y}) scale(-1,1) rotate(${angle})`;
+  }
+
+  /**
+   * Level (no-rotation) cart transform for paused-at-stop frames. Preserves
+   * the mirror so the cart keeps facing its travel direction while parked,
+   * instead of snapping to face right on leftward stops.
+   */
+  function _cartTransformLevel(d) {
+    const pt = _sampleAt(d);
+    const ahead  = _sampleAt(d + _TANGENT_WIN);
+    const behind = _sampleAt(d - _TANGENT_WIN);
+    if (ahead.x - behind.x >= 0) return `translate(${pt.x},${pt.y})`;
+    return `translate(${pt.x},${pt.y}) scale(-1,1)`;
   }
 
   /** Render track rails and crossties onto the track layer. */
@@ -334,9 +375,8 @@ const Train = (() => {
         return;
       }
 
-      // Position cart
-      const pt = _sampleAt(currentDist);
-      _cartEl.setAttribute('transform', `translate(${pt.x},${pt.y})`);
+      // Position and orient cart along the path tangent
+      _cartEl.setAttribute('transform', _cartTransform(currentDist));
 
       // Check for room stops
       if (nextStopIdx < stops.length && currentDist >= stops[nextStopIdx].distance) {
@@ -344,6 +384,8 @@ const Train = (() => {
         nextStopIdx++;
         paused = true;
         pauseStart = timestamp;
+        // Sit level while paused — drop the tangent tilt but keep the mirror.
+        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist));
         if (onRoomReached) onRoomReached(stop.roomId, nextStopIdx - 1);
       }
 
@@ -398,8 +440,7 @@ const Train = (() => {
         return;
       }
 
-      const pt = _sampleAt(currentDist);
-      _cartEl.setAttribute('transform', `translate(${pt.x},${pt.y})`);
+      _cartEl.setAttribute('transform', _cartTransform(currentDist));
 
       // Check for room stops
       if (nextStopIdx < stops.length && currentDist >= stops[nextStopIdx].distance) {
@@ -407,6 +448,8 @@ const Train = (() => {
         nextStopIdx++;
         paused = true;
         pauseStart = timestamp;
+        // Sit level while paused — drop the tangent tilt but keep the mirror.
+        _cartEl.setAttribute('transform', _cartTransformLevel(currentDist));
         if (onRoomReached) onRoomReached(stop.roomId);
       }
 
