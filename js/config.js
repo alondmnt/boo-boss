@@ -427,26 +427,25 @@ const TRAIN_SKINS = {
                Q13,-3 13,2
                Z"
             fill="#c8252a" stroke="#7a1010" stroke-width="0.9"/>
-      <!-- Tongue: rises out of the slanted upper, top above the collar peak.
-           Bottom edge tilts to follow the wedge so the tongue sits flush. -->
+      <!-- Tongue: low-profile, top sits just above the collar peak so the
+           sneaker reads as Campus-style rather than tongue-on-a-stalk. -->
       <path d="M-1,-7.5
-               L-1,-10.5
-               Q-1,-11.5 0.5,-11.5
-               L4.5,-11.5
-               Q6,-11.5 6,-10.5
+               L-1,-8.8
+               Q-1,-9.2 -0.3,-9.2
+               L5.3,-9.2
+               Q6,-9.2 6,-8.8
                L6,-6
                Z"
-            fill="#fafafa" stroke="#888" stroke-width="0.5"/>
-      <!-- Laces (4 stripes, slightly slanted to follow the tongue's tilt) -->
-      <line x1="-0.5" y1="-10.3" x2="5.5" y2="-9.8" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-9.4" x2="5.5" y2="-8.9" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-8.5" x2="5.5" y2="-8" stroke="#fafafa" stroke-width="0.5"/>
-      <line x1="-0.5" y1="-7.6" x2="5.5" y2="-7.1" stroke="#fafafa" stroke-width="0.5"/>
-      <!-- Eyelets -->
-      <circle cx="-1" cy="-10" r="0.35" fill="#1a1a1a"/>
-      <circle cx="-1" cy="-8.3" r="0.35" fill="#1a1a1a"/>
-      <circle cx="6" cy="-9.5" r="0.35" fill="#1a1a1a"/>
-      <circle cx="6" cy="-7.8" r="0.35" fill="#1a1a1a"/>
+            fill="#fafafa" stroke="#888" stroke-width="0.4"/>
+      <!-- Laces: 3 slim stripes spanning the tongue, slanted with the slope -->
+      <line x1="-0.4" y1="-8.8" x2="5.3" y2="-8.4" stroke="#fafafa" stroke-width="0.4"/>
+      <line x1="-0.4" y1="-8.1" x2="5.3" y2="-7.7" stroke="#fafafa" stroke-width="0.4"/>
+      <line x1="-0.4" y1="-7.4" x2="5.3" y2="-7" stroke="#fafafa" stroke-width="0.4"/>
+      <!-- Eyelets along the tongue edges -->
+      <circle cx="-1" cy="-8.5" r="0.3" fill="#1a1a1a"/>
+      <circle cx="-1" cy="-7.5" r="0.3" fill="#1a1a1a"/>
+      <circle cx="6" cy="-8" r="0.3" fill="#1a1a1a"/>
+      <circle cx="6" cy="-7" r="0.3" fill="#1a1a1a"/>
       <!-- Three diagonal Adidas-style stripes — slanted to follow the wedge -->
       <line x1="6" y1="2" x2="4" y2="-4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
       <line x1="4" y1="2" x2="2" y2="-4.5" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
