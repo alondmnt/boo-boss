@@ -96,21 +96,13 @@ const ScareFactory = (() => {
     // primed before any visitor arrives. No-op if the action has no arm.
     ActionScene.arm(creature);
 
-    // Room-block action: start the timed block on deploy. Reuses
-    // lifetimeBonus (witch +25%, skeleton −25%) so type choice modulates
-    // duration. Cleanup runs through clearRoom (idempotent).
+    // Room-block action: the room is blocked for the creature's full
+    // lifetime. lifetimeBonus already modulates lifetime, so witch/skeleton
+    // shape block duration without a separate timer. Cleanup runs through
+    // clearRoom on any creature removal (expire / hug / reset).
     if (creature.action === 'block') {
-      const blockEffect = CONFIG.actionEffects.block;
-      const baseMs = (blockEffect && blockEffect.value) || 6000;
-      const lifetimeMod = effect && effect.type === 'lifetimeBonus' ? effect.value : 0;
-      const blockMs = Math.round(baseMs * (1 + lifetimeMod));
       GameState.blockRoom(roomId);
       House.setRoomVisualBlocked(roomId, true);
-      creature._blockTimeout = setTimeout(() => {
-        creature._blockTimeout = null;
-        GameState.unblockRoom(roomId);
-        House.setRoomVisualBlocked(roomId, false);
-      }, blockMs);
     }
 
     return creature;
@@ -220,14 +212,12 @@ const ScareFactory = (() => {
   /** Return the deployed creature in a room, or null. */
   function getDeployed(roomId) { return _deployed[roomId] || null; }
 
-  /** Clear the room occupancy record (after removal or hug). Also cleans up
-   *  any pending block timer + room-block state owned by this creature, so
-   *  hug-removal doesn't leave a ghost block behind. */
+  /** Clear the room occupancy record (after removal or hug). Also clears any
+   *  active room-block this creature was holding, so hug-removal doesn't
+   *  leave a ghost block behind. */
   function clearRoom(roomId) {
     const creature = _deployed[roomId];
-    if (creature && creature._blockTimeout) {
-      clearTimeout(creature._blockTimeout);
-      creature._blockTimeout = null;
+    if (creature && creature.action === 'block') {
       GameState.unblockRoom(roomId);
       House.setRoomVisualBlocked(roomId, false);
     }
@@ -239,8 +229,7 @@ const ScareFactory = (() => {
   function clearAll() {
     for (const roomId of Object.keys(_deployed)) {
       const creature = _deployed[roomId];
-      if (creature._blockTimeout) {
-        clearTimeout(creature._blockTimeout);
+      if (creature.action === 'block') {
         GameState.unblockRoom(roomId);
         House.setRoomVisualBlocked(roomId, false);
       }

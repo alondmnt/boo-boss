@@ -358,14 +358,6 @@ const Wave = (() => {
     if (_generation !== gen) return;
     _state = 'trainDeparting';
 
-    // Clear any active blocks — block visuals shouldn't persist into the
-    // collection / inter-wave UI. Pending block timeouts on still-live
-    // creatures fire harmlessly later (every cleanup path is idempotent).
-    const cleared = GameState.clearAllBlockedRooms();
-    for (const roomId of cleared) {
-      House.setRoomVisualBlocked(roomId, false);
-    }
-
     Train.animateCollection(
       // onRoomReached: board visitors in this room
       (roomId) => {

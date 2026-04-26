@@ -178,14 +178,6 @@ const GameState = (() => {
   function blockRoom(roomId) { _blockedRooms.add(roomId); }
   function unblockRoom(roomId) { _blockedRooms.delete(roomId); }
 
-  /** Clear all active blocks at wave end. Returns the array of cleared roomIds
-   *  so callers can iterate to remove visual overlays without re-deriving. */
-  function clearAllBlockedRooms() {
-    const cleared = [..._blockedRooms];
-    _blockedRooms.clear();
-    return cleared;
-  }
-
   function getTrainSkin() { return _trainSkin; }
   function setTrainSkin(key) { _trainSkin = key || 'default'; }
 
@@ -300,7 +292,7 @@ const GameState = (() => {
     get, getTrackRoute, getTrackStops, applyTier, reset,
     getSegmentOverride, setSegmentOverride, getAllSegmentOverrides,
     getClosedRooms, isRoomClosed, toggleRoomClosed,
-    isRoomBlocked, blockRoom, unblockRoom, clearAllBlockedRooms,
+    isRoomBlocked, blockRoom, unblockRoom,
     getTrainSkin, setTrainSkin, hasOwnedSkin, markSkinOwned, getOwnedSkins,
     getMalfunctions, isSegmentBroken, setMalfunction,
     setCustomRoute, swapRoomInRoute, getRoomRouteIndex,

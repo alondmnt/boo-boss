@@ -48,10 +48,8 @@ const CONFIG = {
   actionEffects: {
     grabHat:         { type: 'extendStay',  value: 1, label: '+1 🎩' },
     dropFromCeiling: { type: 'splashScare', value: 1, label: 'splash 💥' },
-    // Base block duration in ms; per-monster lifetimeBonus scales it at runtime
-    // (witch +25% → 7500ms, skeleton −25% → 4500ms). Label is icon-only so it
-    // doesn't rot if the base value is retuned.
-    block:           { type: 'blockMs',     value: 6000, label: '🛑' },
+    // block: no entry needed — its duration IS the creature's lifetime, which
+    // is already modulated by witch/skeleton via lifetimeBonus. One timer.
   },
 
   /* ─── Rooms ─── */
