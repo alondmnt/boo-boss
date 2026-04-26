@@ -13,6 +13,8 @@ const Train = (() => {
   // Pre-sampled path points: getPointAtLength is O(path-complexity) and was
   // previously called every rAF frame plus ~250 times at startup. We sample
   // once per _renderTrack into a flat Float32Array and read via _sampleAt.
+  // Sampling is lazy — only animation and stop-distance code needs it, so
+  // builder-mode re-renders skip the ~hundreds of getPointAtLength calls.
   let _pathSamples = null;   // Float32Array of [x0,y0, x1,y1, ...]
   let _pathSampleStep = 2;   // units between consecutive samples
   let _pathTotalLen = 0;
@@ -106,9 +108,9 @@ const Train = (() => {
   }
 
   /**
-   * Sample the current _pathEl into a flat Float32Array so per-frame and
-   * per-tie position lookups become O(1) array reads instead of O(path)
-   * getPointAtLength calls. Called once per _renderTrack.
+   * Sample the current _pathEl into a flat Float32Array so per-frame
+   * position lookups become O(1) array reads instead of O(path)
+   * getPointAtLength calls. Called lazily via _ensureSamples on first use.
    */
   function _samplePath() {
     const totalLen = _pathEl.getTotalLength();
@@ -123,6 +125,13 @@ const Train = (() => {
     }
     _pathSamples = samples;
     _pathTotalLen = totalLen;
+  }
+
+  /** Ensure samples exist before any per-frame or per-stop lookup. */
+  function _ensureSamples() {
+    if (_pathSamples) return;
+    if (!_pathEl) return;
+    _samplePath();
   }
 
   // Tangent smoothing window (path units): the cart's facing is taken from
@@ -252,15 +261,17 @@ const Train = (() => {
     rail2.setAttribute('transform', 'translate(0,4)');
     _trackLayer.appendChild(rail2);
 
-    // Sample the path once — all subsequent position lookups read from
-    // _pathSamples instead of calling getPointAtLength per frame/per tie.
-    _samplePath();
+    // Sampling is deferred — only the cart animation and stop-distance code
+    // need _pathSamples, and they call _ensureSamples() themselves. Builder
+    // mode re-renders therefore skip the ~hundreds of getPointAtLength calls.
+    _pathTotalLen = _pathEl.getTotalLength();
 
-    // Crossties at intervals
+    // Crossties at intervals: one direct getPointAtLength per tie keeps this
+    // ~10x cheaper than the old full-resolution sampling.
     const totalLen = _pathTotalLen;
     const tieSpacing = 18;
     for (let dist = 0; dist < totalLen; dist += tieSpacing) {
-      const pt = _sampleAt(dist);
+      const pt = _pathEl.getPointAtLength(dist);
       const tie = document.createElementNS(NS, 'line');
       tie.setAttribute('x1', pt.x);
       tie.setAttribute('y1', pt.y - 5);
@@ -326,6 +337,7 @@ const Train = (() => {
 
   /** Compute distance along path for each room stop. */
   function _computeStopDistances(route) {
+    _ensureSamples();
     if (!_pathSamples) return [];
     const step = _pathSampleStep;
     const n = _pathSamples.length / 2;
