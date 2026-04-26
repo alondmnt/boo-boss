@@ -793,7 +793,10 @@ const House = (() => {
     // Extra width for exterior return track on the right side
     const trackMargin = 50;
     const vbW = L.svgW + trackMargin;
-    let svg = `<svg xmlns="${NS}" viewBox="-20 0 ${vbW + 20} ${L.svgH}"
+    // Sky band above y=0 makes room for the crescent moon. The roof peak
+    // sits at y=0, so without this margin the moon would have nowhere to go.
+    const skyH = 34;
+    let svg = `<svg xmlns="${NS}" viewBox="-20 ${-skyH} ${vbW + 20} ${L.svgH + skyH}"
                     class="house" preserveAspectRatio="xMidYMid meet">`;
 
     // Shared filter defs. The bubble-halo puts a crisp dark outline behind
@@ -808,6 +811,14 @@ const House = (() => {
         <feDropShadow dx="0" dy="0" stdDeviation="1.0" flood-color="#000000" flood-opacity="1"/>
       </filter>
     </defs>`;
+
+    // Crescent moon in the upper-left sky. Drawn before the structure
+    // group so it sits behind the house, and outside the group so the
+    // drop-shadow filter doesn't blur its halo. Faces right (waning "C").
+    const moonX = 38, moonY = -12, moonR = 11;
+    svg += `<circle cx="${moonX}" cy="${moonY}" r="${moonR + 9}" fill="#fff5d6" opacity="0.06"/>`;
+    svg += `<circle cx="${moonX}" cy="${moonY}" r="${moonR + 4}" fill="#fff5d6" opacity="0.12"/>`;
+    svg += `<path d="M${moonX} ${moonY - moonR} a${moonR} ${moonR} 0 1 0 0 ${2 * moonR} a${moonR * 0.62} ${moonR} 0 1 1 0 ${-2 * moonR} z" fill="#f5e6c8"/>`;
 
     // Static structure wrapper — rooms, walls, decorations, everything that
     // doesn't animate. The drop-shadow filter lives on this group (not the
