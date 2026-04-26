@@ -815,8 +815,9 @@ const House = (() => {
     // scene to re-rasterise on every child animation.
     svg += `<g class="house__structure">`;
 
-    // Background
-    svg += `<rect width="${L.svgW}" height="${L.svgH}" fill="#0d0520"/>`;
+    // No background fill — let the body's purple radial gradient show
+    // through so the roof and floor edges have proper contrast against
+    // the "sky" and "earth" rather than blending into a near-black field.
 
     // Roof (peaked gothic)
     const roofY = 0;
