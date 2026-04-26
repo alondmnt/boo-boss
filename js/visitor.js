@@ -212,14 +212,54 @@ const Visitor = (() => {
     }
   }
 
-  /** Compute a random position within a room, clamped to bounds. */
+  /** Read live positions of all visitors whose translate falls inside `rect`. */
+  function _occupiedPositionsIn(rect) {
+    const layer = House.getSvg() && House.getSvg().querySelector('.house__visitor-layer');
+    if (!layer) return [];
+    const positions = [];
+    for (const el of layer.children) {
+      const t = el.getAttribute('transform');
+      if (!t) continue;
+      const m = t.match(/translate\(([-\d.]+)[,\s]+([-\d.]+)\)/);
+      if (!m) continue;
+      const x = parseFloat(m[1]);
+      const y = parseFloat(m[2]);
+      if (x < rect.x || x > rect.x + rect.w) continue;
+      if (y < rect.y || y > rect.y + rect.h) continue;
+      positions.push({ x, y });
+    }
+    return positions;
+  }
+
+  /**
+   * Random position within a room, biased away from existing visitors.
+   * Samples N candidates and returns the one with the largest min-distance to
+   * any visitor currently in the room. Stops crowding at disembark and during
+   * wander without needing a global registry.
+   */
   function _randomRoomPos(roomId) {
     const rect = House.getRoomRect(roomId);
     if (!rect) return null;
     const margin = 18;
-    const x = rect.x + margin + Math.random() * (rect.w - margin * 2);
-    const y = rect.y + margin + Math.random() * (rect.h - margin * 2);
-    return { x, y };
+    const occupied = _occupiedPositionsIn(rect);
+    let best = null;
+    let bestScore = -1;
+    for (let i = 0; i < 5; i++) {
+      const x = rect.x + margin + Math.random() * (rect.w - margin * 2);
+      const y = rect.y + margin + Math.random() * (rect.h - margin * 2);
+      let minDist = Infinity;
+      for (const p of occupied) {
+        const dx = x - p.x;
+        const dy = y - p.y;
+        const d = dx * dx + dy * dy;
+        if (d < minDist) minDist = d;
+      }
+      if (minDist > bestScore) {
+        best = { x, y };
+        bestScore = minDist;
+      }
+    }
+    return best;
   }
 
   /**
