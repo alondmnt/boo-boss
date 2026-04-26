@@ -155,6 +155,10 @@ html, body {
 /* Tail swish handled by CSS if the tail has a class, or via creature structure */
 .creature--spider .creature__pose--idle { animation: spider-sway 2.5s ease-in-out infinite; transform-origin: 0 -40px; }
 .creature--bat .creature__pose--idle { animation: none; }
+/* When holding a stop sign, pause idle motion — the sign sits at the
+   outer creature.el and would otherwise read as detached from the body. */
+.creature--block-active .creature__pose--idle,
+.creature--block-active .creature__hover { animation: none; }
 
 /* ===== Monster type colour overrides ===== */
 .creature--zombie { filter: sepia(0.6) hue-rotate(70deg) saturate(1.5) brightness(0.8); }
@@ -540,14 +544,10 @@ body.crowd--many .creature--ghost .creature__hover {
 .house__room--closed .house__room-bg { opacity: 0.35; }
 .house__closed-banner { pointer-events: none; }
 
-/* Mid-wave room block (sign-holding creature inside) */
+/* Mid-wave room block (sign-holding creature inside) — visual is the held
+   sign; this class just dims the room background so the state is readable
+   even at a glance. */
 .house__room--blocked .house__room-bg { opacity: 0.7; }
-.house__block-sign { pointer-events: none; }
-.house__block-sign polygon { animation: block-sign-pulse 0.9s ease-in-out infinite; }
-@keyframes block-sign-pulse {
-  0%, 100% { opacity: 0.95; }
-  50%      { opacity: 0.65; }
-}
 
 /* Tunnel piece — semi-transparent dark stroke following the track curve.
    Soft drop-shadow gives a hint of depth without hard edges. */

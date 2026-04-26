@@ -37,7 +37,7 @@ const CONFIG = {
   /* ─── Actions (player-selectable once Director's Chair is unlocked) ─── */
   actions: ['jumpOut', 'grabHat', 'dropFromCeiling'],
   actionIcons: {
-    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥', peekABoo: '🫣', chase: '🏃', block: '🛑',
+    jumpOut: '💥', grabHat: '🎩', dropFromCeiling: '🪂', swarm: '👥', peekABoo: '🫣', chase: '🏃', blockRoom: '🛑',
   },
   defaultAction: {
     spider: 'dropFromCeiling', gorilla: 'jumpOut', bat: 'dropFromCeiling',
@@ -48,8 +48,8 @@ const CONFIG = {
   actionEffects: {
     grabHat:         { type: 'extendStay',  value: 1, label: '+1 🎩' },
     dropFromCeiling: { type: 'splashScare', value: 1, label: 'splash 💥' },
-    // block: no entry needed — its duration IS the creature's lifetime, which
-    // is already modulated by witch/skeleton via lifetimeBonus. One timer.
+    // blockRoom: no entry needed — its duration IS the creature's lifetime,
+    // which is already modulated by witch/skeleton via lifetimeBonus. One timer.
   },
 
   /* ─── Rooms ─── */

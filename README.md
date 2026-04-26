@@ -12,7 +12,7 @@ a train arrives carrying visitors. each visitor has a fear (red jagged bubble) a
 
 visitors disembark at different rooms and wander. pick a creature from the bottom panel, then tap a room to deploy. if a visitor's fear matches, they get scared and you score. if their love matches, they hug the creature and it vanishes. neutral visitors walk past, unimpressed.
 
-score enough to earn coins between waves. coins unlock new creatures, rooms, monster types (zombie, witch, skeleton, vampire, astronaut, ghost), and scare actions (jump out, grab hat, drop from ceiling, swarm, peek-a-boo, chase). with everything unlocked, deployment is a four-stage pick: creature then monster type then action then room.
+score enough to earn coins between waves. coins unlock new creatures, rooms, monster types (zombie, witch, skeleton, vampire, astronaut, ghost), and scare actions (jump out, grab hat, drop from ceiling, swarm, peek-a-boo, chase, block room). with everything unlocked, deployment is a four-stage pick: creature then monster type then action then room.
 
 ## controls
 

@@ -146,37 +146,109 @@ const ActionScene = (() => {
   }
 
   /**
-   * Add a small stop-sign overlay above the creature's head — the held-sign
-   * pose for the room-block action. Attached at the creature's top level (like
-   * _addFloorShadow) so it survives pose transitions during scare payoff,
-   * positioned via the headTop anchor. Idempotent.
+   * Add a held stop-sign-on-a-stick to a creature for the room-block action.
+   * Stick emerges from a grip near bodyCenter and reaches past the head (or
+   * past the body the other way for the upside-down bat). Sign carries a
+   * white "halt"-hand on red. Each deploy gets a random tilt in ±20° so
+   * different creatures don't all hold it dead-vertical — feels organic.
+   *
+   * Attached at the creature's top level (like _addFloorShadow) so it
+   * survives idle→scare pose transitions during the payoff. Idempotent.
+   *
+   * Coordinates are in creature-local SVG units (not scaled). Anchor offsets
+   * already encode each creature's natural size, so spider gets a small held
+   * sign and gorilla a chunky one without an explicit scale factor.
    */
   function _addBlockSign(creature) {
     if (!_live(creature)) return null;
     _removeBlockSign(creature);
 
     const anchors = Creatures.getAnchors(creature.type);
-    const { x, y } = anchors.headTop;
-    const s = anchors.scale || 1;
+    const isBat = creature.type === 'bat';
 
-    // Octagon centred at (0, -3) inside the local g. Radius 2.5 reads as a
-    // sign at the small creature scale without crowding the silhouette.
-    const radius = 2.5;
-    const pts = [];
+    // Post emerges from body centre (no x offset). Read as "held in front
+    // of the body" — combined with the random tilt this still reads as a
+    // casual holding pose, but stays centred on small/symmetric creatures.
+    const gripX = anchors.bodyCenter.x;
+    const gripY = anchors.bodyCenter.y;
+    const signCx = gripX;
+    // Sign clears the silhouette: above the head for upright creatures,
+    // below the body for the bat (matches the _addEffectLabel convention).
+    const signCy = isBat
+      ? anchors.bodyCenter.y + 14
+      : anchors.headTop.y - 12;
+    const signR = 8;
+    const stickEndY = isBat ? signCy - signR : signCy + signR;
+
+    // Octagon vertices around (signCx, signCy), flat-top via π/8 phase offset.
+    const oct = [];
     for (let i = 0; i < 8; i++) {
       const a = (Math.PI / 4) * i + (Math.PI / 8);
-      pts.push(`${(radius * Math.cos(a)).toFixed(2)},${(-3 + radius * Math.sin(a)).toFixed(2)}`);
+      oct.push(`${(signCx + signR * Math.cos(a)).toFixed(2)},${(signCy + signR * Math.sin(a)).toFixed(2)}`);
     }
+
+    // Wood-coloured post, halo + dark core like the grab stick (action-scene
+    // _makeGrabber) but ~60% the thickness — held, not extended.
+    const stickY = Math.min(gripY, stickEndY);
+    const stickH = Math.abs(stickEndY - gripY);
+    const haloW = 2.0, coreW = 1.4;
+
+    // Tilt: 15-30° off vertical with random sign. Magnitude floor of 15°
+    // keeps the post out of the floating monster-effect label that lives
+    // directly above the head.
+    const tiltDeg = (Math.random() < 0.5 ? -1 : 1) * (15 + Math.random() * 15);
 
     const g = document.createElementNS(NS, 'g');
     g.classList.add('creature__block-sign');
-    g.setAttribute('transform', `translate(${x + 3}, ${y - 2}) scale(${s})`);
+    g.setAttribute('transform', `rotate(${tiltDeg.toFixed(1)}, ${gripX}, ${gripY})`);
     g.innerHTML = `
-      <line x1="0" y1="0" x2="0" y2="-1" stroke="#3a2010" stroke-width="0.7"/>
-      <polygon points="${pts.join(' ')}" fill="#c0392b" stroke="#5a1410" stroke-width="0.5"/>
+      <rect x="${(gripX - haloW / 2).toFixed(2)}" y="${stickY.toFixed(2)}"
+            width="${haloW.toFixed(2)}" height="${stickH.toFixed(2)}" rx="0.6" fill="#f5e6c0"/>
+      <rect x="${(gripX - coreW / 2).toFixed(2)}" y="${stickY.toFixed(2)}"
+            width="${coreW.toFixed(2)}" height="${stickH.toFixed(2)}" rx="0.4" fill="#6b4226"/>
+      <polygon points="${oct.join(' ')}" fill="#c0392b" stroke="#5a1410" stroke-width="0.7"/>
+      ${_handPictogram(signCx, signCy, signR)}
     `;
     creature.el.appendChild(g);
+    // Mark the creature as sign-holding so CSS can pause its idle motion —
+    // otherwise the body sways (e.g. spider) but the sign, attached at the
+    // outer creature.el, stays put and reads as detached.
+    creature.el.classList.add('creature--block-active');
     return g;
+  }
+
+  /**
+   * White "halt" hand pictogram: tall rounded palm + an angled thumb, with
+   * three thin background-coloured lines through the upper palm to suggest
+   * finger separation without tracing each finger.
+   */
+  function _handPictogram(cx, cy, r) {
+    const u = r / 3.5;
+    const palmW = 2.8 * u, palmH = 4.2 * u;
+    const palmCx = cx - 0.25 * u, palmCy = cy - 0.1 * u;
+    const thumbW = 0.85 * u, thumbH = 1.7 * u;
+    const thumbBaseX = palmCx + palmW / 2 - 0.1 * u;
+    const thumbBaseY = palmCy + 0.4 * u;
+    // Finger-separator lines: top inset from the rounded crown of the palm,
+    // bottom about 55% down from the top so they only mark the finger zone.
+    const finY1 = palmCy - palmH / 2 + 0.5 * u;
+    const finY2 = palmCy - 0.4 * u;
+    const finLineW = (0.16 * u).toFixed(2);
+    const finXs = [-0.7, 0.0, 0.7].map(d => (palmCx + d * u).toFixed(2));
+    return `
+      <g fill="#fff">
+        <rect x="${(palmCx - palmW / 2).toFixed(2)}" y="${(palmCy - palmH / 2).toFixed(2)}"
+              width="${palmW.toFixed(2)}" height="${palmH.toFixed(2)}" rx="${(1.0 * u).toFixed(2)}"/>
+        <rect x="${(thumbBaseX - thumbW / 2).toFixed(2)}" y="${(thumbBaseY - thumbH).toFixed(2)}"
+              width="${thumbW.toFixed(2)}" height="${thumbH.toFixed(2)}" rx="${(0.4 * u).toFixed(2)}"
+              transform="rotate(30 ${thumbBaseX.toFixed(2)} ${thumbBaseY.toFixed(2)})"/>
+      </g>
+      <g stroke="#c0392b" stroke-width="${finLineW}" stroke-linecap="round">
+        <line x1="${finXs[0]}" y1="${finY1.toFixed(2)}" x2="${finXs[0]}" y2="${finY2.toFixed(2)}"/>
+        <line x1="${finXs[1]}" y1="${finY1.toFixed(2)}" x2="${finXs[1]}" y2="${finY2.toFixed(2)}"/>
+        <line x1="${finXs[2]}" y1="${finY1.toFixed(2)}" x2="${finXs[2]}" y2="${finY2.toFixed(2)}"/>
+      </g>
+    `;
   }
 
   function _removeBlockSign(creature) {
@@ -757,17 +829,18 @@ const ActionScene = (() => {
     swarm:           {                           payoff: _swarm },
     peekABoo:        { arm: _peekABooArm,        payoff: _peekABooPayoff },
     chase:           {                           payoff: _chase },
-    block:           { arm: _blockArm,           payoff: _blockPayoff },
+    blockRoom:       { arm: _blockArm,           payoff: _blockPayoff },
   };
 
   /**
    * block — arm: pin the stop-sign overlay onto the creature's pose.
-   * No animated arm window; the sign is the visual signal that the room is
-   * being blocked, and the room overlay carries the gameplay signal. The
-   * actual block timer is owned by ScareFactory at deploy time.
+   * No animated arm window. Idempotent: the sign is added once on first
+   * deploy and stays for the creature's lifetime, so post-payoff re-arms
+   * after each scare don't churn the DOM or shuffle the tilt.
    */
   function _blockArm(creature) {
     if (!_live(creature)) return 0;
+    if (!creature.el || creature.el.querySelector('.creature__block-sign')) return 0;
     _addBlockSign(creature);
     return 0;
   }

@@ -155,6 +155,7 @@ the scare behaviour performed when a visitor enters the room. each action is a *
 - **cackle/howl**: creature throws head back, concentric sound-wave arcs radiate outward. sound-focused scare.
 - **peek-a-boo**: creature pops in and out of furniture (wardrobe, trunk, cauldron) a few times before the final reveal.
 - **swarm**: creature multiplies briefly (3-4 copies appear then merge back).
+- **block room**: creature holds up a stop sign at the doorway. new visitors can't enter until the creature's lifetime expires; visitors already in the room still get scared. **the first axis-3 action that isn't a scare-modifier — it's flow control.** witch's `lifetimeBonus` lengthens the block, skeleton's shortens it (one timer modulating two effects: creature uptime AND block duration). visitors with no other reachable adjacent room get a stuck-tick counter; after 3 stuck cycles they head for the exit (over-blocking truncates patience by design).
 
 each action is a per-action choreography function in actions.js orchestrating pose changes, opacity, particles, prop changes, audio. reactions.scared delegates to the action when one is selected.
 
@@ -283,7 +284,7 @@ the child's hat-grab works on any creature (spider leg reaches out, gorilla arm,
 
 triple combos (creature + monster + action) deliberately skipped: variety bonus already rewards diverse play.
 
-### expansion 3: "the rollercoaster" (~coins 140+) [NEXT]
+### expansion 3: "the rollercoaster" (~coins 140+) [IMPLEMENTED]
 
 **reframes the game into two halves: design the ride (between waves, builder mode) + operate the ride (during wave, existing scare game).** not a side-game or bonus level — the dark ride is already the front-of-house moment, so putting the player in charge of its shape binds the two halves tighter. you're now the ride designer as well as the scare operator.
 

@@ -100,7 +100,7 @@ const ScareFactory = (() => {
     // lifetime. lifetimeBonus already modulates lifetime, so witch/skeleton
     // shape block duration without a separate timer. Cleanup runs through
     // clearRoom on any creature removal (expire / hug / reset).
-    if (creature.action === 'block') {
+    if (creature.action === 'blockRoom') {
       GameState.blockRoom(roomId);
       House.setRoomVisualBlocked(roomId, true);
     }
@@ -217,7 +217,7 @@ const ScareFactory = (() => {
    *  leave a ghost block behind. */
   function clearRoom(roomId) {
     const creature = _deployed[roomId];
-    if (creature && creature.action === 'block') {
+    if (creature && creature.action === 'blockRoom') {
       GameState.unblockRoom(roomId);
       House.setRoomVisualBlocked(roomId, false);
     }
@@ -229,7 +229,7 @@ const ScareFactory = (() => {
   function clearAll() {
     for (const roomId of Object.keys(_deployed)) {
       const creature = _deployed[roomId];
-      if (creature.action === 'block') {
+      if (creature.action === 'blockRoom') {
         GameState.unblockRoom(roomId);
         House.setRoomVisualBlocked(roomId, false);
       }

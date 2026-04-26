@@ -61,7 +61,7 @@ const GameState = (() => {
     swarm:          () => { _addUnique('actions', 'swarm'); },
     peekABoo:       () => { _addUnique('actions', 'peekABoo'); },
     chase:          () => { _addUnique('actions', 'chase'); },
-    roomBlock:      () => { _addUnique('actions', 'block'); },
+    roomBlock:      () => { _addUnique('actions', 'blockRoom'); },
 
     trackEditor:       () => { _booleans.trackEditor = true; },
     trackPiecesBasic:  () => { _booleans.trackPiecesBasic = true; },
