@@ -240,10 +240,10 @@ const Audio = (() => {
 
     _lastScheduleTime = ctx.currentTime;
     for (const [freq, beat, dur] of _MELODY) {
-      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'triangle', 0.05);
+      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'triangle', 0.1);
     }
     for (const [freq, beat, dur] of _BASS) {
-      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'sine', 0.04);
+      _note(freq, beat * _BEAT, dur * _BEAT * 0.85, 'sine', 0.08);
     }
     _musicTimer = setTimeout(_scheduleLoop, _LOOP_DUR * 1000);
   }
