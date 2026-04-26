@@ -63,10 +63,12 @@ const GameState = (() => {
     chase:          () => { _addUnique('actions', 'chase'); },
     roomBlock:      () => { _addUnique('actions', 'blockRoom'); },
 
-    trackEditor:       () => { _booleans.trackEditor = true; },
-    trackPiecesBasic:  () => { _booleans.trackPiecesBasic = true; },
-    trackPiecesShowy:  () => { _booleans.trackPiecesShowy = true; },
-    trainSkins:        () => { _booleans.trainSkins = true; },
+    trackEditor:         () => { _booleans.trackEditor = true; },
+    trackPieceHill:      () => { _booleans.trackPieceHill = true; },
+    trackPieceTunnel:    () => { _booleans.trackPieceTunnel = true; },
+    trackPieceLoop:      () => { _booleans.trackPieceLoop = true; },
+    trackPieceCorkscrew: () => { _booleans.trackPieceCorkscrew = true; },
+    trainSkins:          () => { _booleans.trainSkins = true; },
   };
 
   /**

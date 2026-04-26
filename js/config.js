@@ -514,10 +514,12 @@ const UNLOCK_TIERS = [
   { coins: 115, key: 'peekABoo',       icon: '🫣', label: 'Peek-a-boo action!' },
   { coins: 130, key: 'chase',          icon: '🏃', label: 'Chase action!' },
   { coins: 135, key: 'roomBlock',      icon: '🛑', label: 'Room block action!' },
-  { coins: 140, key: 'trackEditor',     icon: '🎢', label: 'Ride designer unlocked!' },
-  { coins: 160, key: 'trackPiecesBasic',icon: '⛰️', label: 'Hill & tunnel pieces!' },
-  { coins: 180, key: 'trackPiecesShowy',icon: '🌀', label: 'Loop & corkscrew!' },
-  { coins: 200, key: 'trainSkins',      icon: '🚂', label: 'Train skins!' },
+  { coins: 140, key: 'trackEditor',        icon: '🎢', label: 'Ride designer unlocked!' },
+  { coins: 150, key: 'trackPieceHill',     icon: '⛰️', label: 'Hill piece!' },
+  { coins: 160, key: 'trackPieceTunnel',   icon: '🚇', label: 'Tunnel piece!' },
+  { coins: 170, key: 'trackPieceLoop',     icon: '🌀', label: 'Loop piece!' },
+  { coins: 180, key: 'trackPieceCorkscrew',icon: '🪛', label: 'Corkscrew piece!' },
+  { coins: 190, key: 'trainSkins',         icon: '🚂', label: 'Train skins!' },
 ];
 
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */

@@ -352,14 +352,16 @@ pieces are cosmetic, so the editor needs an intrinsic reason to keep revisiting.
 
 #### unlock ladder
 
-staged sub-unlocks spread the sub-game across ~60 coins:
+staged sub-unlocks spread the sub-game across 50 coins, one tier every 10:
 
 | coins | unlock |
 |-------|--------|
 | 140 | track editor + room skipping + segment reorder + straight pieces |
-| 160 | hill, tunnel (floor-transition slots also open up here) |
-| 180 | loop, corkscrew |
-| 200 | train skins (3-4 cosmetic carts) |
+| 150 | hill |
+| 160 | tunnel (floor-transition slot) |
+| 170 | loop |
+| 180 | corkscrew |
+| 190 | train skins (3-4 cosmetic carts) |
 
 each tier triggers a fanfare + showcase, same pattern as every other unlock. lands right after the last action unlock (chase @ 130), extending the ladder with a new category rather than interleaving.
 

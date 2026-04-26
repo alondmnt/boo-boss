@@ -2,9 +2,9 @@
  * TrackEditor — builder-mode overlay reached opt-in from the wave summary.
  * Lets the player place track pieces on segments, close rooms off the ride,
  * and pick a cart skin (cart skin itself arrives in a later tier). Gated on
- * the `trackEditor` unlock (140 coins). Pieces available scale with further
- * unlocks (`trackPiecesBasic`, `trackPiecesShowy`) and cart skins with
- * `trainSkins`.
+ * the `trackEditor` unlock (140 coins). Pieces unlock individually at 10-coin
+ * gaps (`trackPieceHill`, `trackPieceTunnel`, `trackPieceLoop`,
+ * `trackPieceCorkscrew`); cart skins gate on `trainSkins`.
  *
  * Stage flow mirrors picker.js: tap-a-target → popup → confirm → re-render.
  */
@@ -548,8 +548,10 @@ const TrackEditor = (() => {
 
   function _availablePieces() {
     const keys = ['straight'];
-    if (GameState.get('trackPiecesBasic')) keys.push('hill', 'tunnel');
-    if (GameState.get('trackPiecesShowy')) keys.push('loop', 'corkscrew');
+    if (GameState.get('trackPieceHill')) keys.push('hill');
+    if (GameState.get('trackPieceTunnel')) keys.push('tunnel');
+    if (GameState.get('trackPieceLoop')) keys.push('loop');
+    if (GameState.get('trackPieceCorkscrew')) keys.push('corkscrew');
     return keys;
   }
 
