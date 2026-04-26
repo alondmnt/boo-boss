@@ -523,6 +523,10 @@ const Train = (() => {
       rail.style.transition = 'stroke-dashoffset 1s ease-out';
       requestAnimationFrame(() => { rail.style.strokeDashoffset = '0'; });
     });
+
+    // Pre-sample now, in the quiet window between waves, so the next
+    // wave-start frame doesn't hitch on the path-sampling cost.
+    _ensureSamples();
   }
 
   /** Cancel any running animation. */
