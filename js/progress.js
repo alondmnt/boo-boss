@@ -36,6 +36,17 @@ const Progress = (() => {
       return;
     }
 
+    // Retroactive grant — covers tier-list changes (split bundles, inserted
+    // tiers) so returning saves don't miss unlocks they've already earned.
+    let granted = false;
+    for (const tier of UNLOCK_TIERS) {
+      if (tier.coins <= coins && !unlocked.includes(tier.coins)) {
+        unlocked.push(tier.coins);
+        granted = true;
+      }
+    }
+    if (granted) _save();
+
     applyUnlocks();
     if (rollercoasterSnapshot) GameState.loadRollercoasterState(rollercoasterSnapshot);
     renderPreview();
