@@ -294,7 +294,7 @@ const TRAIN_SKINS = {
   default: {
     key: 'default',
     label: 'classic',
-    icon: '🛤️',
+    icon: '🚂',
     costCoins: 0,
     cartSvg: () => `
       <rect x="-14" y="-12" width="28" height="16" rx="3" fill="#2a1a3a" stroke="#5a3a6a" stroke-width="1.2"/>
