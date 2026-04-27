@@ -96,32 +96,42 @@ const Wave = (() => {
     const scoreEl = document.getElementById('score-value');
     if (scoreEl) scoreEl.dataset.waveBase = scoreEl.textContent;
 
-    // Only stop at unlocked rooms for visitor disembarkation
+    // Disembark plan — each visitor independently picks a stop uniformly at
+    // random. Drops happen as the train passes that stop, so nobody appears
+    // after the train has left. Last unlocked stop sweeps any straggler
+    // (defensive: covers route/stops drift, e.g. a room not in the route).
     const stops = GameState.getTrackStops();
-    let visitorIdx = 0;
+    const route = GameState.getTrackRoute();
+    const visitedStops = route.filter(r => stops.includes(r));
+    const lastStopId = visitedStops[visitedStops.length - 1] || null;
+    const assignments = visitedStops.length
+      ? _visitors.map(() => visitedStops[Math.floor(Math.random() * visitedStops.length)])
+      : _visitors.map(() => null);
+
+    const _drop = (visitor, roomId) => {
+      Visitor.placeInRoom(visitor, roomId);
+      Visitor.setState(visitor, 'walking');
+      visitor._disembarked = true;
+    };
 
     Train.animateEntry(
-      // onRoomReached: only place visitors at unlocked stops
       (roomId, _stopIdx) => {
         if (_generation !== gen) return;
         if (!stops.includes(roomId)) return; // locked room, pass through
-        if (visitorIdx < _visitors.length) {
-          const visitor = _visitors[visitorIdx];
-          Visitor.placeInRoom(visitor, roomId);
-          Visitor.setState(visitor, 'walking');
-          visitorIdx++;
+        for (let i = 0; i < _visitors.length; i++) {
+          if (_visitors[i]._disembarked) continue;
+          if (assignments[i] !== roomId) continue;
+          _drop(_visitors[i], roomId);
+        }
+        if (roomId === lastStopId) {
+          for (let i = 0; i < _visitors.length; i++) {
+            if (_visitors[i]._disembarked) continue;
+            _drop(_visitors[i], roomId);
+          }
         }
       },
-      // onComplete: all rooms passed, remaining visitors go to unlocked rooms
       () => {
         if (_generation !== gen) return;
-        while (visitorIdx < _visitors.length) {
-          const roomId = stops[visitorIdx % stops.length];
-          const visitor = _visitors[visitorIdx];
-          Visitor.placeInRoom(visitor, roomId);
-          Visitor.setState(visitor, 'walking');
-          visitorIdx++;
-        }
         _state = 'visiting';
         _updateVisitorCount();
         // Post-disembark settle: give the player a moment to read the fresh
