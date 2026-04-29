@@ -16,6 +16,7 @@ const Game = (() => {
     Progress.load();
     _syncRoomVisuals();
     _syncClosedRoomVisuals();
+    Train.setCartSkin(GameState.getTrainSkin());
     Train.extendTrack();
     Picker.render();
     TrackEditor.init();
