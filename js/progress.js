@@ -219,14 +219,15 @@ const Progress = (() => {
    * is already on the board, otherwise adds a new one. Returns the rank
    * (0-based) if the run is on the board, or -1.
    */
-  function submitScore(score) {
+  function submitScore(score, wave) {
     if (!_runId) newRun();
     const board = getLeaderboard();
     const existing = board.findIndex(e => e.runId === _runId);
     if (existing >= 0) {
       board[existing].score = score;
+      if (wave != null) board[existing].wave = wave;
     } else {
-      board.push({ score, date: _runId.slice(0, 10), runId: _runId });
+      board.push({ score, wave, date: _runId.slice(0, 10), runId: _runId });
     }
     board.sort((a, b) => b.score - a.score);
     board.splice(MAX_LEADERBOARD);

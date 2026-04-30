@@ -530,7 +530,7 @@ const Wave = (() => {
 
     /* leaderboard check */
     const projectedTotal = _runningTotal + s.totalPoints;
-    const rank = Progress.submitScore(projectedTotal);
+    const rank = Progress.submitScore(projectedTotal, _waveNum);
     const board = Progress.getLeaderboard();
     let leaderboardRow = '';
     if (rank >= 0) {

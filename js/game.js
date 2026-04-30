@@ -212,9 +212,11 @@ const Game = (() => {
       const isCurrent = i === currentRank;
       const cls = isCurrent ? ' leaderboard__row--current' : '';
       const marker = isCurrent && i === 0 ? ' <span class="leaderboard__best">new best!</span>' : '';
+      const waveLabel = entry.wave != null ? `W${entry.wave}` : '';
       return `<div class="leaderboard__row${cls}">
         <span class="leaderboard__rank">${i + 1}.</span>
         <span class="leaderboard__score">${entry.score}</span>
+        <span class="leaderboard__wave">${waveLabel}</span>
         <span class="leaderboard__date">${entry.date}</span>${marker}
       </div>`;
     }).join('') + '</div>';
