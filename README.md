@@ -4,7 +4,7 @@ a haunted house management game. you run a spooky house attraction, deploying sc
 
 ## origins
 
-a father-and-child brainstorm. the spooky-house concept itself came from the child, along with the witch-grabs-your-hat action (sparked by a real haunted house visit) and the zombie and dinosaur creatures. the rest grew around those seeds.
+a father-and-child brainstorm. the spooky-house concept itself came from the child, along with the witch-grabs-your-hat action (sparked by a real haunted house visit), the zombie and dinosaur creatures, and a rollercoaster builder (train builder). the rest grew around those seeds.
 
 ## how to play
 
