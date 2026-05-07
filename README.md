@@ -2,9 +2,11 @@
 
 a haunted house management game. you run a spooky house attraction, deploying scare creatures to frighten visitors as they ride through on a dark-ride train. visitors have fears and loves - match a creature to their fear and they get scared, but if they love it, they'll hug it and it disappears.
 
+![screenshot.png](screenshot.png)
+
 ## origins
 
-a father-and-child brainstorm. the spooky-house concept itself came from the child, along with the witch-grabs-your-hat action (sparked by a real haunted house visit), the zombie and dinosaur creatures, and a rollercoaster builder (train builder). the rest grew around those seeds.
+a father-and-child brainstorm. the spooky-house concept itself came from the child, along with the witch-grabs-your-hat action (sparked by a real haunted house visit), the zombie and dinosaur creatures, and a rollercoaster builder. the rest grew around those seeds.
 
 ## how to play
 
