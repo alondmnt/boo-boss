@@ -522,6 +522,17 @@ const UNLOCK_TIERS = [
   { coins: 190, key: 'trainSkins',         icon: '🚂', label: 'Train skins!' },
 ];
 
+// ?zero — constant wave size (no per-wave growth). Default N=4. Pairs with
+// ?sandyclaws for relaxed showcase/recording sessions. Applied before freeze.
+(() => {
+  const params = new URLSearchParams(location.search);
+  if (!params.has('zero')) return;
+  const raw = params.get('zero');
+  const n = parseInt(raw, 10);
+  CONFIG.waveSizing.base = Number.isFinite(n) && n > 0 ? n : 4;
+  CONFIG.waveSizing.perWave = 0;
+})();
+
 /** Deep-freeze CONFIG and UNLOCK_TIERS to prevent accidental mutation. */
 function _deepFreeze(obj) {
   Object.freeze(obj);
